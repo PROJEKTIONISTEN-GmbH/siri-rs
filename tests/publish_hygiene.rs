@@ -89,9 +89,16 @@ fn published_files() -> Vec<PathBuf> {
         }
     }
     collect(&root.join("tests/support"), &mut out);
+    // This file spells out the very substrings it searches for, so scanning it would
+    // always report itself. That it still recognises a leak is asserted separately by
+    // `the_check_would_catch_a_leak`.
+    out.retain(|path| path.file_name().is_none_or(|name| name != THIS_FILE));
     out.sort();
     out
 }
+
+/// The checker's own file name, excluded from the scan above.
+const THIS_FILE: &str = "publish_hygiene.rs";
 
 fn collect(dir: &Path, out: &mut Vec<PathBuf>) {
     for entry in std::fs::read_dir(dir).unwrap_or_else(|e| panic!("cannot read {}: {e}", dir.display()))
