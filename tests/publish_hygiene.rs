@@ -180,6 +180,75 @@ fn the_check_would_catch_an_example_the_front_page_forgot() {
     assert!(examples_offered_in("no examples are offered here").is_empty());
 }
 
+/// The front page is read as plain Markdown — on the repository page and on
+/// crates.io — where rustdoc's doc-test scaffolding does not survive: a hidden `#`
+/// line is shown verbatim, and a `no_run` or `ignore` fence attribute is noise in
+/// front of the reader. So the front page carries none of it, and the compile check
+/// lives where the scaffolding is invisible instead: the examples and the rustdoc.
+#[test]
+fn the_front_page_carries_no_doc_test_scaffolding() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let readme = std::fs::read_to_string(root.join("README.md")).expect("readable front page");
+
+    let findings = doc_test_scaffolding_in(&readme);
+    assert!(
+        findings.is_empty(),
+        "the front page shows doc-test scaffolding to its readers:\n{}",
+        findings.join("\n")
+    );
+}
+
+/// The languages a fenced block on the front page may be written in. Anything else
+/// is a rustdoc attribute rather than a language.
+const FENCE_LANGUAGES: &[&str] = &["rust", "sh", "text"];
+
+/// Reports every fenced block whose fence carries a rustdoc attribute and every
+/// line inside one that rustdoc would hide.
+fn doc_test_scaffolding_in(text: &str) -> Vec<String> {
+    let mut findings = Vec::new();
+    let mut open = false;
+    for (number, line) in text.lines().enumerate() {
+        let trimmed = line.trim();
+        if let Some(info) = trimmed.strip_prefix("```") {
+            if open {
+                open = false;
+            } else {
+                open = true;
+                if !FENCE_LANGUAGES.contains(&info) {
+                    findings.push(format!("{}: fence ```{info}", number + 1));
+                }
+            }
+        } else if open && trimmed.starts_with('#') {
+            findings.push(format!("{}: hidden line — {trimmed}", number + 1));
+        }
+    }
+    findings
+}
+
+#[test]
+fn the_check_would_catch_doc_test_scaffolding() {
+    assert!(doc_test_scaffolding_in("```rust\nlet answer = 42;\n```\n").is_empty());
+    assert!(doc_test_scaffolding_in("# A heading\n\nAnd prose about `#`.\n").is_empty());
+    assert!(
+        doc_test_scaffolding_in("```sh\ncargo run --example one  # in one terminal\n```\n")
+            .is_empty(),
+        "a comment at the end of a line is not scaffolding"
+    );
+    assert_eq!(
+        doc_test_scaffolding_in("```rust\n# fn run() {\nlet answer = 42;\n# }\n```\n").len(),
+        2
+    );
+    assert_eq!(
+        doc_test_scaffolding_in("```rust,no_run\nlet answer = 42;\n```\n"),
+        ["1: fence ```rust,no_run"]
+    );
+    assert_eq!(
+        doc_test_scaffolding_in("```\nlet answer = 42;\n```\n"),
+        ["1: fence ```"],
+        "a block with no language is not a language this page uses"
+    );
+}
+
 /// Every file the manifest promises is where it says it is.
 #[test]
 fn the_manifest_points_at_files_that_exist() {
