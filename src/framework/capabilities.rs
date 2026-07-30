@@ -1014,6 +1014,62 @@ mod tests {
     }
 
     #[test]
+    fn a_capabilities_response_names_one_element_per_service_described() {
+        let timestamp = DateTime::parse_from_rfc3339("2001-12-17T09:30:47Z").unwrap();
+        let response = CapabilitiesResponse::new(
+            timestamp,
+            "KUBRICK",
+            vec![
+                EstimatedTimetableCapabilitiesResponse::new(
+                    timestamp,
+                    crate::et::EstimatedTimetableServiceCapabilities {
+                        topic_filtering: Some(
+                            crate::et::EstimatedTimetableTopicFiltering::by_operator_and_line(),
+                        ),
+                        request_policy: Some(CapabilityRequestPolicy::in_language("en-uk")),
+                        ..Default::default()
+                    },
+                )
+                .into(),
+                VehicleMonitoringCapabilitiesResponse::new(
+                    timestamp,
+                    crate::vm::VehicleMonitoringServiceCapabilities::default(),
+                )
+                .into(),
+            ],
+        );
+
+        let xml = quick_xml::se::to_string_with_root("CapabilitiesResponse", &response).unwrap();
+        assert!(xml.contains("<EstimatedTimetableCapabilitiesResponse>"), "{xml}");
+        assert!(xml.contains("<VehicleMonitoringCapabilitiesResponse>"), "{xml}");
+        assert!(xml.contains("<FilterByOperatorRef>true</FilterByOperatorRef>"), "{xml}");
+        assert!(xml.contains("<WgsDecimalDegrees/>"), "{xml}");
+
+        let reread: CapabilitiesResponse = quick_xml::de::from_str(&xml).unwrap();
+        assert_eq!(reread, response);
+    }
+
+    #[test]
+    fn a_timetable_permission_grants_operators_lines_and_connection_links() {
+        let permission = ConnectionServicePermission::for_all_participants();
+        let xml =
+            quick_xml::se::to_string_with_root("EstimatedTimetablePermission", &permission).unwrap();
+        let operators = xml.find("<OperatorPermissions>").expect("operators are written");
+        let lines = xml.find("<LinePermissions>").expect("lines are written");
+        let links = xml
+            .find("<ConnectionLinkPermissions>")
+            .expect("connection links are written");
+        assert!(operators < lines && lines < links, "{xml}");
+
+        let reread: ConnectionServicePermission = quick_xml::de::from_str(&xml).unwrap();
+        assert_eq!(reread, permission);
+        assert_eq!(
+            reread.connection_link_permissions,
+            ConnectionLinkPermissions::allow_all()
+        );
+    }
+
+    #[test]
     fn per_line_permissions_keep_the_directions_they_are_limited_to() {
         let permissions = LinePermissions::per_line(vec![LinePermission {
             allow: true,

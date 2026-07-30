@@ -253,3 +253,75 @@ impl VehicleActivityCancellation {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::{DataFrameRef, DatedVehicleJourneyRef, Location};
+
+    fn timestamp() -> DateTime<FixedOffset> {
+        DateTime::parse_from_rfc3339("2004-12-17T09:30:47-05:00").expect("valid timestamp")
+    }
+
+    fn activity() -> VehicleActivity {
+        VehicleActivity {
+            vehicle_monitoring_ref: Some("ACT019456".into()),
+            ..VehicleActivity::new(
+                timestamp(),
+                timestamp(),
+                MonitoredVehicleJourney {
+                    vehicle_location: Some(Location::wgs84(0.1, 53.55)),
+                    bearing: Some(123.0),
+                    vehicle_ref: Some("VEH987654".into()),
+                    ..MonitoredVehicleJourney::on_line("Line123")
+                },
+            )
+        }
+    }
+
+    #[test]
+    fn an_activity_writes_its_identity_before_the_journey_and_reads_back() {
+        let delivery = VehicleMonitoringDelivery::new(timestamp(), vec![activity()]);
+
+        let xml = quick_xml::se::to_string_with_root("VehicleMonitoringDelivery", &delivery)
+            .expect("delivery serialises");
+        let valid_until = xml.find("<ValidUntilTime>").expect("the horizon is written");
+        let monitoring = xml
+            .find("<VehicleMonitoringRef>")
+            .expect("the monitoring service is written");
+        let journey = xml
+            .find("<MonitoredVehicleJourney>")
+            .expect("the journey is written");
+        assert!(valid_until < monitoring && monitoring < journey, "{xml}");
+
+        let read: VehicleMonitoringDelivery =
+            quick_xml::de::from_str(&xml).expect("delivery round-trips");
+        assert_eq!(read, delivery);
+    }
+
+    #[test]
+    fn a_cancellation_is_written_after_the_activities_it_withdraws() {
+        let mut delivery = VehicleMonitoringDelivery::new(timestamp(), vec![activity()]);
+        delivery
+            .vehicle_activity_cancellation
+            .push(VehicleActivityCancellation::new(
+                timestamp(),
+                FramedVehicleJourneyRef {
+                    data_frame_ref: DataFrameRef::new("2001-12-17"),
+                    dated_vehicle_journey_ref: DatedVehicleJourneyRef::new("09867"),
+                },
+            ));
+
+        let xml = quick_xml::se::to_string_with_root("VehicleMonitoringDelivery", &delivery)
+            .expect("delivery serialises");
+        let activity = xml.find("<VehicleActivity>").expect("the activity is written");
+        let cancellation = xml
+            .find("<VehicleActivityCancellation>")
+            .expect("the cancellation is written");
+        assert!(activity < cancellation, "{xml}");
+
+        let read: VehicleMonitoringDelivery =
+            quick_xml::de::from_str(&xml).expect("delivery round-trips");
+        assert_eq!(read, delivery);
+    }
+}

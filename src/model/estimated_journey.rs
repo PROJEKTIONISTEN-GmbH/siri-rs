@@ -1031,3 +1031,86 @@ impl WillWait {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::reference::DataFrameRef;
+
+    fn timestamp() -> DateTime<FixedOffset> {
+        DateTime::parse_from_rfc3339("2001-12-17T09:30:47-05:00").expect("valid timestamp")
+    }
+
+    #[test]
+    fn a_journey_reports_which_run_it_names() {
+        let dated = EstimatedVehicleJourney::dated("LZ123", "INBOUND", "00008");
+        assert!(matches!(dated.identity(), Some(JourneyIdentity::Dated(reference))
+            if reference.as_str() == "00008"));
+
+        let mut framed = dated.clone();
+        framed.dated_vehicle_journey_ref = None;
+        framed.framed_vehicle_journey_ref = Some(FramedVehicleJourneyRef {
+            data_frame_ref: DataFrameRef::new("2001-12-17"),
+            dated_vehicle_journey_ref: DatedVehicleJourneyRef::new("00008"),
+        });
+        assert!(matches!(framed.identity(), Some(JourneyIdentity::Framed(_))));
+
+        let mut unplanned = dated;
+        unplanned.dated_vehicle_journey_ref = None;
+        unplanned.estimated_vehicle_journey_code = Some("EXTRA-1".to_owned());
+        assert!(matches!(unplanned.identity(), Some(JourneyIdentity::Code("EXTRA-1"))));
+    }
+
+    #[test]
+    fn a_journey_reports_whether_it_adds_a_run_or_takes_one_away() {
+        let running = EstimatedVehicleJourney::dated("LZ123", "INBOUND", "00008");
+        assert_eq!(running.alteration(), None);
+        assert_eq!(
+            running.clone().cancelled().alteration(),
+            Some(JourneyAlteration::Cancelled)
+        );
+
+        let mut extra = running;
+        extra.extra_journey = Some(true);
+        assert_eq!(extra.alteration(), Some(JourneyAlteration::Extra));
+    }
+
+    #[test]
+    fn a_call_writes_the_arrival_before_the_departure_and_reads_back() {
+        let call = EstimatedCall {
+            aimed_arrival_time: Some(timestamp()),
+            expected_arrival_time: Some(timestamp()),
+            arrival_platform_name: vec![NaturalLanguageString::with_lang("EN", "4")],
+            aimed_departure_time: Some(timestamp()),
+            expected_departure_time: Some(timestamp()),
+            departure_platform_name: vec![NaturalLanguageString::with_lang("EN", "3")],
+            ..EstimatedCall::at("00002")
+        };
+
+        let xml = quick_xml::se::to_string_with_root("EstimatedCall", &call)
+            .expect("the call serialises");
+        let arrival = xml.find("<ExpectedArrivalTime>").expect("arrival is written");
+        let platform = xml.find("<ArrivalPlatformName").expect("platform is written");
+        let departure = xml
+            .find("<AimedDepartureTime>")
+            .expect("departure is written");
+        assert!(arrival < platform && platform < departure, "{xml}");
+
+        let read: EstimatedCall = quick_xml::de::from_str(&xml).expect("the call round-trips");
+        assert_eq!(read, call);
+    }
+
+    #[test]
+    fn a_call_reports_whether_it_is_being_added_or_skipped() {
+        let call = EstimatedCall::at("00003");
+        assert_eq!(call.alteration(), None);
+        assert_eq!(
+            call.clone().cancelled().alteration(),
+            Some(CallAlteration::Cancelled)
+        );
+
+        let mut extra = call;
+        extra.extra_call = Some(true);
+        assert_eq!(extra.alteration(), Some(CallAlteration::Extra));
+    }
+}

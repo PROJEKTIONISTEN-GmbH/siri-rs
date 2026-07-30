@@ -12,10 +12,19 @@ in Rust. Read a producer's feed, or run one.
   capabilities and discovery;
 - the **publish/subscribe data hub**: the full subscription lifecycle, direct and
   fetched delivery, check-status and heartbeat, termination — as types *and* as
-  the state machines that drive them;
+  the state machines that drive them, for any of the services below;
+- **Production Timetable (SIRI-PT)**: the day's plan — dated journeys, their calls,
+  and the interchanges planned around them;
+- **Estimated Timetable (SIRI-ET)**: the same journeys as they are actually running
+  — delays, cancellations, journeys added today, stops skipped;
+- **Vehicle Monitoring (SIRI-VM)**: where the vehicles are, how they are getting on,
+  and which stops they have served and have still to serve;
 - **Situation Exchange (SIRI-SX)**: incidents and disruptions, complete — validity
   and publication windows, sources, classifiers and reasons, everything a
-  situation affects, its consequences, and the publishing actions it triggers.
+  situation affects, its consequences, and the publishing actions it triggers;
+- the **journey model** the timetable and monitoring services share, down to train
+  formations, occupancy and capacity, and the GML polygon a flexible stop area may
+  be drawn as.
 
 It is **transport-agnostic**. The library owns the protocol; carrying bytes is
 yours. That keeps it usable from any HTTP stack, from a message queue, or from a
@@ -106,12 +115,12 @@ fallen due and posts it to the address each consumer named when it subscribed:
 
 ```rust
 use chrono::{DateTime, FixedOffset};
-use siri_rs::pubsub::{Producer, SituationSource};
+use siri_rs::pubsub::{Producer, Service, Source};
 
 /// The route. `None` is a message that needs no answer — an acknowledgement, say —
 /// which HTTP reports as `204 No Content`.
-fn answer<S: SituationSource>(
-    producer: &mut Producer<S>,
+fn answer<S: Source<Svc>, Svc: Service>(
+    producer: &mut Producer<S, Svc>,
     body: &str,
     now: DateTime<FixedOffset>,
 ) -> siri_rs::Result<Option<String>> {
@@ -125,8 +134,8 @@ fn answer<S: SituationSource>(
 /// The timer. Every message that has fallen due — a delivery, a data-ready
 /// notification, a heartbeat — paired with the address to post it to. A consumer
 /// that named no address cannot be reached, so nothing is sent to it.
-fn due<S: SituationSource>(
-    producer: &mut Producer<S>,
+fn due<S: Source<Svc>, Svc: Service>(
+    producer: &mut Producer<S, Svc>,
     now: DateTime<FixedOffset>,
 ) -> siri_rs::Result<Vec<(String, String)>> {
     producer
@@ -143,11 +152,14 @@ On the consumer's side, opening a subscription yields the body to post and the
 
 ```rust
 use chrono::{DateTime, Duration, FixedOffset};
-use siri_rs::pubsub::Consumer;
+use siri_rs::pubsub::{Consumer, SituationExchange};
 use siri_rs::sx::SituationExchangeRequest;
 
-fn subscribe(own_address: &str, now: DateTime<FixedOffset>) -> siri_rs::Result<(Consumer, String)> {
-    let mut consumer = Consumer::new("PASSENGER-APP")
+fn subscribe(
+    own_address: &str,
+    now: DateTime<FixedOffset>,
+) -> siri_rs::Result<(Consumer<SituationExchange>, String)> {
+    let mut consumer = Consumer::<SituationExchange>::new("PASSENGER-APP")
         .at_address(own_address)
         .confirming_deliveries();
 
@@ -163,25 +175,42 @@ fn subscribe(own_address: &str, now: DateTime<FixedOffset>) -> siri_rs::Result<(
 ```
 
 `Consumer::handle` then turns each incoming message into a `ConsumerEvent`: the
-situations a delivery carried, the acknowledgement and the fetch request a data-ready
+records a delivery carried, the acknowledgement and the fetch request a data-ready
 notification calls for, a heartbeat, a subscription that ended.
 
-Two examples run all of it against a real socket.
+Which service the two speak is decided once. A producer takes it from its source —
+implementing `SituationSource`, `EstimatedTimetableSource`,
+`ProductionTimetableSource` or `VehicleMonitoringSource` is what makes it a producer
+of that service — and a consumer is told directly, as
+`Consumer::<EstimatedTimetable>::new(…)`. Everything else is the same code.
+
+Three pairs of examples run all of it against a real socket. Each producer serves a
+route and a timer; each consumer subscribes, receives on a route of its own, prints
+what arrives and unsubscribes before it stops.
 **`examples/sx_producer_axum.rs`** serves one route per delivery method, so pushing a
-delivery and announcing one for collection are both visible in a single run.
-**`examples/sx_consumer_reqwest.rs`** subscribes, receives the data-ready notification
-on a route of its own, answers it, fetches the data, prints the situations that
-arrive, and unsubscribes before it stops.
+delivery and announcing one for collection are both visible in a single run, and
+**`examples/sx_consumer_reqwest.rs`** follows the announced path all the way through.
+**`examples/et_producer_axum.rs`** publishes a journey running late and one cancelled,
+and lets the delay grow while **`examples/et_consumer_reqwest.rs`** is watching.
+**`examples/vm_producer_axum.rs`** moves a vehicle every few seconds, which
+**`examples/vm_consumer_reqwest.rs`** follows across the map.
 
 ```sh
-cargo run --example sx_producer_axum     # in one terminal
-cargo run --example sx_consumer_reqwest  # in another
+cargo run --example sx_producer_axum     # in one terminal…
+cargo run --example sx_consumer_reqwest  # …and the other in another
+
+cargo run --example et_producer_axum
+cargo run --example et_consumer_reqwest
+
+cargo run --example vm_producer_axum
+cargo run --example vm_consumer_reqwest
 ```
 
-`tests/http_endpoint.rs` runs that wiring on a port the operating system picks and
-drives full cycles through it — announced delivery, pushed delivery, a heartbeat and
-a plain service request — validating every body that crosses the wire against the
-official schemas and pinning the order of the exchange.
+`tests/http_endpoint.rs` and `tests/http_journey_services.rs` run that wiring on a
+port the operating system picks and drive full cycles through it — announced
+delivery, pushed delivery, a heartbeat, a plain service request — validating every
+body that crosses the wire against the official schemas and pinning the order of the
+exchange.
 
 axum, reqwest and tokio are development dependencies, and stay that way. Which
 transport to use is the application's decision; the examples make one so that the
@@ -199,7 +228,8 @@ the German **VDV 736** profile messages.
 
 Every enumeration is checked token by token against the `xsd:simpleType` it
 transcribes, so a mistyped wire value is a test failure rather than a rejected
-message in production.
+message in production. Losing an enumeration from that check is itself a failure:
+the count is compared with the number the crate declares.
 
 `tests/fixtures/README.md` lists the documents covered and where they come from.
 
@@ -215,18 +245,18 @@ fail with a pointer to this note if it is missing rather than passing quietly.
 
 ## Roadmap
 
-The framework and the publish/subscribe hub are complete and service-independent;
-the remaining work is one functional service at a time, each on this foundation:
+The framework, the publish/subscribe hub and the journey model are complete and
+service-independent; the remaining work is one functional service at a time, each on
+this foundation:
 
-- Estimated Timetable (SIRI-ET) and Production Timetable (SIRI-PT)
 - Stop Monitoring (SIRI-SM) and Stop Timetable (SIRI-ST)
-- Vehicle Monitoring (SIRI-VM)
 - Connection Monitoring (SIRI-CM) and Connection Timetable (SIRI-CT)
 - General Message (SIRI-GM), Facility Monitoring (SIRI-FM), Control Actions (SIRI-CA)
 
 Also open: structured `Extensions` payloads, which currently round-trip as opaque
-content, and a fuller DATEX II binding for the road-situation records SIRI-SX can
-embed.
+content; the facility model the journey services may embed a condition from, which
+arrives with Facility Monitoring; and a fuller DATEX II binding for the
+road-situation records SIRI-SX can embed.
 
 ## Licence
 

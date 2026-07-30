@@ -4,9 +4,10 @@
 //! real-time public transport data. This crate implements the SIRI **framework**
 //! (message envelope, request/response, discovery and capabilities), the full
 //! **publish/subscribe data hub** (subscription lifecycle, data-ready
-//! notifications, fetched and direct delivery, heartbeats), and the
-//! **Situation Exchange** service (SIRI-SX) that carries incidents and
-//! disruptions.
+//! notifications, fetched and direct delivery, heartbeats), and four functional
+//! services on top of it: the planned timetable (**SIRI-PT**), the timetable as it
+//! is actually running (**SIRI-ET**), the vehicles running it (**SIRI-VM**), and the
+//! incidents and disruptions that perturb it (**SIRI-SX**).
 //!
 //! Both roles are supported: use it to consume a producer's feed, or to run one.
 //!
@@ -15,9 +16,12 @@
 //! | Module | What it holds |
 //! |---|---|
 //! | [`framework`] | The `<Siri>` envelope and every framework message |
+//! | [`pt`] | Production Timetable: the day's plan |
+//! | [`et`] | Estimated Timetable: the plan as it is running |
+//! | [`vm`] | Vehicle Monitoring: where the vehicles are |
 //! | [`sx`] | Situation Exchange requests, deliveries and `PtSituationElement` |
 //! | [`pubsub`] | The subscription state machines and the transport seam |
-//! | [`model`] | References, locations and features shared across services |
+//! | [`model`] | The journey model, references and locations shared across services |
 //! | [`types`] | Primitive datatypes: identifiers, texts, durations |
 //! | [`enumerations`] | The schema's enumerated code lists |
 //!

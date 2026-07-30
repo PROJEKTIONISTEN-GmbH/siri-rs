@@ -709,3 +709,66 @@ pub struct RemovedServiceJourneyInterchange {
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<Extensions>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn timestamp() -> DateTime<FixedOffset> {
+        DateTime::parse_from_rfc3339("2001-12-17T09:30:47-05:00").expect("valid timestamp")
+    }
+
+    #[test]
+    fn a_call_writes_its_interchanges_after_its_times_and_reads_back() {
+        let call = DatedCall {
+            aimed_arrival_time: Some(timestamp()),
+            aimed_departure_time: Some(timestamp()),
+            targeted_interchange: vec![TargetedInterchange {
+                distributor_connection_link: Some(ContextualisedConnectionLink {
+                    connection_link_code: Some("01340".to_owned()),
+                    default_duration: Some(Duration::parse("PT3M").expect("valid duration")),
+                    ..ContextualisedConnectionLink::default()
+                }),
+                distributor_visit_number: Some(1),
+                guaranteed: Some(true),
+                ..TargetedInterchange::onto("V45681")
+            }],
+            ..DatedCall::at("HLTS00102")
+        };
+
+        let xml =
+            quick_xml::se::to_string_with_root("DatedCall", &call).expect("the call serialises");
+        let departure = xml
+            .find("<AimedDepartureTime>")
+            .expect("departure is written");
+        let interchange = xml
+            .find("<TargetedInterchange>")
+            .expect("the interchange is written");
+        assert!(departure < interchange, "{xml}");
+
+        let read: DatedCall = quick_xml::de::from_str(&xml).expect("the call round-trips");
+        assert_eq!(read, call);
+    }
+
+    #[test]
+    fn a_run_keeps_the_calls_it_was_given_in_order() {
+        let run = DatedVehicleJourney::new(
+            "DVC0008767",
+            vec![DatedCall::at("HLTS00101"), DatedCall::at("HLTS00102")],
+        );
+
+        assert_eq!(
+            run.dated_calls()
+                .iter()
+                .map(|call| call.stop_point_ref.as_str())
+                .collect::<Vec<_>>(),
+            ["HLTS00101", "HLTS00102"]
+        );
+
+        let xml = quick_xml::se::to_string_with_root("DatedVehicleJourney", &run)
+            .expect("the run serialises");
+        let read: DatedVehicleJourney =
+            quick_xml::de::from_str(&xml).expect("the run round-trips");
+        assert_eq!(read, run);
+    }
+}

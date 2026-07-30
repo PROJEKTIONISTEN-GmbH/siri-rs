@@ -254,3 +254,58 @@ impl DatedTimetableVersionFrame {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::{DatedCall, DatedVehicleJourney};
+
+    fn timestamp() -> DateTime<FixedOffset> {
+        DateTime::parse_from_rfc3339("2001-12-17T09:30:47-05:00").expect("valid timestamp")
+    }
+
+    fn frame(code: &str) -> DatedTimetableVersionFrame {
+        DatedTimetableVersionFrame::new(
+            timestamp(),
+            "123",
+            "Out",
+            vec![DatedVehicleJourney::new(
+                code,
+                vec![DatedCall::at("HLTS00101"), DatedCall::at("HLTS00102")],
+            )],
+        )
+    }
+
+    #[test]
+    fn a_frame_states_what_its_runs_have_in_common_before_the_runs() {
+        let delivery = ProductionTimetableDelivery::new(timestamp(), vec![frame("DVC0008767")]);
+
+        let xml = quick_xml::se::to_string_with_root("ProductionTimetableDelivery", &delivery)
+            .expect("delivery serialises");
+        let line = xml.find("<LineRef>").expect("the line is written");
+        let direction = xml.find("<DirectionRef>").expect("the direction is written");
+        let journey = xml
+            .find("<DatedVehicleJourney>")
+            .expect("the run is written");
+        assert!(line < direction && direction < journey, "{xml}");
+
+        let read: ProductionTimetableDelivery =
+            quick_xml::de::from_str(&xml).expect("delivery round-trips");
+        assert_eq!(read, delivery);
+    }
+
+    #[test]
+    fn the_runs_of_every_frame_are_reported_together() {
+        let delivery =
+            ProductionTimetableDelivery::new(timestamp(), vec![frame("first"), frame("second")]);
+
+        assert_eq!(
+            delivery
+                .journeys()
+                .map(|run| run.dated_vehicle_journey_code.as_deref().unwrap())
+                .collect::<Vec<_>>(),
+            ["first", "second"]
+        );
+        assert_eq!(delivery.journeys().next().unwrap().dated_calls().len(), 2);
+    }
+}

@@ -680,3 +680,46 @@ impl OnwardCall {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::location::Location;
+
+    fn timestamp() -> DateTime<FixedOffset> {
+        DateTime::parse_from_rfc3339("2004-12-17T09:30:47-05:00").expect("valid timestamp")
+    }
+
+    #[test]
+    fn a_journey_writes_its_progress_after_its_identity_and_reads_back() {
+        let journey = MonitoredVehicleJourney {
+            monitored: Some(true),
+            vehicle_location: Some(Location::wgs84(0.1, 53.55)),
+            bearing: Some(123.0),
+            delay: Some(Duration::parse("PT2M").expect("valid duration")),
+            vehicle_ref: Some("VEH987654".into()),
+            onward_calls: Some(OnwardCalls {
+                onward_call: vec![OnwardCall {
+                    aimed_arrival_time: Some(timestamp()),
+                    expected_arrival_time: Some(timestamp()),
+                    ..OnwardCall::at("HLTST012")
+                }],
+            }),
+            ..MonitoredVehicleJourney::on_line("Line123")
+        };
+
+        let xml = quick_xml::se::to_string_with_root("MonitoredVehicleJourney", &journey)
+            .expect("the journey serialises");
+        let line = xml.find("<LineRef>").expect("the line is written");
+        let location = xml.find("<VehicleLocation>").expect("the position is written");
+        let vehicle = xml.find("<VehicleRef>").expect("the vehicle is written");
+        let onward = xml.find("<OnwardCalls>").expect("the calls are written");
+        assert!(line < location && location < vehicle && vehicle < onward, "{xml}");
+
+        let read: MonitoredVehicleJourney =
+            quick_xml::de::from_str(&xml).expect("the journey round-trips");
+        assert_eq!(read, journey);
+        assert_eq!(read.onward_calls().len(), 1);
+        assert!(read.previous_calls().is_empty());
+    }
+}

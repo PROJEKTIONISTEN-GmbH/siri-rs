@@ -132,3 +132,57 @@ impl EstimatedVersionFrame {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::EstimatedCall;
+
+    fn timestamp() -> DateTime<FixedOffset> {
+        DateTime::parse_from_rfc3339("2001-12-17T09:30:47-05:00").expect("valid timestamp")
+    }
+
+    fn journey(dated_vehicle_journey_ref: &str) -> EstimatedVehicleJourney {
+        EstimatedVehicleJourney::dated("LZ123", "INBOUND", dated_vehicle_journey_ref)
+            .with_estimated_calls(vec![EstimatedCall::at("00001")])
+    }
+
+    #[test]
+    fn a_delivery_writes_its_header_before_the_journeys_and_reads_back() {
+        let delivery = EstimatedTimetableDelivery {
+            subscriber_ref: Some("NADER".into()),
+            subscription_ref: Some("0004".into()),
+            status: Some(true),
+            ..EstimatedTimetableDelivery::new(timestamp(), vec![journey("00008")])
+        };
+
+        let xml = quick_xml::se::to_string_with_root("EstimatedTimetableDelivery", &delivery)
+            .expect("delivery serialises");
+        let subscriber = xml.find("<SubscriberRef>").expect("subscriber is written");
+        let status = xml.find("<Status>").expect("status is written");
+        let frame = xml
+            .find("<EstimatedJourneyVersionFrame>")
+            .expect("the frame is written");
+        assert!(subscriber < status && status < frame, "{xml}");
+
+        let read: EstimatedTimetableDelivery =
+            quick_xml::de::from_str(&xml).expect("delivery round-trips");
+        assert_eq!(read, delivery);
+    }
+
+    #[test]
+    fn the_journeys_of_every_frame_are_reported_together() {
+        let mut delivery = EstimatedTimetableDelivery::new(timestamp(), vec![journey("00008")]);
+        delivery
+            .estimated_journey_version_frame
+            .push(EstimatedVersionFrame::new(timestamp(), vec![journey("00009")]));
+
+        assert_eq!(
+            delivery
+                .journeys()
+                .map(|journey| journey.dated_vehicle_journey_ref.as_ref().unwrap().as_str())
+                .collect::<Vec<_>>(),
+            ["00008", "00009"]
+        );
+    }
+}
