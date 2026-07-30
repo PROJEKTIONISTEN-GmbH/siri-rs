@@ -12,7 +12,7 @@
 mod support;
 
 use siri::framework::SituationExchangeCapabilitiesResponse;
-use siri::sx::RoadSituationElement;
+use siri::sx::{PtSituationElement, RoadSituationElement};
 use siri::Siri;
 use support::{compare, parse, validate, validator_available, VALIDATOR_MISSING};
 
@@ -27,6 +27,9 @@ fn round_trip(root: &str, xml: &str) -> siri::Result<String> {
         "SituationExchangeCapabilitiesResponse" => siri::to_string_pretty(&siri::from_str::<
             SituationExchangeCapabilitiesResponse,
         >(xml)?),
+        "PtSituationElement" => {
+            siri::to_string_pretty(&siri::from_str::<PtSituationElement>(xml)?)
+        }
         "RoadSituationElement" => {
             siri::to_string_pretty(&siri::from_str::<RoadSituationElement>(xml)?)
         }

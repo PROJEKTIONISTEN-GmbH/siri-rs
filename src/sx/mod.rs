@@ -30,6 +30,10 @@ pub use request::{
 };
 pub use situation::{PtSituationElement, Reason, RoadSituationElement};
 
+impl crate::xml::SiriRoot for PtSituationElement {
+    const ELEMENT_NAME: &'static str = "PtSituationElement";
+}
+
 impl crate::xml::SiriRoot for RoadSituationElement {
     const ELEMENT_NAME: &'static str = "RoadSituationElement";
 }
