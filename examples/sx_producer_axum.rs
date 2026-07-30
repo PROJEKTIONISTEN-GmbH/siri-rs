@@ -34,12 +34,12 @@ use axum::routing::post;
 use axum::Router;
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 
-use siri::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
-use siri::pubsub::{Outbound, Producer, ProducerConfig, SituationSource};
-use siri::sx::situation::{HalfOpenTimestampOutputRange, SituationSource as Source};
-use siri::sx::{PtSituationElement, SituationExchangeRequest};
-use siri::types::{DefaultedText, Duration as SiriDuration};
-use siri::Siri;
+use siri_rs::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
+use siri_rs::pubsub::{Outbound, Producer, ProducerConfig, SituationSource};
+use siri_rs::sx::situation::{HalfOpenTimestampOutputRange, SituationSource as Source};
+use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
+use siri_rs::types::{DefaultedText, Duration as SiriDuration};
+use siri_rs::Siri;
 
 /// The media type SIRI travels as.
 const XML: &str = "application/xml";
@@ -125,7 +125,7 @@ fn producer(config: ProducerConfig, started: DateTime<FixedOffset>) -> SharedPro
 /// of them is answered, and with what.
 async fn answer(State(producer): State<SharedProducer>, body: String) -> Response {
     let now = Utc::now().fixed_offset();
-    let message: Siri = match siri::from_str(&body) {
+    let message: Siri = match siri_rs::from_str(&body) {
         Ok(message) => message,
         Err(complaint) => {
             return (
@@ -142,7 +142,7 @@ async fn answer(State(producer): State<SharedProducer>, body: String) -> Respons
         .expect("the producer is usable")
         .handle(&message, now);
     match reply {
-        Ok(Some(reply)) => match siri::to_string(&reply) {
+        Ok(Some(reply)) => match siri_rs::to_string(&reply) {
             Ok(body) => {
                 show("producer → consumer", &reply);
                 ([(header::CONTENT_TYPE, XML)], body).into_response()
@@ -189,7 +189,7 @@ async fn send(producer: &SharedProducer, client: &reqwest::Client, outbound: &Ou
         );
         return;
     };
-    let body = match siri::to_string(&outbound.message) {
+    let body = match siri_rs::to_string(&outbound.message) {
         Ok(body) => body,
         Err(complaint) => {
             eprintln!("! a message could not be written: {complaint}");
@@ -218,7 +218,7 @@ async fn send(producer: &SharedProducer, client: &reqwest::Client, outbound: &Ou
 
     // A consumer acknowledges a push in the response body. The producer wants to see
     // it, even though it answers acknowledgements with silence.
-    match siri::from_str::<Siri>(&answer) {
+    match siri_rs::from_str::<Siri>(&answer) {
         Ok(acknowledgement) => {
             show(&format!("{address} → producer"), &acknowledgement);
             let now = Utc::now().fixed_offset();
@@ -252,7 +252,7 @@ async fn publish_an_update(producers: [SharedProducer; 2]) {
 
 /// Prints a message, so that running the example shows the whole exchange.
 fn show(direction: &str, message: &Siri) {
-    match siri::to_string_pretty(message) {
+    match siri_rs::to_string_pretty(message) {
         Ok(xml) => println!("\n=== {direction} ===\n{xml}"),
         Err(complaint) => eprintln!("! a message could not be written: {complaint}"),
     }

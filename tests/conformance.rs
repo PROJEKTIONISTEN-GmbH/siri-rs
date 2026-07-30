@@ -11,9 +11,9 @@
 
 mod support;
 
-use siri::framework::SituationExchangeCapabilitiesResponse;
-use siri::sx::{PtSituationElement, RoadSituationElement};
-use siri::Siri;
+use siri_rs::framework::SituationExchangeCapabilitiesResponse;
+use siri_rs::sx::{PtSituationElement, RoadSituationElement};
+use siri_rs::Siri;
 use support::{compare, parse, validate, validator_available, VALIDATOR_MISSING};
 
 /// Reads a document into the type its root element names, then writes it back out.
@@ -21,17 +21,17 @@ use support::{compare, parse, validate, validator_available, VALIDATOR_MISSING};
 /// SIRI declares every message as a global element, so a document may be rooted at
 /// something other than `<Siri>`. Every root the fixtures use is listed here; an
 /// unlisted one is a gap in the harness rather than something to skip quietly.
-fn round_trip(root: &str, xml: &str) -> siri::Result<String> {
+fn round_trip(root: &str, xml: &str) -> siri_rs::Result<String> {
     match root {
-        "Siri" => siri::to_string_pretty(&siri::from_str::<Siri>(xml)?),
-        "SituationExchangeCapabilitiesResponse" => siri::to_string_pretty(&siri::from_str::<
+        "Siri" => siri_rs::to_string_pretty(&siri_rs::from_str::<Siri>(xml)?),
+        "SituationExchangeCapabilitiesResponse" => siri_rs::to_string_pretty(&siri_rs::from_str::<
             SituationExchangeCapabilitiesResponse,
         >(xml)?),
         "PtSituationElement" => {
-            siri::to_string_pretty(&siri::from_str::<PtSituationElement>(xml)?)
+            siri_rs::to_string_pretty(&siri_rs::from_str::<PtSituationElement>(xml)?)
         }
         "RoadSituationElement" => {
-            siri::to_string_pretty(&siri::from_str::<RoadSituationElement>(xml)?)
+            siri_rs::to_string_pretty(&siri_rs::from_str::<RoadSituationElement>(xml)?)
         }
         other => panic!("no document type is registered for root element <{other}>"),
     }
@@ -165,9 +165,9 @@ fn reading_the_wrong_message_type_is_an_error() {
             <RequestTimestamp>2004-12-17T09:30:47-05:00</RequestTimestamp>
         </HeartbeatNotification>
     </Siri>"#;
-    let error = siri::from_str::<RoadSituationElement>(heartbeat).unwrap_err();
+    let error = siri_rs::from_str::<RoadSituationElement>(heartbeat).unwrap_err();
     assert!(
-        matches!(&error, siri::Error::UnexpectedRoot { expected, found }
+        matches!(&error, siri_rs::Error::UnexpectedRoot { expected, found }
             if *expected == "RoadSituationElement" && found == "Siri"),
         "{error}"
     );

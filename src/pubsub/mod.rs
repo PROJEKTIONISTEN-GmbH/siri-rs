@@ -36,8 +36,8 @@
 //!
 //! ```
 //! use chrono::{DateTime, FixedOffset};
-//! use siri::pubsub::{Consumer, ConsumerEvent, Producer, ProducerConfig, SituationSource};
-//! use siri::sx::{PtSituationElement, SituationExchangeRequest};
+//! use siri_rs::pubsub::{Consumer, ConsumerEvent, Producer, ProducerConfig, SituationSource};
+//! use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
 //!
 //! struct OneSituation(PtSituationElement);
 //! impl SituationSource for OneSituation {
@@ -46,7 +46,7 @@
 //!     }
 //! }
 //!
-//! # fn run(situation: PtSituationElement, now: DateTime<FixedOffset>) -> siri::Result<()> {
+//! # fn run(situation: PtSituationElement, now: DateTime<FixedOffset>) -> siri_rs::Result<()> {
 //! let mut producer = Producer::new(ProducerConfig::new("KUBRICK"), OneSituation(situation));
 //! let mut consumer = Consumer::new("NADER");
 //!

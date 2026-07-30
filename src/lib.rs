@@ -32,13 +32,13 @@
 //!   </HeartbeatNotification>
 //! </Siri>"#;
 //!
-//! let message: siri::Siri = siri::from_str(xml)?;
+//! let message: siri_rs::Siri = siri_rs::from_str(xml)?;
 //! let heartbeat = message.payload.as_heartbeat_notification().unwrap();
 //! assert_eq!(heartbeat.producer_ref.as_ref().unwrap().as_str(), "KUBRICK");
 //!
-//! let written = siri::to_string(&message)?;
+//! let written = siri_rs::to_string(&message)?;
 //! assert!(written.contains("<ProducerRef>KUBRICK</ProducerRef>"));
-//! # Ok::<(), siri::Error>(())
+//! # Ok::<(), siri_rs::Error>(())
 //! ```
 //!
 //! # How the schema is modelled

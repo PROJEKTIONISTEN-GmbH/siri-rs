@@ -9,12 +9,12 @@ mod support;
 
 use chrono::{DateTime, Duration, FixedOffset};
 
-use siri::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
-use siri::pubsub::{Consumer, ConsumerEvent, Producer, ProducerConfig, SituationSource};
-use siri::sx::situation::{HalfOpenTimestampOutputRange, SituationSource as Source};
-use siri::sx::{PtSituationElement, SituationExchangeRequest};
-use siri::types::{DefaultedText, Duration as SiriDuration};
-use siri::Siri;
+use siri_rs::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
+use siri_rs::pubsub::{Consumer, ConsumerEvent, Producer, ProducerConfig, SituationSource};
+use siri_rs::sx::situation::{HalfOpenTimestampOutputRange, SituationSource as Source};
+use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
+use siri_rs::types::{DefaultedText, Duration as SiriDuration};
+use siri_rs::Siri;
 use support::{validate, validator_available, VALIDATOR_MISSING};
 
 struct Disruptions(Vec<PtSituationElement>);
@@ -55,7 +55,7 @@ fn situation(at: DateTime<FixedOffset>, number: &str, severity: Severity) -> PtS
 /// Writes the message out and checks it against the schemas.
 #[track_caller]
 fn exchanged(label: &str, message: &Siri) {
-    let xml = siri::to_string_pretty(message).expect("message serialises");
+    let xml = siri_rs::to_string_pretty(message).expect("message serialises");
     if let Err(complaint) = validate(&xml) {
         panic!("{label} is not valid SIRI:\n{complaint}\n{xml}");
     }
@@ -388,8 +388,8 @@ fn a_direct_request_is_answered_with_a_delivery() {
     );
 
     let request = Siri::new(
-        siri::pubsub::PROTOCOL_VERSION,
-        siri::framework::ServiceRequest::new(
+        siri_rs::pubsub::PROTOCOL_VERSION,
+        siri_rs::framework::ServiceRequest::new(
             now,
             "PASSENGER-APP",
             vec![SituationExchangeRequest::new(now).into()],
@@ -420,8 +420,8 @@ fn a_check_status_request_reports_when_the_service_started() {
         Producer::new(ProducerConfig::new("MY-AGENCY"), Disruptions(Vec::new())).started_at(started);
 
     let request = Siri::new(
-        siri::pubsub::PROTOCOL_VERSION,
-        siri::framework::CheckStatusRequest::new(now, "PASSENGER-APP"),
+        siri_rs::pubsub::PROTOCOL_VERSION,
+        siri_rs::framework::CheckStatusRequest::new(now, "PASSENGER-APP"),
     );
     exchanged("CheckStatusRequest", &request);
 

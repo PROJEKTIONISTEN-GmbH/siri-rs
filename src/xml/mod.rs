@@ -5,7 +5,7 @@
 //! which is what [`from_str`] checks against and what [`to_string`] writes.
 //!
 //! ```
-//! use siri::{CheckStatusRequest, ParticipantRef};
+//! use siri_rs::{CheckStatusRequest, ParticipantRef};
 //!
 //! let doc = r#"<Siri xmlns="http://www.siri.org.uk/siri" version="2.0">
 //!   <CheckStatusRequest version="2.0">
@@ -14,10 +14,10 @@
 //!   </CheckStatusRequest>
 //! </Siri>"#;
 //!
-//! let siri: siri::Siri = siri::from_str(doc)?;
+//! let siri: siri_rs::Siri = siri_rs::from_str(doc)?;
 //! let request: &CheckStatusRequest = siri.payload.as_check_status_request().unwrap();
 //! assert_eq!(request.requestor_ref, ParticipantRef::new("EREWHON"));
-//! # Ok::<(), siri::Error>(())
+//! # Ok::<(), siri_rs::Error>(())
 //! ```
 
 pub mod namespace;

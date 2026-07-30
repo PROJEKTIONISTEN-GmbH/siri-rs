@@ -1,7 +1,7 @@
-# siri
+# siri-rs
 
-[![crates.io](https://img.shields.io/crates/v/siri.svg)](https://crates.io/crates/siri)
-[![docs.rs](https://docs.rs/siri/badge.svg)](https://docs.rs/siri)
+[![crates.io](https://img.shields.io/crates/v/siri-rs.svg)](https://crates.io/crates/siri-rs)
+[![docs.rs](https://docs.rs/siri-rs/badge.svg)](https://docs.rs/siri-rs)
 
 CEN **SIRI** — *Service Interface for Real-time Information*, EN 15531 / CEN/TS 15531 —
 in Rust. Read a producer's feed, or run one.
@@ -40,8 +40,8 @@ message in production.
 ## Quick start
 
 ```rust
-use siri::framework::ServiceDeliveryPayload;
-use siri::{Siri, SiriPayload};
+use siri_rs::framework::ServiceDeliveryPayload;
+use siri_rs::{Siri, SiriPayload};
 
 let xml = r#"<Siri xmlns="http://www.siri.org.uk/siri" version="2.0">
   <ServiceDelivery>
@@ -66,7 +66,7 @@ let xml = r#"<Siri xmlns="http://www.siri.org.uk/siri" version="2.0">
   </ServiceDelivery>
 </Siri>"#;
 
-let message: Siri = siri::from_str(xml)?;
+let message: Siri = siri_rs::from_str(xml)?;
 
 if let SiriPayload::ServiceDelivery(delivery) = &message.payload {
     for payload in &delivery.deliveries {
@@ -81,7 +81,7 @@ if let SiriPayload::ServiceDelivery(delivery) = &message.payload {
         }
     }
 }
-# Ok::<(), siri::Error>(())
+# Ok::<(), siri_rs::Error>(())
 ```
 
 Both namespace bindings found in the wild are accepted — the SIRI namespace as the
@@ -89,25 +89,25 @@ document default, or bound to a prefix.
 
 ## Running an endpoint
 
-`siri::pubsub` implements both sides of the data hub as state machines that take
+`siri_rs::pubsub` implements both sides of the data hub as state machines that take
 messages and a clock reading and hand back the messages that should go out:
 
 ```rust,no_run
-use siri::pubsub::{Producer, ProducerConfig, SituationSource};
+use siri_rs::pubsub::{Producer, ProducerConfig, SituationSource};
 
-# fn run<S: SituationSource>(source: S, now: chrono::DateTime<chrono::FixedOffset>) -> siri::Result<()> {
+# fn run<S: SituationSource>(source: S, now: chrono::DateTime<chrono::FixedOffset>) -> siri_rs::Result<()> {
 let mut producer = Producer::new(ProducerConfig::new("MY-AGENCY"), source);
 
 // ... on each incoming request:
 # let incoming = String::new();
-if let Some(reply) = producer.handle(&siri::from_str(&incoming)?, now)? {
-    let _body = siri::to_string(&reply)?;
+if let Some(reply) = producer.handle(&siri_rs::from_str(&incoming)?, now)? {
+    let _body = siri_rs::to_string(&reply)?;
 }
 
 // ... and whenever the situations change:
 producer.situations_changed();
 for outbound in producer.poll(now) {
-    let _body = siri::to_string(&outbound.message)?;
+    let _body = siri_rs::to_string(&outbound.message)?;
 }
 # Ok(())
 # }

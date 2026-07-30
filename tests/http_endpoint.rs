@@ -24,12 +24,12 @@ use quick_xml::events::Event;
 use tokio::net::TcpListener;
 use tokio::sync::mpsc;
 
-use siri::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
-use siri::pubsub::{Consumer, ConsumerEvent, Outbound, Producer, ProducerConfig, SituationSource};
-use siri::sx::situation::{HalfOpenTimestampOutputRange, SituationSource as Source};
-use siri::sx::{PtSituationElement, SituationExchangeRequest};
-use siri::types::{DefaultedText, Duration as SiriDuration};
-use siri::Siri;
+use siri_rs::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
+use siri_rs::pubsub::{Consumer, ConsumerEvent, Outbound, Producer, ProducerConfig, SituationSource};
+use siri_rs::sx::situation::{HalfOpenTimestampOutputRange, SituationSource as Source};
+use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
+use siri_rs::types::{DefaultedText, Duration as SiriDuration};
+use siri_rs::Siri;
 use support::{validate, validator_available, VALIDATOR_MISSING};
 
 /// The media type SIRI travels as.
@@ -173,8 +173,8 @@ async fn a_service_request_is_answered_over_http_without_a_subscription() {
 
     let now = Utc::now().fixed_offset();
     let request = Siri::new(
-        siri::pubsub::PROTOCOL_VERSION,
-        siri::framework::ServiceRequest::new(
+        siri_rs::pubsub::PROTOCOL_VERSION,
+        siri_rs::framework::ServiceRequest::new(
             now,
             "PASSENGER-APP",
             vec![SituationExchangeRequest::new(now).into()],
@@ -392,13 +392,13 @@ async fn answer(State(state): State<ProducerState>, body: String) -> Response {
     let mut producer = state.producer.lock().expect("the producer is usable");
     state.wire.passing("consumer → producer", &body);
 
-    let message: Siri = match siri::from_str(&body) {
+    let message: Siri = match siri_rs::from_str(&body) {
         Ok(message) => message,
         Err(complaint) => return refused(&state.wire, format!("unreadable request: {complaint}")),
     };
     match producer.handle(&message, now) {
         Ok(Some(reply)) => {
-            let xml = siri::to_string(&reply).expect("a reply serialises");
+            let xml = siri_rs::to_string(&reply).expect("a reply serialises");
             state.wire.passing("producer → consumer", &xml);
             xml_response(xml)
         }
@@ -432,12 +432,12 @@ async fn send(state: &ProducerState, client: &reqwest::Client, outbound: &Outbou
         state.wire.failed(format!(
             "{} named no address, so {} could not be sent",
             outbound.recipient,
-            payload_name(&siri::to_string(&outbound.message).expect("a message serialises")),
+            payload_name(&siri_rs::to_string(&outbound.message).expect("a message serialises")),
         ));
         return;
     };
 
-    let body = siri::to_string(&outbound.message).expect("a message serialises");
+    let body = siri_rs::to_string(&outbound.message).expect("a message serialises");
     let response = client
         .post(address.as_str())
         .header(header::CONTENT_TYPE, XML)
@@ -458,7 +458,7 @@ async fn send(state: &ProducerState, client: &reqwest::Client, outbound: &Outbou
     }
 
     let now = Utc::now().fixed_offset();
-    let message: Siri = siri::from_str(&acknowledgement).expect("a readable acknowledgement");
+    let message: Siri = siri_rs::from_str(&acknowledgement).expect("a readable acknowledgement");
     state
         .producer
         .lock()
@@ -572,7 +572,7 @@ async fn receive(State(state): State<ConsumerState>, body: String) -> Response {
     let mut consumer = state.consumer.lock().expect("the consumer is usable");
     state.wire.passing("producer → consumer", &body);
 
-    let message: Siri = match siri::from_str(&body) {
+    let message: Siri = match siri_rs::from_str(&body) {
         Ok(message) => message,
         Err(complaint) => return refused(&state.wire, format!("unreadable push: {complaint}")),
     };
@@ -589,7 +589,7 @@ async fn receive(State(state): State<ConsumerState>, body: String) -> Response {
         _ => None,
     };
     let answered = reply.map(|reply| {
-        let xml = siri::to_string(&reply).expect("an acknowledgement serialises");
+        let xml = siri_rs::to_string(&reply).expect("an acknowledgement serialises");
         state.wire.passing("consumer → producer", &xml);
         xml
     });
@@ -608,14 +608,14 @@ async fn exchange(client: &reqwest::Client, url: &str, message: &Siri) -> Siri {
     let response = client
         .post(url)
         .header(header::CONTENT_TYPE, XML)
-        .body(siri::to_string(message).expect("a request serialises"))
+        .body(siri_rs::to_string(message).expect("a request serialises"))
         .send()
         .await
         .expect("the endpoint answers");
     let status = response.status();
     let body = response.text().await.expect("a readable answer");
     assert!(status.is_success(), "{url} answered {status}: {body}");
-    siri::from_str(&body).expect("the answer is a SIRI message")
+    siri_rs::from_str(&body).expect("the answer is a SIRI message")
 }
 
 fn xml_response(body: String) -> Response {

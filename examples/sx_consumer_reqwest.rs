@@ -36,9 +36,9 @@ use axum::Router;
 use chrono::{Duration, Utc};
 use tokio::sync::mpsc;
 
-use siri::pubsub::{Consumer, ConsumerEvent, Subscribed};
-use siri::sx::{PtSituationElement, SituationExchangeRequest};
-use siri::Siri;
+use siri_rs::pubsub::{Consumer, ConsumerEvent, Subscribed};
+use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
+use siri_rs::Siri;
 
 /// The media type SIRI travels as.
 const XML: &str = "application/xml";
@@ -155,7 +155,7 @@ async fn main() -> Result<(), Failure> {
 /// The acknowledgement the consumer builds is returned as the response body, which is
 /// how a producer that pushed a message gets an answer to it.
 async fn receive(State(state): State<Receiving>, body: String) -> Response {
-    let message: Siri = match siri::from_str(&body) {
+    let message: Siri = match siri_rs::from_str(&body) {
         Ok(message) => message,
         Err(complaint) => {
             return (
@@ -250,7 +250,7 @@ fn report(outcomes: &[Subscribed]) {
 }
 
 /// Hands a message to the consumer and says what it meant.
-fn interpret(consumer: &SharedConsumer, message: &Siri) -> siri::Result<ConsumerEvent> {
+fn interpret(consumer: &SharedConsumer, message: &Siri) -> siri_rs::Result<ConsumerEvent> {
     consumer
         .lock()
         .expect("the consumer is usable")
@@ -264,7 +264,7 @@ async fn post_to(
     url: &str,
     message: &Siri,
 ) -> Result<Option<Siri>, Failure> {
-    let body = siri::to_string(message)?;
+    let body = siri_rs::to_string(message)?;
     let answer = client
         .post(url)
         .header(header::CONTENT_TYPE, XML)
@@ -277,7 +277,7 @@ async fn post_to(
     if answer.trim().is_empty() {
         return Ok(None);
     }
-    Ok(Some(siri::from_str(&answer)?))
+    Ok(Some(siri_rs::from_str(&answer)?))
 }
 
 /// Posts a message the producer is expected to answer, and reads the answer.
@@ -291,7 +291,7 @@ async fn request(client: &reqwest::Client, url: &str, message: &Siri) -> Result<
 type Failure = Box<dyn std::error::Error + Send + Sync>;
 
 fn answer_with(message: &Siri) -> Response {
-    match siri::to_string(message) {
+    match siri_rs::to_string(message) {
         Ok(body) => ([(header::CONTENT_TYPE, XML)], body).into_response(),
         Err(complaint) => {
             eprintln!("! an acknowledgement could not be written: {complaint}");

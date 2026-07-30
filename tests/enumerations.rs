@@ -22,7 +22,7 @@ macro_rules! enumerations {
 }
 
 fn transcribed() -> Vec<(&'static str, Vec<&'static str>)> {
-    use siri::enumerations::*;
+    use siri_rs::enumerations::*;
     enumerations![
         AccessModes,
         Accessibility,

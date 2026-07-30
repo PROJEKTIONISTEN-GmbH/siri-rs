@@ -11,12 +11,12 @@
 
 use chrono::{DateTime, Duration, FixedOffset};
 
-use siri::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
-use siri::pubsub::{Consumer, ConsumerEvent, Producer, ProducerConfig, SituationSource};
-use siri::sx::situation::{HalfOpenTimestampOutputRange, SituationSource as Source};
-use siri::sx::{PtSituationElement, SituationExchangeRequest};
-use siri::types::{DefaultedText, NaturalLanguageString};
-use siri::Siri;
+use siri_rs::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
+use siri_rs::pubsub::{Consumer, ConsumerEvent, Producer, ProducerConfig, SituationSource};
+use siri_rs::sx::situation::{HalfOpenTimestampOutputRange, SituationSource as Source};
+use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
+use siri_rs::types::{DefaultedText, NaturalLanguageString};
+use siri_rs::Siri;
 
 /// Whatever an application already keeps its disruptions in.
 struct Disruptions {
@@ -39,7 +39,7 @@ impl SituationSource for Disruptions {
     }
 }
 
-fn main() -> siri::Result<()> {
+fn main() -> siri_rs::Result<()> {
     let now = DateTime::parse_from_rfc3339("2026-03-14T08:00:00+01:00").expect("valid instant");
 
     let mut producer = Producer::new(
@@ -129,8 +129,8 @@ fn main() -> siri::Result<()> {
     Ok(())
 }
 
-fn show(direction: &str, message: &Siri) -> siri::Result<()> {
-    println!("\n=== {direction} ===\n{}", siri::to_string_pretty(message)?);
+fn show(direction: &str, message: &Siri) -> siri_rs::Result<()> {
+    println!("\n=== {direction} ===\n{}", siri_rs::to_string_pretty(message)?);
     Ok(())
 }
 

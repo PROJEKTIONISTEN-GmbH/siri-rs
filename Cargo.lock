@@ -751,7 +751,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "siri"
+name = "siri-rs"
 version = "0.1.0"
 dependencies = [
  "axum",

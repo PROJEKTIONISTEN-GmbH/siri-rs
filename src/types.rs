@@ -135,10 +135,10 @@ impl Duration {
     /// Parses an `xsd:duration` lexical form, keeping it verbatim.
     ///
     /// ```
-    /// use siri::Duration;
+    /// use siri_rs::Duration;
     /// assert_eq!(Duration::parse("PT5M")?.as_str(), "PT5M");
     /// assert!(Duration::parse("5 minutes").is_err());
-    /// # Ok::<(), siri::Error>(())
+    /// # Ok::<(), siri_rs::Error>(())
     /// ```
     pub fn parse(lexical: impl Into<String>) -> Result<Self> {
         let lexical = lexical.into();

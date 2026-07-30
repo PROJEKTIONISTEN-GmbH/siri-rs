@@ -7,16 +7,16 @@
 //! added without the token-list reader fails a test rather than a user's feed.
 
 use chrono::{DateTime, FixedOffset};
-use siri::enumerations::{
+use siri_rs::enumerations::{
     DayType, FacilityStatus, RoutePointType, ScopeType, ServiceCondition, WorkflowStatus,
 };
-use siri::model::{DataFrameRef, DatedVehicleJourneyRef, FramedVehicleJourneyRef};
-use siri::sx::affects::{
+use siri_rs::model::{DataFrameRef, DatedVehicleJourneyRef, FramedVehicleJourneyRef};
+use siri_rs::sx::affects::{
     AffectedCall, AffectedFacility, AffectedStopPoint, AffectedVehicleJourney,
 };
-use siri::sx::consequence::Consequence;
-use siri::sx::request::SituationExchangeRequest;
-use siri::sx::situation::SituationRepetitions;
+use siri_rs::sx::consequence::Consequence;
+use siri_rs::sx::request::SituationExchangeRequest;
+use siri_rs::sx::situation::SituationRepetitions;
 
 /// Serialises `value` under `root` and reads it back, asserting nothing changed.
 fn round_trip<T>(root: &str, value: &T) -> String
