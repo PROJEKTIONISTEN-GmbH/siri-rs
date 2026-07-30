@@ -123,7 +123,8 @@ fn answer<S: SituationSource>(
 }
 
 /// The timer. Every message that has fallen due — a delivery, a data-ready
-/// notification, a heartbeat — paired with the address to post it to.
+/// notification, a heartbeat — paired with the address to post it to. A consumer
+/// that named no address cannot be reached, so nothing is sent to it.
 fn due<S: SituationSource>(
     producer: &mut Producer<S>,
     now: DateTime<FixedOffset>,
