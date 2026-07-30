@@ -139,6 +139,10 @@ fn the_expected_documents_are_covered() {
         "framework/exa_terminateSubscription_request.xml",
         "framework/exa_terminateSubscription_response.xml",
         "framework/exa_terminateSubscription_response_err.xml",
+        "pt/ext_productionTimetable_capabilitiesResponse.xml",
+        "pt/ext_productionTimetable_request.xml",
+        "pt/ext_productionTimetable_response.xml",
+        "pt/ext_productionTimetable_subscriptionRequest.xml",
         "sx/exx_situationExchangeResponse.xml",
         "sx/exx_situationExchange_ATOC.xml",
         "sx/exx_situationExchange_Pt.xml",
@@ -152,6 +156,13 @@ fn the_expected_documents_are_covered() {
         "sx/vdv736/SX_1022_main_message.xml",
         "sx/vdv736/SX_1135_main_message_update.xml",
         "sx/vdv736/SX_1247_end_message.xml",
+        "vm/exv_vehicleMonitoring_capabilitiesResponse.xml",
+        "vm/exv_vehicleMonitoring_request.xml",
+        "vm/exv_vehicleMonitoring_request_simple.xml",
+        "vm/exv_vehicleMonitoring_response.xml",
+        "vm/exv_vehicleMonitoring_response_simple.xml",
+        "vm/exv_vehicleMonitoring_responsex_simple.xml",
+        "vm/exv_vehicleMonitoring_subscriptionRequest.xml",
     ];
 
     let present: Vec<String> = support::fixtures()
