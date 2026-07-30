@@ -40,24 +40,48 @@ message in production.
 ## Quick start
 
 ```rust
+use siri::framework::ServiceDeliveryPayload;
 use siri::{Siri, SiriPayload};
 
-let xml = std::fs::read_to_string("delivery.xml")?;
-let message: Siri = siri::from_str(&xml)?;
+let xml = r#"<Siri xmlns="http://www.siri.org.uk/siri" version="2.0">
+  <ServiceDelivery>
+    <ResponseTimestamp>2026-03-04T08:15:00+01:00</ResponseTimestamp>
+    <SituationExchangeDelivery>
+      <ResponseTimestamp>2026-03-04T08:15:00+01:00</ResponseTimestamp>
+      <Situations>
+        <PtSituationElement>
+          <CreationTime>2026-03-04T07:50:00+01:00</CreationTime>
+          <SituationNumber>2026-0041</SituationNumber>
+          <Source>
+            <SourceType>feed</SourceType>
+          </Source>
+          <ValidityPeriod>
+            <StartTime>2026-03-04T07:50:00+01:00</StartTime>
+          </ValidityPeriod>
+          <EquipmentReason>liftFailure</EquipmentReason>
+          <Summary xml:lang="EN">Lift out of service at Central Station</Summary>
+        </PtSituationElement>
+      </Situations>
+    </SituationExchangeDelivery>
+  </ServiceDelivery>
+</Siri>"#;
+
+let message: Siri = siri::from_str(xml)?;
 
 if let SiriPayload::ServiceDelivery(delivery) = &message.payload {
     for payload in &delivery.deliveries {
-        let siri::framework::ServiceDeliveryPayload::SituationExchangeDelivery(sx) = payload;
-        for situation in sx.pt_situations() {
-            println!(
-                "{}: {}",
-                situation.situation_number,
-                situation.summary.first().map(|s| s.value.as_str()).unwrap_or("")
-            );
+        if let ServiceDeliveryPayload::SituationExchangeDelivery(sx) = payload {
+            for situation in sx.pt_situations() {
+                println!(
+                    "{}: {}",
+                    situation.situation_number,
+                    situation.summary.first().map(|s| s.value.as_str()).unwrap_or("")
+                );
+            }
         }
     }
 }
-# Ok::<(), Box<dyn std::error::Error>>(())
+# Ok::<(), siri::Error>(())
 ```
 
 Both namespace bindings found in the wild are accepted — the SIRI namespace as the
