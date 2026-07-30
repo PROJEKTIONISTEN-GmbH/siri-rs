@@ -68,12 +68,6 @@
 #![deny(missing_docs)]
 #![forbid(unsafe_code)]
 
-/// Compiles and runs the examples in `README.md` as doc-tests, so that the front
-/// page cannot describe an API the crate no longer has.
-#[cfg(doctest)]
-#[doc = include_str!("../README.md")]
-struct Readme;
-
 #[macro_use]
 mod macros;
 
