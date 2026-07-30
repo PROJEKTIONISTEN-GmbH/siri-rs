@@ -997,7 +997,12 @@ pub struct AffectedStopPoint {
     pub accessibility_assessment: Option<AccessibilityAssessment>,
     /// What is happening at the stop, e.g. that services no longer call there or
     /// call at a temporary replacement.
-    #[serde(rename = "StopCondition", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "StopCondition",
+        default,
+        deserialize_with = "crate::xml::token_list::deserialize",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub stop_condition: Vec<RoutePointType>,
     /// Interchange links from this stop that are affected.
     #[serde(rename = "ConnectionLinks", default, skip_serializing_if = "Option::is_none")]
@@ -1264,7 +1269,12 @@ pub struct AffectedVehicleJourney {
     pub accessibility_assessment: Option<AccessibilityAssessment>,
     /// What is happening to the journey, e.g. that it is cancelled, diverted or
     /// running as an extra. Several conditions may hold at once.
-    #[serde(rename = "JourneyCondition", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "JourneyCondition",
+        default,
+        deserialize_with = "crate::xml::token_list::deserialize",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub journey_condition: Vec<ServiceCondition>,
     /// The calls making up the journey that are affected.
     #[serde(rename = "Calls", default, skip_serializing_if = "Option::is_none")]
@@ -1395,7 +1405,12 @@ pub struct AffectedFacility {
     #[serde(rename = "FacilityName", default, skip_serializing_if = "Vec::is_empty")]
     pub facility_name: Vec<NaturalLanguageString>,
     /// Whether the facility is available, not available or only partly available.
-    #[serde(rename = "FacilityStatus", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "FacilityStatus",
+        default,
+        deserialize_with = "crate::xml::token_list::deserialize",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub facility_status: Vec<FacilityStatus>,
     /// Implementation-defined content. The schema allows more than one element here.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Vec::is_empty")]
@@ -1444,7 +1459,12 @@ pub struct AffectedCall {
     #[serde(rename = "AccessibilityAssessment", default, skip_serializing_if = "Option::is_none")]
     pub accessibility_assessment: Option<AccessibilityAssessment>,
     /// What is happening at the stop itself.
-    #[serde(rename = "StopCondition", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "StopCondition",
+        default,
+        deserialize_with = "crate::xml::token_list::deserialize",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub stop_condition: Vec<RoutePointType>,
     /// Interchange links from this stop that are affected.
     #[serde(rename = "ConnectionLinks", default, skip_serializing_if = "Option::is_none")]
@@ -1460,7 +1480,12 @@ pub struct AffectedCall {
     pub order: Option<u64>,
     /// What is happening to this call, e.g. that it is cancelled or has moved to a
     /// temporary stop. Several conditions may hold at once.
-    #[serde(rename = "CallCondition", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "CallCondition",
+        default,
+        deserialize_with = "crate::xml::token_list::deserialize",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub call_condition: Vec<RoutePointType>,
     /// Whether the vehicle is currently standing at the stop.
     #[serde(rename = "VehicleAtStop", default, skip_serializing_if = "Option::is_none")]

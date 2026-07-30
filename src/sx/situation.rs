@@ -793,7 +793,7 @@ impl HalfOpenTimestampInputRange {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SituationRepetitions {
     /// The day types the situation applies on, at least one.
-    #[serde(rename = "DayType")]
+    #[serde(rename = "DayType", deserialize_with = "crate::xml::token_list::deserialize")]
     pub day_type: Vec<DayType>,
 }
 
