@@ -1,0 +1,137 @@
+# siri
+
+[![crates.io](https://img.shields.io/crates/v/siri.svg)](https://crates.io/crates/siri)
+[![docs.rs](https://docs.rs/siri/badge.svg)](https://docs.rs/siri)
+
+CEN **SIRI** — *Service Interface for Real-time Information*, EN 15531 / CEN/TS 15531 —
+in Rust. Read a producer's feed, or run one.
+
+This release covers:
+
+- the **framework**: the `<Siri>` envelope, service requests and deliveries,
+  capabilities and discovery;
+- the **publish/subscribe data hub**: the full subscription lifecycle, direct and
+  fetched delivery, check-status and heartbeat, termination — as types *and* as
+  the state machines that drive them;
+- **Situation Exchange (SIRI-SX)**: incidents and disruptions, complete — validity
+  and publication windows, sources, classifiers and reasons, everything a
+  situation affects, its consequences, and the publishing actions it triggers.
+
+It is **transport-agnostic**. The library owns the protocol; carrying bytes is
+yours. That keeps it usable from any HTTP stack, from a message queue, or from a
+test harness with no I/O at all.
+
+## Conformance
+
+Conformance is not a claim here, it is the test suite.
+
+Every official SIRI v2.2 example document shipped with the standard is read into
+these types, written back out, compared with the original element by element, and
+validated against the official schemas. A document that loses content, invents
+content, reorders content or fails validation fails the build. The same applies to
+the German **VDV 736** profile messages.
+
+Every enumeration is checked token by token against the `xsd:simpleType` it
+transcribes, so a mistyped wire value is a test failure rather than a rejected
+message in production.
+
+`tests/fixtures/README.md` lists the documents covered and where they come from.
+
+## Quick start
+
+```rust
+use siri::{Siri, SiriPayload};
+
+let xml = std::fs::read_to_string("delivery.xml")?;
+let message: Siri = siri::from_str(&xml)?;
+
+if let SiriPayload::ServiceDelivery(delivery) = &message.payload {
+    for payload in &delivery.deliveries {
+        let siri::framework::ServiceDeliveryPayload::SituationExchangeDelivery(sx) = payload;
+        for situation in sx.pt_situations() {
+            println!(
+                "{}: {}",
+                situation.situation_number,
+                situation.summary.first().map(|s| s.value.as_str()).unwrap_or("")
+            );
+        }
+    }
+}
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
+Both namespace bindings found in the wild are accepted — the SIRI namespace as the
+document default, or bound to a prefix.
+
+## Running an endpoint
+
+`siri::pubsub` implements both sides of the data hub as state machines that take
+messages and a clock reading and hand back the messages that should go out:
+
+```rust,no_run
+use siri::pubsub::{Producer, ProducerConfig, SituationSource};
+
+# fn run<S: SituationSource>(source: S, now: chrono::DateTime<chrono::FixedOffset>) -> siri::Result<()> {
+let mut producer = Producer::new(ProducerConfig::new("MY-AGENCY"), source);
+
+// ... on each incoming request:
+# let incoming = String::new();
+if let Some(reply) = producer.handle(&siri::from_str(&incoming)?, now)? {
+    let _body = siri::to_string(&reply)?;
+}
+
+// ... and whenever the situations change:
+producer.situations_changed();
+for outbound in producer.poll(now) {
+    let _body = siri::to_string(&outbound.message)?;
+}
+# Ok(())
+# }
+```
+
+`examples/sx_endpoint.rs` runs a complete subscription cycle — subscribe, notify,
+fetch, deliver, terminate — between an in-process producer and consumer, and
+prints every message exchanged. Run it with `cargo run --example sx_endpoint`.
+
+## Running the tests
+
+```sh
+cargo test
+```
+
+The schema-validation tests shell out to `xmllint`, which is part of libxml2
+(Debian/Ubuntu: `apt install libxml2-utils`, macOS: `brew install libxml2`). They
+fail with a pointer to this note if it is missing rather than passing quietly.
+
+## Roadmap
+
+The framework and the publish/subscribe hub are complete and service-independent;
+the remaining work is one functional service at a time, each on this foundation:
+
+- Estimated Timetable (SIRI-ET) and Production Timetable (SIRI-PT)
+- Stop Monitoring (SIRI-SM) and Stop Timetable (SIRI-ST)
+- Vehicle Monitoring (SIRI-VM)
+- Connection Monitoring (SIRI-CM) and Connection Timetable (SIRI-CT)
+- General Message (SIRI-GM), Facility Monitoring (SIRI-FM), Control Actions (SIRI-CA)
+
+Also open: structured `Extensions` payloads, which currently round-trip as opaque
+content, and a fuller DATEX II binding for the road-situation records SIRI-SX can
+embed.
+
+## Licence
+
+Licensed under either of
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE))
+- MIT licence ([LICENSE-MIT](LICENSE-MIT))
+
+at your option.
+
+The XML schemas and example documents under `tests/fixtures/` are the published
+CEN SIRI artefacts and remain © 2006–2026 CEN — see `tests/fixtures/README.md`.
+
+### Contribution
+
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in the work by you, as defined in the Apache-2.0 licence, shall be
+dual licensed as above, without any additional terms or conditions.
