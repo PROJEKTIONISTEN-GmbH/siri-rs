@@ -17,7 +17,16 @@ quick-xml = { version = "0.37", features = ["serialize"] }
 serde = { version = "1", features = ["derive"] }
 
 [dev-dependencies]
+# The transport the examples and the HTTP endpoint test use. The library builds and
+# reads the messages; carrying them is the application's business, so these are
+# development dependencies rather than dependencies. TLS is left out because the
+# examples talk to localhost — a deployment adds reqwest's `default-tls` or
+# `rustls-tls` feature.
+axum = "0.7"
+chrono = { version = "0.4.38", features = ["clock"] }
+reqwest = { version = "0.12", default-features = false, features = ["charset"] }
 serde_json = "1"
+tokio = { version = "1", features = ["full"] }
 
 [lints.rust]
 missing_docs = "deny"

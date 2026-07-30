@@ -180,7 +180,7 @@ async fn a_service_request_is_answered_over_http_without_a_subscription() {
             vec![SituationExchangeRequest::new(now).into()],
         ),
     );
-    let answer = post(&reqwest::Client::new(), &producer.url, &request).await;
+    let answer = exchange(&reqwest::Client::new(), &producer.url, &request).await;
 
     let ConsumerEvent::Delivered { situations, .. } = Consumer::new("PASSENGER-APP")
         .handle(&answer, now)
@@ -522,7 +522,7 @@ impl ConsumerEndpoint {
 
     /// Posts a message to the producer and reads the answer.
     async fn post(&self, url: &str, message: &Siri) -> Siri {
-        post(&self.client, url, message).await
+        exchange(&self.client, url, message).await
     }
 
     /// Interprets a message that arrived as an answer rather than as a push.
@@ -589,7 +589,7 @@ async fn receive(State(state): State<ConsumerState>, body: String) -> Response {
 }
 
 /// Posts a SIRI message and reads the message that comes back.
-async fn post(client: &reqwest::Client, url: &str, message: &Siri) -> Siri {
+async fn exchange(client: &reqwest::Client, url: &str, message: &Siri) -> Siri {
     let response = client
         .post(url)
         .header(header::CONTENT_TYPE, XML)
