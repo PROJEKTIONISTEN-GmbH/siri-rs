@@ -2,8 +2,9 @@
 //! published.
 //!
 //! A library that ships with references to its authors' issue tracker, working
-//! directories or half-finished intentions reads as unfinished. This is cheap to
-//! check mechanically, so it is checked mechanically.
+//! directories or half-finished intentions reads as unfinished, and so does one whose
+//! front page sends the reader to an example that is not there. Both are cheap to
+//! check mechanically, so they are checked mechanically.
 
 use std::path::{Path, PathBuf};
 
@@ -125,6 +126,58 @@ fn the_check_would_catch_a_leak() {
     assert!(development_reference("Sprint-500 follow-up").is_some());
     assert!(development_reference("a sprint finish").is_none());
     assert!(development_reference("the situation is published").is_none());
+}
+
+/// The front page and the examples say the same thing: every example is offered to
+/// the reader, and every example the reader is told to run is there.
+#[test]
+fn the_readme_and_the_examples_agree() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let readme = std::fs::read_to_string(root.join("README.md")).expect("readable front page");
+
+    let mut shipped: Vec<String> = std::fs::read_dir(root.join("examples"))
+        .expect("readable example directory")
+        .map(|entry| entry.expect("readable directory entry").path())
+        .filter(|path| path.extension().is_some_and(|e| e == "rs"))
+        .map(|path| {
+            path.file_stem()
+                .expect("an example has a name")
+                .to_string_lossy()
+                .into_owned()
+        })
+        .collect();
+    shipped.sort();
+
+    assert_eq!(examples_offered_in(&readme), shipped);
+}
+
+/// The examples a text tells the reader to run, in a stable order.
+fn examples_offered_in(text: &str) -> Vec<String> {
+    let mut offered: Vec<String> = text
+        .split("--example ")
+        .skip(1)
+        .filter_map(|rest| rest.split_whitespace().next())
+        .map(|name| {
+            name.trim_end_matches(|c: char| !c.is_ascii_alphanumeric() && c != '_')
+                .to_owned()
+        })
+        .collect();
+    offered.sort();
+    offered.dedup();
+    offered
+}
+
+#[test]
+fn the_check_would_catch_an_example_the_front_page_forgot() {
+    assert_eq!(
+        examples_offered_in("Run it with `cargo run --example sx_endpoint`."),
+        ["sx_endpoint"]
+    );
+    assert_eq!(
+        examples_offered_in("cargo run --example one  # a comment\ncargo run --example two\n"),
+        ["one", "two"]
+    );
+    assert!(examples_offered_in("no examples are offered here").is_empty());
 }
 
 /// Every file the manifest promises is where it says it is.

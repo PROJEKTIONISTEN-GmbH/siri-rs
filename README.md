@@ -117,6 +117,35 @@ for outbound in producer.poll(now) {
 fetch, deliver, terminate — between an in-process producer and consumer, and
 prints every message exchanged. Run it with `cargo run --example sx_endpoint`.
 
+## Over HTTP, with axum and reqwest
+
+Because nothing here carries bytes, an endpoint is these state machines plus a
+transport. Two examples show all of it:
+
+- **`examples/sx_producer_axum.rs`** — a POST route hands what arrives to
+  `Producer::handle` and answers with the reply it gets back; a timer drives
+  `Producer::poll` and posts what has become due to the address each consumer named
+  when it subscribed. It serves one route per delivery method, so pushing a delivery
+  and announcing one for collection are both visible in a single run.
+- **`examples/sx_consumer_reqwest.rs`** — subscribes, receives the data-ready
+  notification on a route of its own, answers it with the acknowledgement
+  `Consumer::handle` builds, fetches the data, prints the situations that arrive, and
+  unsubscribes before it stops.
+
+```sh
+cargo run --example sx_producer_axum     # in one terminal
+cargo run --example sx_consumer_reqwest  # in another
+```
+
+`tests/http_endpoint.rs` runs that wiring on a port the operating system picks and
+drives full cycles through it — announced delivery, pushed delivery, a heartbeat and
+a plain service request — validating every body that crosses the wire against the
+official schemas and pinning the order of the exchange.
+
+axum, reqwest and tokio are development dependencies, and stay that way. Which
+transport to use is the application's decision; the examples make one so that the
+seam is concrete.
+
 ## Running the tests
 
 ```sh
