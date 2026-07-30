@@ -10,9 +10,9 @@ use crate::enumerations::{
     VerificationStatus, WaterSubmodesOfTransport, WorkflowStatus,
 };
 use crate::model::{
-    ConnectionLinkRef, FacilityRef, FramedVehicleJourneyRef, InterchangeRef, LineDirection, LineRef,
-    Location, OperationalUnitRef, OperatorRef, PassengerAccessibilityNeeds, StopPlaceComponentRef,
-    StopPlaceRef, StopPointRef, Submode, VehicleJourneyRef, VehicleRef,
+    ConnectionLinkRef, FacilityRef, FramedVehicleJourneyRef, InterchangeRef, LineRef,
+    Location, OperationalUnitRef, OperatorRef, PassengerAccessibilityNeeds, RequestedLines,
+    StopPlaceComponentRef, StopPlaceRef, StopPointRef, Submode, VehicleJourneyRef, VehicleRef,
 };
 use crate::sx::situation::HalfOpenTimestampInputRange;
 use crate::types::{
@@ -245,14 +245,6 @@ impl SituationExchangeRequest {
             .or(self.water_submode.map(Submode::Water))
             .or(self.telecabin_submode.map(Submode::Telecabin))
     }
-}
-
-/// Lines, each optionally narrowed to one direction, that a request filters on.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct RequestedLines {
-    /// The lines and directions.
-    #[serde(rename = "LineDirection")]
-    pub line_direction: Vec<LineDirection>,
 }
 
 /// Roads that a request filters on.

@@ -3,15 +3,18 @@
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
+use crate::et::EstimatedTimetableSubscriptionRequest;
 use crate::framework::error_condition::{
     ApplicationError, ErrorCondition, ServiceRequestError, TerminationError,
 };
+use crate::pt::ProductionTimetableSubscriptionRequest;
 use crate::sx::SituationExchangeSubscriptionRequest;
 use crate::types::{
     Duration, Empty, EndpointAddress, Extensions, MessageQualifier, MessageRef,
     NaturalLanguageString, ParticipantRef, SubscriptionFilterRef, SubscriptionQualifier,
     SubscriptionRef,
 };
+use crate::vm::VehicleMonitoringSubscriptionRequest;
 
 /// A request to open one or more subscriptions.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -84,13 +87,37 @@ impl SubscriptionRequest {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum SubscriptionRequestPayload {
+    /// A subscription to a planned timetable.
+    ProductionTimetableSubscriptionRequest(Box<ProductionTimetableSubscriptionRequest>),
+    /// A subscription to a real-time timetable.
+    EstimatedTimetableSubscriptionRequest(Box<EstimatedTimetableSubscriptionRequest>),
+    /// A subscription to vehicle positions.
+    VehicleMonitoringSubscriptionRequest(Box<VehicleMonitoringSubscriptionRequest>),
     /// A subscription to situations.
-    SituationExchangeSubscriptionRequest(SituationExchangeSubscriptionRequest),
+    SituationExchangeSubscriptionRequest(Box<SituationExchangeSubscriptionRequest>),
+}
+
+impl From<ProductionTimetableSubscriptionRequest> for SubscriptionRequestPayload {
+    fn from(request: ProductionTimetableSubscriptionRequest) -> Self {
+        Self::ProductionTimetableSubscriptionRequest(Box::new(request))
+    }
+}
+
+impl From<EstimatedTimetableSubscriptionRequest> for SubscriptionRequestPayload {
+    fn from(request: EstimatedTimetableSubscriptionRequest) -> Self {
+        Self::EstimatedTimetableSubscriptionRequest(Box::new(request))
+    }
+}
+
+impl From<VehicleMonitoringSubscriptionRequest> for SubscriptionRequestPayload {
+    fn from(request: VehicleMonitoringSubscriptionRequest) -> Self {
+        Self::VehicleMonitoringSubscriptionRequest(Box::new(request))
+    }
 }
 
 impl From<SituationExchangeSubscriptionRequest> for SubscriptionRequestPayload {
     fn from(request: SituationExchangeSubscriptionRequest) -> Self {
-        Self::SituationExchangeSubscriptionRequest(request)
+        Self::SituationExchangeSubscriptionRequest(Box::new(request))
     }
 }
 

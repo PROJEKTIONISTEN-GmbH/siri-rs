@@ -25,7 +25,9 @@ use tokio::net::TcpListener;
 use tokio::sync::mpsc;
 
 use siri_rs::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
-use siri_rs::pubsub::{Consumer, ConsumerEvent, Outbound, Producer, ProducerConfig, SituationSource};
+use siri_rs::pubsub::{
+    Consumer, ConsumerEvent, Outbound, Producer, ProducerConfig, SituationExchange, SituationSource,
+};
 use siri_rs::sx::situation::{HalfOpenTimestampOutputRange, SituationSource as Source};
 use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
 use siri_rs::types::{DefaultedText, Duration as SiriDuration};
@@ -43,7 +45,7 @@ const PATIENCE: StdDuration = StdDuration::from_secs(10);
 async fn a_fetched_delivery_subscription_runs_its_full_cycle_over_http() {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     let wire = Wire::default();
-    let mut consumer = ConsumerEndpoint::start(Consumer::new("PASSENGER-APP"), wire.clone()).await;
+    let mut consumer = ConsumerEndpoint::start(Consumer::<SituationExchange>::new("PASSENGER-APP"), wire.clone()).await;
     let producer = ProducerEndpoint::start(
         ProducerConfig::new("MY-AGENCY").with_fetched_delivery(),
         wire.clone(),
@@ -68,7 +70,7 @@ async fn a_fetched_delivery_subscription_runs_its_full_cycle_over_http() {
     };
 
     let delivery = consumer.post(&producer.url, &fetch).await;
-    let ConsumerEvent::Delivered { situations, .. } = consumer.interpret(&delivery) else {
+    let ConsumerEvent::Delivered { items: situations, .. } = consumer.interpret(&delivery) else {
         panic!("a data supply request is answered with the situations");
     };
     assert_eq!(numbers(&situations), ["2026-0041", "2026-0042"]);
@@ -110,7 +112,7 @@ async fn a_direct_delivery_producer_pushes_and_then_beats_over_http() {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     let wire = Wire::default();
     let mut consumer = ConsumerEndpoint::start(
-        Consumer::new("PASSENGER-APP").confirming_deliveries(),
+        Consumer::<SituationExchange>::new("PASSENGER-APP").confirming_deliveries(),
         wire.clone(),
     )
     .await;
@@ -128,7 +130,7 @@ async fn a_direct_delivery_producer_pushes_and_then_beats_over_http() {
 
     // This producer pushes: the delivery arrives at the consumer's address without
     // being asked for, and the consumer answers it with an acknowledgement.
-    let ConsumerEvent::Delivered { situations, reply } = consumer.next_event().await else {
+    let ConsumerEvent::Delivered { items: situations, reply } = consumer.next_event().await else {
         panic!("a direct-delivery producer pushes its situations");
     };
     assert_eq!(numbers(&situations), ["2026-0041", "2026-0042"]);
@@ -182,7 +184,7 @@ async fn a_service_request_is_answered_over_http_without_a_subscription() {
     );
     let answer = exchange(&reqwest::Client::new(), &producer.url, &request).await;
 
-    let ConsumerEvent::Delivered { situations, .. } = Consumer::new("PASSENGER-APP")
+    let ConsumerEvent::Delivered { items: situations, .. } = Consumer::<SituationExchange>::new("PASSENGER-APP")
         .handle(&answer, now)
         .expect("the consumer reads the delivery")
     else {
@@ -333,7 +335,7 @@ fn payload_name(xml: &str) -> String {
     }
 }
 
-type SharedProducer = Arc<Mutex<Producer<Disruptions>>>;
+type SharedProducer = Arc<Mutex<Producer<Disruptions, SituationExchange>>>;
 
 #[derive(Clone)]
 struct ProducerState {
@@ -467,13 +469,13 @@ async fn send(state: &ProducerState, client: &reqwest::Client, outbound: &Outbou
         .expect("the producer accepts the acknowledgement");
 }
 
-type SharedConsumer = Arc<Mutex<Consumer>>;
+type SharedConsumer = Arc<Mutex<Consumer<SituationExchange>>>;
 
 #[derive(Clone)]
 struct ConsumerState {
     consumer: SharedConsumer,
     wire: Wire,
-    events: mpsc::UnboundedSender<ConsumerEvent>,
+    events: mpsc::UnboundedSender<ConsumerEvent<SituationExchange>>,
 }
 
 /// A consumer reachable over HTTP: it answers what the producer pushes with the
@@ -481,11 +483,11 @@ struct ConsumerState {
 struct ConsumerEndpoint {
     consumer: SharedConsumer,
     client: reqwest::Client,
-    events: mpsc::UnboundedReceiver<ConsumerEvent>,
+    events: mpsc::UnboundedReceiver<ConsumerEvent<SituationExchange>>,
 }
 
 impl ConsumerEndpoint {
-    async fn start(consumer: Consumer, wire: Wire) -> Self {
+    async fn start(consumer: Consumer<SituationExchange>, wire: Wire) -> Self {
         let (address, listener) = bind().await;
         let consumer = Arc::new(Mutex::new(
             consumer.at_address(format!("http://{address}/siri")),
@@ -541,7 +543,7 @@ impl ConsumerEndpoint {
     }
 
     /// Interprets a message that arrived as an answer rather than as a push.
-    fn interpret(&self, message: &Siri) -> ConsumerEvent {
+    fn interpret(&self, message: &Siri) -> ConsumerEvent<SituationExchange> {
         self.consumer
             .lock()
             .expect("the consumer is usable")
@@ -550,7 +552,7 @@ impl ConsumerEndpoint {
     }
 
     /// The next message the producer pushed, as the consumer understood it.
-    async fn next_event(&mut self) -> ConsumerEvent {
+    async fn next_event(&mut self) -> ConsumerEvent<SituationExchange> {
         tokio::time::timeout(PATIENCE, self.events.recv())
             .await
             .expect("the producer sends what it owes")

@@ -28,12 +28,14 @@ mod subscription;
 
 pub use capabilities::{
     CapabilitiesRequest, CapabilitiesRequestPayload, CapabilitiesResponse,
-    CapabilitiesResponsePayload, CoordinateFormat, DeliveryCapability, GeneralInteractionCapability,
-    GeneralPermissions, InteractionCapability, LinePermission, LinePermissionItem, LinePermissions,
-    OperatorPermission, OperatorPermissionItem, OperatorPermissions, PermissionScope,
-    PermissionVersionRef, ServiceCapabilitiesRequest, SituationExchangeAccessControl,
-    SituationExchangeCapabilitiesResponse, SituationExchangePermission,
-    SituationExchangePermissions, SituationExchangeRequestPolicy,
+    CapabilitiesResponsePayload, CapabilityRequestPolicy, ConnectionCapabilityAccessControl,
+    ConnectionLinkPermission, ConnectionLinkPermissionItem, ConnectionLinkPermissions,
+    ConnectionServicePermission, CoordinateFormat, DeliveryCapability,
+    GeneralInteractionCapability, GeneralPermissions, InteractionCapability, LinePermission,
+    LinePermissionItem, LinePermissions, OperatorPermission, OperatorPermissionItem,
+    OperatorPermissions, PermissionScope, PermissionVersionRef, ServiceCapabilitiesRequest,
+    SituationExchangeAccessControl, SituationExchangeCapabilitiesResponse,
+    SituationExchangePermission, SituationExchangePermissions, SituationExchangeRequestPolicy,
     SituationExchangeServiceCapabilities, SituationExchangeTopicFiltering,
     SubscriptionPolicyCapability, TransportDescription,
 };

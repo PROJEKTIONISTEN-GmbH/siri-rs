@@ -1,13 +1,15 @@
 //! The consumer half of the data hub.
 
+use std::marker::PhantomData;
+
 use chrono::{DateTime, FixedOffset};
 
 use crate::framework::{
-    DataReadyAcknowledgement, DataReceivedAcknowledgement, DataSupplyRequest, ServiceDeliveryPayload,
-    Siri, SiriPayload, SubscriptionContext, SubscriptionRequest, TerminateSubscriptionRequest,
+    DataReadyAcknowledgement, DataReceivedAcknowledgement, DataSupplyRequest, Siri, SiriPayload,
+    SubscriptionContext, SubscriptionRequest, TerminateSubscriptionRequest,
 };
 use crate::pubsub::envelope;
-use crate::sx::{PtSituationElement, SituationExchangeRequest, SituationExchangeSubscriptionRequest};
+use crate::pubsub::service::{Service, SubscriptionParts};
 use crate::types::{
     Duration, EndpointAddress, MessageQualifier, ParticipantRef, SubscriptionQualifier,
     SubscriptionRef,
@@ -25,7 +27,7 @@ pub struct Subscribed {
 
 /// What an incoming message meant.
 #[derive(Debug, Clone, PartialEq)]
-pub enum ConsumerEvent {
+pub enum ConsumerEvent<S: Service> {
     /// The producer answered a subscription request.
     Subscribed {
         /// One entry per subscription in the request.
@@ -38,10 +40,10 @@ pub enum ConsumerEvent {
         /// The request that collects the data.
         fetch: Box<Siri>,
     },
-    /// The producer delivered situations.
+    /// The producer delivered data.
     Delivered {
-        /// The situations, flattened across the deliveries in the message.
-        situations: Vec<PtSituationElement>,
+        /// The records, flattened across the deliveries in the message.
+        items: Vec<S::Item>,
         /// Acknowledgement to send back, when the producer asked for confirmation.
         reply: Option<Box<Siri>>,
     },
@@ -68,16 +70,22 @@ pub enum ConsumerEvent {
 ///
 /// It builds the requests that drive a subscription and interprets what comes
 /// back. Like [`Producer`](super::Producer) it reads no clock of its own.
+///
+/// Which functional service it speaks is the type parameter, so it has to be named
+/// when a consumer is built: `Consumer::<SituationExchange>::new("MY-APP")`.
+/// Deliveries from another service are reported as
+/// [`ConsumerEvent::Ignored`] rather than misread.
 #[derive(Debug)]
-pub struct Consumer {
+pub struct Consumer<S: Service> {
     requestor_ref: ParticipantRef,
     consumer_address: Option<EndpointAddress>,
     confirm_delivery: bool,
     subscriptions: Vec<SubscriptionRef>,
     next_message_id: u64,
+    service: PhantomData<S>,
 }
 
-impl Consumer {
+impl<S: Service> Consumer<S> {
     /// A consumer identifying itself as `requestor_ref`.
     pub fn new(requestor_ref: impl Into<ParticipantRef>) -> Self {
         Self {
@@ -86,6 +94,7 @@ impl Consumer {
             confirm_delivery: false,
             subscriptions: Vec::new(),
             next_message_id: 1,
+            service: PhantomData,
         }
     }
 
@@ -111,7 +120,7 @@ impl Consumer {
         &mut self,
         subscription_identifier: impl Into<SubscriptionQualifier>,
         initial_termination_time: DateTime<FixedOffset>,
-        request: SituationExchangeRequest,
+        request: S::Request,
         now: DateTime<FixedOffset>,
     ) -> Siri {
         self.subscribe_with_heartbeat(
@@ -128,24 +137,35 @@ impl Consumer {
         &mut self,
         subscription_identifier: impl Into<SubscriptionQualifier>,
         initial_termination_time: DateTime<FixedOffset>,
-        request: SituationExchangeRequest,
+        request: S::Request,
         heartbeat_interval: Option<Duration>,
         now: DateTime<FixedOffset>,
     ) -> Siri {
-        let subscription = SituationExchangeSubscriptionRequest::new(
-            subscription_identifier,
+        let subscription = S::subscription_request(SubscriptionParts {
+            subscriber_ref: None,
+            subscription_identifier: subscription_identifier.into(),
             initial_termination_time,
             request,
-        );
+            incremental_updates: None,
+        });
         envelope(SubscriptionRequest {
             message_identifier: Some(self.mint_message_id()),
             consumer_address: self.consumer_address.clone(),
             subscription_context: heartbeat_interval
                 .map(SubscriptionContext::with_heartbeat_interval),
-            ..SubscriptionRequest::new(
+            ..SubscriptionRequest::new(now, self.requestor_ref.clone(), vec![subscription])
+        })
+    }
+
+    /// Builds a direct request for data, outside any subscription.
+    pub fn request(&mut self, request: S::Request, now: DateTime<FixedOffset>) -> Siri {
+        envelope(crate::framework::ServiceRequest {
+            message_identifier: Some(self.mint_message_id()),
+            address: self.consumer_address.clone(),
+            ..crate::framework::ServiceRequest::new(
                 now,
                 self.requestor_ref.clone(),
-                vec![subscription.into()],
+                vec![S::service_request(request)],
             )
         })
     }
@@ -159,7 +179,7 @@ impl Consumer {
     }
 
     /// Interprets an incoming message.
-    pub fn handle(&mut self, message: &Siri, now: DateTime<FixedOffset>) -> Result<ConsumerEvent> {
+    pub fn handle(&mut self, message: &Siri, now: DateTime<FixedOffset>) -> Result<ConsumerEvent<S>> {
         match &message.payload {
             SiriPayload::SubscriptionResponse(response) => {
                 let outcomes: Vec<Subscribed> = response
@@ -199,14 +219,11 @@ impl Consumer {
                 })
             }
             SiriPayload::ServiceDelivery(delivery) => {
-                let situations = delivery
+                let items = delivery
                     .deliveries
                     .iter()
-                    .flat_map(|payload| match payload {
-                        ServiceDeliveryPayload::SituationExchangeDelivery(delivery) => {
-                            delivery.pt_situations().to_vec()
-                        }
-                    })
+                    .filter_map(S::items_of)
+                    .flatten()
                     .collect();
                 let reply = self.confirm_delivery.then(|| {
                     Box::new(envelope(DataReceivedAcknowledgement {
@@ -217,7 +234,7 @@ impl Consumer {
                         ..DataReceivedAcknowledgement::accepted(now, self.requestor_ref.clone())
                     }))
                 });
-                Ok(ConsumerEvent::Delivered { situations, reply })
+                Ok(ConsumerEvent::Delivered { items, reply })
             }
             SiriPayload::HeartbeatNotification(heartbeat) => Ok(ConsumerEvent::Alive {
                 service_started_time: heartbeat.service_started_time,

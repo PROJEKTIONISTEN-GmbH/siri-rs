@@ -25,13 +25,7 @@ use crate::sx::affects::AffectsScope;
 use crate::sx::consequence::PtConsequences;
 use crate::types::{CountryRef, DefaultedText, Extensions, NaturalLanguageString, ParticipantRef};
 
-siri_ref! {
-    /// Identifies a situation within the participant that raised it.
-    ///
-    /// The number stays the same across every update to the situation; the update's
-    /// `Version` distinguishes the revisions.
-    SituationNumber;
-}
+pub use crate::model::{SituationFullRef, SituationNumber, SituationRef};
 
 /// An incident or planned disruption affecting public transport.
 ///

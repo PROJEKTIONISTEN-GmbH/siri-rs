@@ -11,8 +11,11 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{CommunicationsTransportMethod, CompressionMethod};
+use crate::et::EstimatedTimetableCapabilitiesResponse;
+use crate::pt::ProductionTimetableCapabilitiesResponse;
+use crate::vm::VehicleMonitoringCapabilitiesResponse;
 use crate::framework::error_condition::{ErrorCondition, ServiceRequestError};
-use crate::model::{DirectionRef, LineRef, OperatorRef};
+use crate::model::{ConnectionLinkRef, DirectionRef, LineRef, OperatorRef};
 use crate::types::{
     Duration, Empty, EndpointAddress, Extensions, MessageQualifier, MessageRef, ParticipantRef,
 };
@@ -212,15 +215,38 @@ impl CapabilitiesResponse {
 
 /// The capabilities of one functional service inside a [`CapabilitiesResponse`].
 ///
-/// This release implements the Situation Exchange service, so that is the only
-/// variant. Each further functional service adds one variant describing its own
-/// capabilities; the enum is non-exhaustive so that doing so is not a breaking
-/// change for callers that match on it.
+/// Each functional service adds one variant describing its own capabilities; the
+/// enum is non-exhaustive so that the services this crate does not implement yet
+/// can be added without a breaking change for callers that match on it.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum CapabilitiesResponsePayload {
+    /// What the Production Timetable service offers.
+    ProductionTimetableCapabilitiesResponse(ProductionTimetableCapabilitiesResponse),
+    /// What the Estimated Timetable service offers.
+    EstimatedTimetableCapabilitiesResponse(EstimatedTimetableCapabilitiesResponse),
+    /// What the Vehicle Monitoring service offers.
+    VehicleMonitoringCapabilitiesResponse(VehicleMonitoringCapabilitiesResponse),
     /// What the Situation Exchange service offers.
     SituationExchangeCapabilitiesResponse(SituationExchangeCapabilitiesResponse),
+}
+
+impl From<ProductionTimetableCapabilitiesResponse> for CapabilitiesResponsePayload {
+    fn from(response: ProductionTimetableCapabilitiesResponse) -> Self {
+        Self::ProductionTimetableCapabilitiesResponse(response)
+    }
+}
+
+impl From<EstimatedTimetableCapabilitiesResponse> for CapabilitiesResponsePayload {
+    fn from(response: EstimatedTimetableCapabilitiesResponse) -> Self {
+        Self::EstimatedTimetableCapabilitiesResponse(response)
+    }
+}
+
+impl From<VehicleMonitoringCapabilitiesResponse> for CapabilitiesResponsePayload {
+    fn from(response: VehicleMonitoringCapabilitiesResponse) -> Self {
+        Self::VehicleMonitoringCapabilitiesResponse(response)
+    }
 }
 
 impl From<SituationExchangeCapabilitiesResponse> for CapabilitiesResponsePayload {
@@ -704,6 +730,139 @@ pub struct LinePermission {
     /// The directions of that line the decision is limited to; empty means both.
     #[serde(rename = "DirectionRef", default, skip_serializing_if = "Vec::is_empty")]
     pub direction_ref: Vec<DirectionRef>,
+}
+
+/// Languages and coordinate format a service applies to every request.
+///
+/// Each functional service states this; the services that need more than the common
+/// fields add them to their own request policy.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct CapabilityRequestPolicy {
+    /// Languages the service can return texts in, most preferred first.
+    #[serde(rename = "NationalLanguage")]
+    pub national_language: Vec<String>,
+    /// Whether one text can be returned in several languages at once.
+    #[serde(rename = "Translations", default, skip_serializing_if = "Option::is_none")]
+    pub translations: Option<bool>,
+    /// How positions are written in responses.
+    #[serde(rename = "$value")]
+    pub coordinate_format: CoordinateFormat,
+}
+
+impl CapabilityRequestPolicy {
+    /// A policy offering the given language and WGS 84 decimal degrees.
+    pub fn in_language(national_language: impl Into<String>) -> Self {
+        Self {
+            national_language: vec![national_language.into()],
+            translations: None,
+            coordinate_format: CoordinateFormat::WgsDecimalDegrees(Empty::new()),
+        }
+    }
+}
+
+/// Whether and how a service that filters by connection link checks requests
+/// against the permissions of the participant making them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConnectionCapabilityAccessControl {
+    /// Whether requests are checked against permissions at all.
+    #[serde(rename = "RequestChecking")]
+    pub request_checking: bool,
+    /// Whether the operator a request names is checked against its permissions.
+    #[serde(rename = "CheckOperatorRef", default, skip_serializing_if = "Option::is_none")]
+    pub check_operator_ref: Option<bool>,
+    /// Whether the line a request names is checked against its permissions.
+    #[serde(rename = "CheckLineRef", default, skip_serializing_if = "Option::is_none")]
+    pub check_line_ref: Option<bool>,
+    /// Whether the connection link a request names is checked against its permissions.
+    #[serde(rename = "CheckConnectionLinkRef", default, skip_serializing_if = "Option::is_none")]
+    pub check_connection_link_ref: Option<bool>,
+}
+
+/// What one participant may see of a timetable service.
+///
+/// Production Timetable and Estimated Timetable grant the same three permissions,
+/// so the schema gives them one structure.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ConnectionServicePermission {
+    /// Who this entry applies to.
+    #[serde(rename = "$value")]
+    pub scope: PermissionScope,
+    /// Which interaction patterns the participant may use.
+    #[serde(rename = "GeneralCapabilities", default, skip_serializing_if = "Option::is_none")]
+    pub general_capabilities: Option<GeneralPermissions>,
+    /// Whose services the participant may see.
+    #[serde(rename = "OperatorPermissions")]
+    pub operator_permissions: OperatorPermissions,
+    /// Which lines' services the participant may see.
+    #[serde(rename = "LinePermissions")]
+    pub line_permissions: LinePermissions,
+    /// Which connection links' services the participant may see.
+    #[serde(rename = "ConnectionLinkPermissions")]
+    pub connection_link_permissions: ConnectionLinkPermissions,
+    /// Implementation-defined content.
+    #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<Extensions>,
+}
+
+impl ConnectionServicePermission {
+    /// A permission entry applying to every participant that has no entry of its own.
+    pub fn for_all_participants() -> Self {
+        Self {
+            scope: PermissionScope::AllParticipants(Empty::new()),
+            general_capabilities: None,
+            operator_permissions: OperatorPermissions::allow_all(),
+            line_permissions: LinePermissions::allow_all(),
+            connection_link_permissions: ConnectionLinkPermissions::allow_all(),
+            extensions: None,
+        }
+    }
+}
+
+/// Which connection links' services a participant may see.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConnectionLinkPermissions {
+    /// The entries, all of the same kind.
+    #[serde(rename = "$value")]
+    pub items: Vec<ConnectionLinkPermissionItem>,
+}
+
+impl ConnectionLinkPermissions {
+    /// Permission covering every connection link the service knows about.
+    pub fn allow_all() -> Self {
+        Self {
+            items: vec![ConnectionLinkPermissionItem::AllowAll(true)],
+        }
+    }
+
+    /// Permission listed link by link.
+    pub fn per_link(permissions: Vec<ConnectionLinkPermission>) -> Self {
+        Self {
+            items: permissions
+                .into_iter()
+                .map(ConnectionLinkPermissionItem::ConnectionLinkPermission)
+                .collect(),
+        }
+    }
+}
+
+/// One entry of a [`ConnectionLinkPermissions`] list.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ConnectionLinkPermissionItem {
+    /// Whether every connection link known to the service is covered.
+    AllowAll(bool),
+    /// A decision about one named connection link.
+    ConnectionLinkPermission(ConnectionLinkPermission),
+}
+
+/// Whether a participant may see one named connection link's services.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ConnectionLinkPermission {
+    /// Whether access is granted or withheld.
+    #[serde(rename = "Allow")]
+    pub allow: bool,
+    /// The connection link the decision is about.
+    #[serde(rename = "ConnectionLinkRef")]
+    pub connection_link_ref: ConnectionLinkRef,
 }
 
 #[cfg(test)]

@@ -25,11 +25,12 @@ use crate::enumerations::{
     TramSubmodesOfTransport, VehicleModesOfTransport, WaterSubmodesOfTransport,
 };
 use crate::model::{
-    AccessibilityAssessment, ConnectionLinkRef, DatedVehicleJourneyRef, Direction, DirectionRef,
-    FacilityRef, FramedVehicleJourneyRef, InterchangeRef, JourneyPartInfo, LineRef, LinkProjection,
-    Location, OperationalUnitRef, OperatorRef, PlaceRef, PointProjection, ProductCategoryRef,
-    RouteRef, ServiceFeatureRef, StopPlaceComponentRef, StopPlaceRef, StopPointRef, TrainBlockPart,
-    VehicleFeatureRef, VehicleJourneyRef, VehicleRef, ZoneProjection,
+    AccessibilityAssessment, BlockRef, ConnectionLinkRef, CourseOfJourneyRef, DatedVehicleJourneyRef,
+    Direction, DirectionRef, FacilityRef, FramedVehicleJourneyRef, InterchangeRef, JourneyPartInfo,
+    LineRef, LinkProjection, Location, OperationalUnitRef, OperatorRef, PlaceRef, PointProjection,
+    ProductCategoryRef, QuayRef, RouteRef, ServiceFeatureRef, StopPlaceComponentRef, StopPlaceRef,
+    StopPointRef, TrainBlockPart, TrainNumberRef, VehicleFeatureRef, VehicleJourneyRef, VehicleRef,
+    ZoneProjection,
 };
 use crate::types::{
     Duration, Empty, Extensions, NaturalLanguagePlaceName, NaturalLanguageString,
@@ -42,16 +43,8 @@ siri_ref! {
     NetworkRef;
     /// Identifies a common section of route shared by several lines.
     SectionRef;
-    /// Identifies a quay — the boarding position within a stop place.
-    QuayRef;
     /// Identifies a link between two consecutive points of a route.
     RouteLinkRef;
-    /// Identifies a block, i.e. a day's work for one vehicle.
-    BlockRef;
-    /// Identifies the sequence of journeys a single vehicle runs within a block.
-    CourseOfJourneyRef;
-    /// Identifies a train number assigned to a journey.
-    TrainNumberRef;
     /// Identifies a signposted walking route through a stop place.
     NavigationPathRef;
 }

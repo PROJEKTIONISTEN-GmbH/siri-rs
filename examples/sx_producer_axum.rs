@@ -35,7 +35,7 @@ use axum::Router;
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 
 use siri_rs::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
-use siri_rs::pubsub::{Outbound, Producer, ProducerConfig, SituationSource};
+use siri_rs::pubsub::{Outbound, Producer, ProducerConfig, SituationExchange, SituationSource};
 use siri_rs::sx::situation::{HalfOpenTimestampOutputRange, SituationSource as Source};
 use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
 use siri_rs::types::{DefaultedText, Duration as SiriDuration};
@@ -72,7 +72,7 @@ impl SituationSource for Disruptions {
 
 /// A producer shared between the route that answers requests and the timer that
 /// sends what is due.
-type SharedProducer = Arc<Mutex<Producer<Disruptions>>>;
+type SharedProducer = Arc<Mutex<Producer<Disruptions, SituationExchange>>>;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -246,7 +246,7 @@ async fn publish_an_update(producers: [SharedProducer; 2]) {
     for producer in producers {
         let mut producer = producer.lock().expect("the producer is usable");
         producer.source_mut().situations.push(bridge_works(now));
-        producer.situations_changed();
+        producer.data_changed();
     }
 }
 

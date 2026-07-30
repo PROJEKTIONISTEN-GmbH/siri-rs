@@ -32,11 +32,21 @@
 //! due. Carrying those messages is the caller's job — see the `sx_endpoint`
 //! example for a sketch.
 //!
+//! # Which service the two speak
+//!
+//! The conversation above is the same for every functional service; only the
+//! request, the delivery and the records inside it differ. A producer takes that
+//! from the source it is given — a [`SituationSource`] makes it a SIRI-SX producer,
+//! an [`EstimatedTimetableSource`] a SIRI-ET one — and a consumer is told directly:
+//! `Consumer::<EstimatedTimetable>::new("MY-APP")`.
+//!
 //! # A full cycle, in process
 //!
 //! ```
 //! use chrono::{DateTime, FixedOffset};
-//! use siri_rs::pubsub::{Consumer, ConsumerEvent, Producer, ProducerConfig, SituationSource};
+//! use siri_rs::pubsub::{
+//!     Consumer, ConsumerEvent, Producer, ProducerConfig, SituationExchange, SituationSource,
+//! };
 //! use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
 //!
 //! struct OneSituation(PtSituationElement);
@@ -48,7 +58,7 @@
 //!
 //! # fn run(situation: PtSituationElement, now: DateTime<FixedOffset>) -> siri_rs::Result<()> {
 //! let mut producer = Producer::new(ProducerConfig::new("KUBRICK"), OneSituation(situation));
-//! let mut consumer = Consumer::new("NADER");
+//! let mut consumer = Consumer::<SituationExchange>::new("NADER");
 //!
 //! let request = consumer.subscribe(
 //!     "sub-1",
@@ -61,8 +71,8 @@
 //!
 //! // The producer now owes the consumer the situations it matched.
 //! for outbound in producer.poll(now) {
-//!     if let ConsumerEvent::Delivered { situations, .. } = consumer.handle(&outbound.message, now)? {
-//!         assert_eq!(situations.len(), 1);
+//!     if let ConsumerEvent::Delivered { items, .. } = consumer.handle(&outbound.message, now)? {
+//!         assert_eq!(items.len(), 1);
 //!     }
 //! }
 //! # Ok(())
@@ -71,9 +81,15 @@
 
 mod consumer;
 mod producer;
+mod service;
 
 pub use consumer::{Consumer, ConsumerEvent, Subscribed};
-pub use producer::{Outbound, Producer, ProducerConfig, SituationSource, Subscription, SubscriptionState};
+pub use producer::{Outbound, Producer, ProducerConfig, Subscription, SubscriptionState};
+pub use service::{
+    EstimatedTimetable, EstimatedTimetableSource, ProductionTimetable, ProductionTimetableSource,
+    Service, SituationExchange, SituationSource, Source, SubscriptionParts, VehicleMonitoring,
+    VehicleMonitoringSource,
+};
 
 use crate::framework::Siri;
 

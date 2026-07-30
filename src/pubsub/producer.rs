@@ -1,31 +1,20 @@
 //! The producer half of the data hub.
 
+use std::marker::PhantomData;
+
 use chrono::{DateTime, FixedOffset};
 
 use crate::enumerations::DeliveryMethod;
 use crate::framework::{
     CheckStatusResponse, DataReadyNotification, ErrorCondition, HeartbeatNotification,
     ServiceDelivery, ServiceRequestError, Siri, SiriPayload, StatusResponse, SubscriptionRequest,
-    SubscriptionRequestPayload, SubscriptionResponse, TerminateSubscriptionRequest,
-    TerminateSubscriptionResponse, TerminationResponseStatus, TerminationScope,
+    SubscriptionResponse, TerminateSubscriptionRequest, TerminateSubscriptionResponse,
+    TerminationResponseStatus, TerminationScope,
 };
 use crate::pubsub::envelope;
-use crate::sx::{PtSituationElement, SituationExchangeDelivery, SituationExchangeRequest};
+use crate::pubsub::service::{Service, Source, SubscriptionParts};
 use crate::types::{Duration, EndpointAddress, MessageQualifier, ParticipantRef, SubscriptionRef};
 use crate::{Error, Result};
-
-/// Where a producer gets the situations it publishes.
-///
-/// Implementing this is the only thing an application has to do to become a SIRI-SX
-/// producer; everything else about the exchange is handled by [`Producer`].
-pub trait SituationSource {
-    /// The situations matching `request`.
-    ///
-    /// Applying the request's filters is the implementation's job — it knows its own
-    /// data. A source that ignores a filter simply publishes more than was asked
-    /// for, which the schema allows but consumers will not thank it for.
-    fn situations(&self, request: &SituationExchangeRequest) -> Vec<PtSituationElement>;
-}
 
 /// How a producer identifies itself and answers.
 #[derive(Debug, Clone)]
@@ -70,7 +59,7 @@ impl ProducerConfig {
 
 /// A subscription a producer holds on a consumer's behalf.
 #[derive(Debug, Clone)]
-pub struct Subscription {
+pub struct Subscription<S: Service> {
     /// Who subscribed.
     pub subscriber_ref: ParticipantRef,
     /// The producer's handle on this subscription.
@@ -80,7 +69,7 @@ pub struct Subscription {
     /// When it lapses unless renewed.
     pub initial_termination_time: DateTime<FixedOffset>,
     /// What was subscribed to.
-    pub request: SituationExchangeRequest,
+    pub request: S::Request,
     /// Whether the consumer asked for changes only.
     pub incremental_updates: bool,
     /// Where the subscription is in its lifecycle.
@@ -114,19 +103,26 @@ pub struct Outbound {
 /// Feed it incoming messages with [`Producer::handle`] and ask it for the messages
 /// that are due with [`Producer::poll`]. It never reads a clock of its own: the
 /// caller passes the current instant, which keeps its behaviour reproducible.
+///
+/// Which functional service it serves follows from the source it is given: a
+/// [`SituationSource`](super::SituationSource) makes it a SIRI-SX producer, an
+/// [`EstimatedTimetableSource`](super::EstimatedTimetableSource) a SIRI-ET one, and
+/// so on. Messages addressed to another service are refused rather than
+/// misinterpreted.
 #[derive(Debug)]
-pub struct Producer<S> {
+pub struct Producer<Src, Svc: Service> {
     config: ProducerConfig,
-    source: S,
+    source: Src,
     service_started_time: Option<DateTime<FixedOffset>>,
-    subscriptions: Vec<Subscription>,
+    subscriptions: Vec<Subscription<Svc>>,
     last_heartbeat: Option<DateTime<FixedOffset>>,
     next_message_id: u64,
+    service: PhantomData<Svc>,
 }
 
-impl<S: SituationSource> Producer<S> {
-    /// A producer publishing the situations `source` holds.
-    pub fn new(config: ProducerConfig, source: S) -> Self {
+impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
+    /// A producer publishing what `source` holds.
+    pub fn new(config: ProducerConfig, source: Src) -> Self {
         Self {
             config,
             source,
@@ -134,6 +130,7 @@ impl<S: SituationSource> Producer<S> {
             subscriptions: Vec::new(),
             last_heartbeat: None,
             next_message_id: 1,
+            service: PhantomData,
         }
     }
 
@@ -147,21 +144,21 @@ impl<S: SituationSource> Producer<S> {
     }
 
     /// The subscriptions this producer currently holds.
-    pub fn subscriptions(&self) -> &[Subscription] {
+    pub fn subscriptions(&self) -> &[Subscription<Svc>] {
         &self.subscriptions
     }
 
-    /// The situation source, so the application can keep updating it.
-    pub fn source_mut(&mut self) -> &mut S {
+    /// The source, so the application can keep updating it.
+    pub fn source_mut(&mut self) -> &mut Src {
         &mut self.source
     }
 
     /// Marks every subscription as owing its consumer a delivery.
     ///
-    /// Call this when the underlying situations change. Subscriptions already
-    /// waiting for a fetch keep waiting: the consumer will get the new data when it
-    /// collects, so a second notification would be noise.
-    pub fn situations_changed(&mut self) {
+    /// Call this when the underlying data changes. Subscriptions already waiting for
+    /// a fetch keep waiting: the consumer will get the new data when it collects, so
+    /// a second notification would be noise.
+    pub fn data_changed(&mut self) {
         for subscription in &mut self.subscriptions {
             if subscription.state == SubscriptionState::Idle {
                 subscription.state = SubscriptionState::DeliveryDue;
@@ -176,7 +173,7 @@ impl<S: SituationSource> Producer<S> {
     pub fn handle(&mut self, message: &Siri, now: DateTime<FixedOffset>) -> Result<Option<Siri>> {
         match &message.payload {
             SiriPayload::SubscriptionRequest(request) => {
-                Ok(Some(self.open_subscriptions(request, now)))
+                Ok(Some(self.open_subscriptions(request, now)?))
             }
             SiriPayload::TerminateSubscriptionRequest(request) => {
                 Ok(Some(self.close_subscriptions(request, now)))
@@ -197,15 +194,14 @@ impl<S: SituationSource> Producer<S> {
                 )
             }))),
             SiriPayload::ServiceRequest(request) => {
-                let deliveries = request
-                    .requests
-                    .iter()
-                    .map(|payload| match payload {
-                        crate::framework::ServiceRequestPayload::SituationExchangeRequest(
-                            request,
-                        ) => self.delivery_for(request, now).into(),
-                    })
-                    .collect();
+                let mut deliveries = Vec::with_capacity(request.requests.len());
+                for payload in &request.requests {
+                    let asked = Svc::request_of(payload).ok_or(Error::UnexpectedRoot {
+                        expected: "a request for the service this producer serves",
+                        found: request_name(payload).to_owned(),
+                    })?;
+                    deliveries.push(Svc::service_delivery(self.delivery_for(asked, now)));
+                }
                 Ok(Some(envelope(ServiceDelivery {
                     request_message_ref: request
                         .message_identifier
@@ -231,11 +227,18 @@ impl<S: SituationSource> Producer<S> {
         outbound
     }
 
-    fn open_subscriptions(&mut self, request: &SubscriptionRequest, now: DateTime<FixedOffset>) -> Siri {
+    fn open_subscriptions(
+        &mut self,
+        request: &SubscriptionRequest,
+        now: DateTime<FixedOffset>,
+    ) -> Result<Siri> {
         let mut statuses = Vec::new();
         for payload in &request.subscriptions {
-            let SubscriptionRequestPayload::SituationExchangeSubscriptionRequest(subscription) =
-                payload;
+            let subscription: SubscriptionParts<Svc> =
+                Svc::subscription_of(payload).ok_or(Error::UnexpectedRoot {
+                    expected: "a subscription to the service this producer serves",
+                    found: subscription_name(payload).to_owned(),
+                })?;
             let subscriber_ref = subscription
                 .subscriber_ref
                 .clone()
@@ -262,7 +265,7 @@ impl<S: SituationSource> Producer<S> {
                 subscription_ref: subscription_ref.clone(),
                 consumer_address: request.consumer_address.clone(),
                 initial_termination_time: subscription.initial_termination_time,
-                request: subscription.situation_exchange_request.clone(),
+                request: subscription.request,
                 incremental_updates: subscription.incremental_updates.unwrap_or(false),
                 state: SubscriptionState::DeliveryDue,
             });
@@ -273,11 +276,11 @@ impl<S: SituationSource> Producer<S> {
             });
         }
 
-        envelope(SubscriptionResponse {
+        Ok(envelope(SubscriptionResponse {
             request_message_ref: request.message_identifier.as_ref().map(|id| id.as_str().into()),
             service_started_time: self.service_started_time,
             ..SubscriptionResponse::new(now, self.config.producer_ref.clone(), statuses)
-        })
+        }))
     }
 
     fn close_subscriptions(
@@ -324,7 +327,7 @@ impl<S: SituationSource> Producer<S> {
 
     /// Builds the delivery a consumer's outstanding fetch is waiting for.
     fn supply(&mut self, consumer: &ParticipantRef, now: DateTime<FixedOffset>) -> Siri {
-        let waiting: Vec<Subscription> = self
+        let waiting: Vec<Subscription<Svc>> = self
             .subscriptions
             .iter()
             .filter(|held| {
@@ -336,7 +339,7 @@ impl<S: SituationSource> Producer<S> {
 
         let deliveries = waiting
             .iter()
-            .map(|subscription| self.subscription_delivery(subscription, now).into())
+            .map(|subscription| Svc::service_delivery(self.subscription_delivery(subscription, now)))
             .collect();
 
         for held in &mut self.subscriptions {
@@ -355,7 +358,7 @@ impl<S: SituationSource> Producer<S> {
     }
 
     fn pending_deliveries(&mut self, now: DateTime<FixedOffset>) -> Vec<Outbound> {
-        let due: Vec<Subscription> = self
+        let due: Vec<Subscription<Svc>> = self
             .subscriptions
             .iter()
             .filter(|held| held.state == SubscriptionState::DeliveryDue)
@@ -368,7 +371,9 @@ impl<S: SituationSource> Producer<S> {
                     DeliveryMethod::Direct => envelope(ServiceDelivery::new(
                         now,
                         self.config.producer_ref.clone(),
-                        vec![self.subscription_delivery(&subscription, now).into()],
+                        vec![Svc::service_delivery(
+                            self.subscription_delivery(&subscription, now),
+                        )],
                     )),
                     DeliveryMethod::Fetched => {
                         let identifier = self.mint_message_id();
@@ -395,7 +400,7 @@ impl<S: SituationSource> Producer<S> {
     }
 
     fn expire_subscriptions(&mut self, now: DateTime<FixedOffset>) -> Vec<Outbound> {
-        let expired: Vec<Subscription> = self
+        let expired: Vec<Subscription<Svc>> = self
             .subscriptions
             .iter()
             .filter(|held| held.initial_termination_time <= now)
@@ -409,22 +414,20 @@ impl<S: SituationSource> Producer<S> {
             .map(|subscription| Outbound {
                 recipient: subscription.subscriber_ref.clone(),
                 address: subscription.consumer_address.clone(),
-                message: envelope(
-                    crate::framework::SubscriptionTerminatedNotification {
-                        response_timestamp: now,
-                        producer_ref: Some(self.config.producer_ref.clone()),
-                        address: None,
-                        response_message_identifier: None,
-                        request_message_ref: None,
-                        delegator_address: None,
-                        delegator_ref: None,
-                        subscriber_ref: Some(subscription.subscriber_ref.clone()),
-                        subscription_filter_ref: None,
-                        subscription_ref: subscription.subscription_ref.clone(),
-                        error_condition: None,
-                        extensions: None,
-                    },
-                ),
+                message: envelope(crate::framework::SubscriptionTerminatedNotification {
+                    response_timestamp: now,
+                    producer_ref: Some(self.config.producer_ref.clone()),
+                    address: None,
+                    response_message_identifier: None,
+                    request_message_ref: None,
+                    delegator_address: None,
+                    delegator_ref: None,
+                    subscriber_ref: Some(subscription.subscriber_ref.clone()),
+                    subscription_filter_ref: None,
+                    subscription_ref: subscription.subscription_ref.clone(),
+                    error_condition: None,
+                    extensions: None,
+                }),
             })
             .collect()
     }
@@ -456,23 +459,20 @@ impl<S: SituationSource> Producer<S> {
 
     fn subscription_delivery(
         &self,
-        subscription: &Subscription,
+        subscription: &Subscription<Svc>,
         now: DateTime<FixedOffset>,
-    ) -> SituationExchangeDelivery {
-        SituationExchangeDelivery {
-            subscriber_ref: Some(subscription.subscriber_ref.clone()),
-            subscription_ref: Some(subscription.subscription_ref.clone()),
-            status: Some(true),
-            ..self.delivery_for(&subscription.request, now)
-        }
+    ) -> Svc::Delivery {
+        let mut delivery = self.delivery_for(&subscription.request, now);
+        Svc::attribute(
+            &mut delivery,
+            subscription.subscriber_ref.clone(),
+            subscription.subscription_ref.clone(),
+        );
+        delivery
     }
 
-    fn delivery_for(
-        &self,
-        request: &SituationExchangeRequest,
-        now: DateTime<FixedOffset>,
-    ) -> SituationExchangeDelivery {
-        SituationExchangeDelivery::new(now, self.source.situations(request))
+    fn delivery_for(&self, request: &Svc::Request, now: DateTime<FixedOffset>) -> Svc::Delivery {
+        Svc::delivery(now, self.source.items(request))
     }
 
     fn set_state(&mut self, subscription_ref: &SubscriptionRef, state: SubscriptionState) {
@@ -489,6 +489,28 @@ impl<S: SituationSource> Producer<S> {
         let id = self.next_message_id;
         self.next_message_id += 1;
         MessageQualifier::new(format!("{}-{id}", self.config.message_id_prefix))
+    }
+}
+
+fn request_name(payload: &crate::framework::ServiceRequestPayload) -> &'static str {
+    use crate::framework::ServiceRequestPayload as Payload;
+    match payload {
+        Payload::ProductionTimetableRequest(_) => "ProductionTimetableRequest",
+        Payload::EstimatedTimetableRequest(_) => "EstimatedTimetableRequest",
+        Payload::VehicleMonitoringRequest(_) => "VehicleMonitoringRequest",
+        Payload::SituationExchangeRequest(_) => "SituationExchangeRequest",
+    }
+}
+
+fn subscription_name(payload: &crate::framework::SubscriptionRequestPayload) -> &'static str {
+    use crate::framework::SubscriptionRequestPayload as Payload;
+    match payload {
+        Payload::ProductionTimetableSubscriptionRequest(_) => {
+            "ProductionTimetableSubscriptionRequest"
+        }
+        Payload::EstimatedTimetableSubscriptionRequest(_) => "EstimatedTimetableSubscriptionRequest",
+        Payload::VehicleMonitoringSubscriptionRequest(_) => "VehicleMonitoringSubscriptionRequest",
+        Payload::SituationExchangeSubscriptionRequest(_) => "SituationExchangeSubscriptionRequest",
     }
 }
 

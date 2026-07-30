@@ -36,7 +36,7 @@ use axum::Router;
 use chrono::{Duration, Utc};
 use tokio::sync::mpsc;
 
-use siri_rs::pubsub::{Consumer, ConsumerEvent, Subscribed};
+use siri_rs::pubsub::{Consumer, ConsumerEvent, SituationExchange, Subscribed};
 use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
 use siri_rs::Siri;
 
@@ -47,7 +47,7 @@ const LISTEN_FOR: StdDuration = StdDuration::from_secs(20);
 
 /// A consumer shared between the route that receives pushes and the code that posts
 /// requests.
-type SharedConsumer = Arc<Mutex<Consumer>>;
+type SharedConsumer = Arc<Mutex<Consumer<SituationExchange>>>;
 
 /// What the route that receives pushes needs to do its work.
 #[derive(Clone)]
@@ -67,7 +67,7 @@ async fn main() -> Result<(), Failure> {
         .parse()?;
 
     let consumer: SharedConsumer = Arc::new(Mutex::new(
-        Consumer::new("PASSENGER-APP")
+        Consumer::<SituationExchange>::new("PASSENGER-APP")
             .at_address(format!("http://{address}/siri"))
             .confirming_deliveries(),
     ));
@@ -183,7 +183,7 @@ async fn receive(State(state): State<Receiving>, body: String) -> Response {
             tokio::spawn(fetch_the_data(state.clone(), *fetch));
             answer_with(&reply)
         }
-        ConsumerEvent::Delivered { situations, reply } => {
+        ConsumerEvent::Delivered { items: situations, reply } => {
             let _ = state.delivered.send(situations);
             match reply {
                 Some(reply) => answer_with(&reply),
@@ -219,7 +219,7 @@ async fn fetch_the_data(state: Receiving, fetch: Siri) {
         }
     };
     match interpret(&state.consumer, &delivery) {
-        Ok(ConsumerEvent::Delivered { situations, reply }) => {
+        Ok(ConsumerEvent::Delivered { items: situations, reply }) => {
             let _ = state.delivered.send(situations);
             // A producer that asked for confirmation gets it as a fresh request, since
             // this delivery arrived as an answer rather than as a push.
@@ -250,7 +250,7 @@ fn report(outcomes: &[Subscribed]) {
 }
 
 /// Hands a message to the consumer and says what it meant.
-fn interpret(consumer: &SharedConsumer, message: &Siri) -> siri_rs::Result<ConsumerEvent> {
+fn interpret(consumer: &SharedConsumer, message: &Siri) -> siri_rs::Result<ConsumerEvent<SituationExchange>> {
     consumer
         .lock()
         .expect("the consumer is usable")

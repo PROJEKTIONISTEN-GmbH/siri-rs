@@ -10,7 +10,7 @@ mod support;
 use chrono::{DateTime, Duration, FixedOffset};
 
 use siri_rs::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
-use siri_rs::pubsub::{Consumer, ConsumerEvent, Producer, ProducerConfig, SituationSource};
+use siri_rs::pubsub::{Consumer, ConsumerEvent, Producer, ProducerConfig, SituationExchange, SituationSource};
 use siri_rs::sx::situation::{HalfOpenTimestampOutputRange, SituationSource as Source};
 use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
 use siri_rs::types::{DefaultedText, Duration as SiriDuration};
@@ -71,7 +71,7 @@ fn a_direct_delivery_subscription_runs_its_full_cycle() {
         Disruptions(vec![situation(now, "2026-0041", Severity::Normal)]),
     )
     .started_at(now - Duration::hours(6));
-    let mut consumer = Consumer::new("PASSENGER-APP")
+    let mut consumer = Consumer::<SituationExchange>::new("PASSENGER-APP")
         .at_address("https://app.example/siri")
         .confirming_deliveries();
 
@@ -110,7 +110,7 @@ fn a_direct_delivery_subscription_runs_its_full_cycle() {
     );
     exchanged("ServiceDelivery", &outbound[0].message);
 
-    let ConsumerEvent::Delivered { situations, reply } = consumer
+    let ConsumerEvent::Delivered { items: situations, reply } = consumer
         .handle(&outbound[0].message, now)
         .expect("the consumer reads the delivery")
     else {
@@ -127,7 +127,7 @@ fn a_direct_delivery_subscription_runs_its_full_cycle() {
 
     // Nothing is owed until the situations change again.
     assert!(producer.poll(now).is_empty());
-    producer.situations_changed();
+    producer.data_changed();
     assert_eq!(producer.poll(now).len(), 1);
 
     let terminate = consumer.terminate_all(now);
@@ -158,7 +158,7 @@ fn a_fetched_delivery_subscription_announces_before_it_delivers() {
         ProducerConfig::new("MY-AGENCY").with_fetched_delivery(),
         Disruptions(vec![situation(now, "2026-0041", Severity::Normal)]),
     );
-    let mut consumer = Consumer::new("PASSENGER-APP");
+    let mut consumer = Consumer::<SituationExchange>::new("PASSENGER-APP");
 
     let subscribe = consumer.subscribe(
         "lifts",
@@ -203,7 +203,7 @@ fn a_fetched_delivery_subscription_announces_before_it_delivers() {
         .expect("a data supply request is answered");
     exchanged("ServiceDelivery", &delivery);
 
-    let ConsumerEvent::Delivered { situations, reply } = consumer
+    let ConsumerEvent::Delivered { items: situations, reply } = consumer
         .handle(&delivery, now)
         .expect("the consumer reads the delivery")
     else {
@@ -226,7 +226,7 @@ fn a_request_filter_narrows_what_is_delivered() {
             situation(now, "major", Severity::Severe),
         ]),
     );
-    let mut consumer = Consumer::new("PASSENGER-APP");
+    let mut consumer = Consumer::<SituationExchange>::new("PASSENGER-APP");
 
     let mut request = SituationExchangeRequest::new(now);
     request.severity = Some(Severity::Severe);
@@ -238,7 +238,7 @@ fn a_request_filter_narrows_what_is_delivered() {
     consumer.handle(&response, now).expect("the consumer reads it");
 
     let outbound = producer.poll(now);
-    let ConsumerEvent::Delivered { situations, .. } = consumer
+    let ConsumerEvent::Delivered { items: situations, .. } = consumer
         .handle(&outbound[0].message, now)
         .expect("the consumer reads the delivery")
     else {
@@ -252,7 +252,7 @@ fn a_request_filter_narrows_what_is_delivered() {
 fn a_subscription_that_has_already_lapsed_is_refused() {
     let now = now();
     let mut producer = Producer::new(ProducerConfig::new("MY-AGENCY"), Disruptions(Vec::new()));
-    let mut consumer = Consumer::new("PASSENGER-APP");
+    let mut consumer = Consumer::<SituationExchange>::new("PASSENGER-APP");
 
     let subscribe = consumer.subscribe(
         "too-late",
@@ -282,7 +282,7 @@ fn a_lapsed_subscription_is_ended_by_the_producer() {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     let now = now();
     let mut producer = Producer::new(ProducerConfig::new("MY-AGENCY"), Disruptions(Vec::new()));
-    let mut consumer = Consumer::new("PASSENGER-APP");
+    let mut consumer = Consumer::<SituationExchange>::new("PASSENGER-APP");
 
     let subscribe = consumer.subscribe(
         "short",
@@ -331,7 +331,7 @@ fn a_heartbeat_is_sent_no_faster_than_its_interval() {
         Disruptions(Vec::new()),
     )
     .started_at(now - Duration::hours(6));
-    let mut consumer = Consumer::new("PASSENGER-APP");
+    let mut consumer = Consumer::<SituationExchange>::new("PASSENGER-APP");
 
     let subscribe = consumer.subscribe(
         "lifts",

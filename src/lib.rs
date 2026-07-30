@@ -73,11 +73,14 @@ mod macros;
 
 pub mod enumerations;
 mod error;
+pub mod et;
 pub mod framework;
 pub mod model;
+pub mod pt;
 pub mod pubsub;
 pub mod sx;
 pub mod types;
+pub mod vm;
 mod xml;
 
 pub use error::{Error, Result};

@@ -12,7 +12,7 @@
 use chrono::{DateTime, Duration, FixedOffset};
 
 use siri_rs::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
-use siri_rs::pubsub::{Consumer, ConsumerEvent, Producer, ProducerConfig, SituationSource};
+use siri_rs::pubsub::{Consumer, ConsumerEvent, Producer, ProducerConfig, SituationExchange, SituationSource};
 use siri_rs::sx::situation::{HalfOpenTimestampOutputRange, SituationSource as Source};
 use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
 use siri_rs::types::{DefaultedText, NaturalLanguageString};
@@ -49,7 +49,7 @@ fn main() -> siri_rs::Result<()> {
         },
     )
     .started_at(now - Duration::hours(6));
-    let mut consumer = Consumer::new("PASSENGER-APP").at_address("https://app.example/siri");
+    let mut consumer = Consumer::<SituationExchange>::new("PASSENGER-APP").at_address("https://app.example/siri");
 
     // 1. Subscribe.
     let subscribe = consumer.subscribe(
@@ -97,7 +97,7 @@ fn main() -> siri_rs::Result<()> {
             .expect("a data supply request is always answered");
         show("producer → consumer", &delivery)?;
 
-        if let ConsumerEvent::Delivered { situations, .. } = consumer.handle(&delivery, now)? {
+        if let ConsumerEvent::Delivered { items: situations, .. } = consumer.handle(&delivery, now)? {
             for situation in situations {
                 println!(
                     "  {} — {}",

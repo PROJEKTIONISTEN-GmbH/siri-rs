@@ -19,7 +19,10 @@ use crate::framework::subscription::{
     SubscriptionRequest, SubscriptionResponse, SubscriptionTerminatedNotification,
     TerminateSubscriptionRequest, TerminateSubscriptionResponse,
 };
+use crate::et::{EstimatedTimetableDelivery, EstimatedTimetableRequest};
+use crate::pt::{ProductionTimetableDelivery, ProductionTimetableRequest};
 use crate::sx::{SituationExchangeDelivery, SituationExchangeRequest};
+use crate::vm::{VehicleMonitoringDelivery, VehicleMonitoringRequest};
 use crate::types::{
     Duration, EndpointAddress, Empty, Extensions, MessageQualifier, MessageRef, ParticipantRef,
 };
@@ -205,18 +208,46 @@ impl ServiceRequest {
 /// A functional service request inside a [`ServiceRequest`].
 ///
 /// The schema requires every request in one `ServiceRequest` to address the same
-/// functional service. This release implements Situation Exchange; the enum is
-/// non-exhaustive so that further services can be added without a breaking change.
+/// functional service. The enum is non-exhaustive so that the services this crate
+/// does not implement yet can be added without a breaking change.
+///
+/// The requests differ widely in size — a vehicle-monitoring request is a handful
+/// of fields, an estimated-timetable one several dozen — so each is boxed, keeping
+/// a `Vec` of them from costing the largest variant per element.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum ServiceRequestPayload {
+    /// A request for a planned timetable.
+    ProductionTimetableRequest(Box<ProductionTimetableRequest>),
+    /// A request for a real-time timetable.
+    EstimatedTimetableRequest(Box<EstimatedTimetableRequest>),
+    /// A request for vehicle positions.
+    VehicleMonitoringRequest(Box<VehicleMonitoringRequest>),
     /// A request for situations.
-    SituationExchangeRequest(SituationExchangeRequest),
+    SituationExchangeRequest(Box<SituationExchangeRequest>),
+}
+
+impl From<ProductionTimetableRequest> for ServiceRequestPayload {
+    fn from(request: ProductionTimetableRequest) -> Self {
+        Self::ProductionTimetableRequest(Box::new(request))
+    }
+}
+
+impl From<EstimatedTimetableRequest> for ServiceRequestPayload {
+    fn from(request: EstimatedTimetableRequest) -> Self {
+        Self::EstimatedTimetableRequest(Box::new(request))
+    }
+}
+
+impl From<VehicleMonitoringRequest> for ServiceRequestPayload {
+    fn from(request: VehicleMonitoringRequest) -> Self {
+        Self::VehicleMonitoringRequest(Box::new(request))
+    }
 }
 
 impl From<SituationExchangeRequest> for ServiceRequestPayload {
     fn from(request: SituationExchangeRequest) -> Self {
-        Self::SituationExchangeRequest(request)
+        Self::SituationExchangeRequest(Box::new(request))
     }
 }
 
@@ -287,17 +318,41 @@ impl ServiceDelivery {
 
 /// A functional service delivery inside a [`ServiceDelivery`].
 ///
-/// Non-exhaustive for the same reason as [`ServiceRequestPayload`].
+/// Non-exhaustive, and boxed, for the same reasons as [`ServiceRequestPayload`].
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum ServiceDeliveryPayload {
+    /// A planned timetable from the Production Timetable service.
+    ProductionTimetableDelivery(Box<ProductionTimetableDelivery>),
+    /// A real-time timetable from the Estimated Timetable service.
+    EstimatedTimetableDelivery(Box<EstimatedTimetableDelivery>),
+    /// Vehicle positions from the Vehicle Monitoring service.
+    VehicleMonitoringDelivery(Box<VehicleMonitoringDelivery>),
     /// Situations from the Situation Exchange service.
-    SituationExchangeDelivery(SituationExchangeDelivery),
+    SituationExchangeDelivery(Box<SituationExchangeDelivery>),
+}
+
+impl From<ProductionTimetableDelivery> for ServiceDeliveryPayload {
+    fn from(delivery: ProductionTimetableDelivery) -> Self {
+        Self::ProductionTimetableDelivery(Box::new(delivery))
+    }
+}
+
+impl From<EstimatedTimetableDelivery> for ServiceDeliveryPayload {
+    fn from(delivery: EstimatedTimetableDelivery) -> Self {
+        Self::EstimatedTimetableDelivery(Box::new(delivery))
+    }
+}
+
+impl From<VehicleMonitoringDelivery> for ServiceDeliveryPayload {
+    fn from(delivery: VehicleMonitoringDelivery) -> Self {
+        Self::VehicleMonitoringDelivery(Box::new(delivery))
+    }
 }
 
 impl From<SituationExchangeDelivery> for ServiceDeliveryPayload {
     fn from(delivery: SituationExchangeDelivery) -> Self {
-        Self::SituationExchangeDelivery(delivery)
+        Self::SituationExchangeDelivery(Box::new(delivery))
     }
 }
 

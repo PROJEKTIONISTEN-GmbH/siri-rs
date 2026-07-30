@@ -11,8 +11,11 @@
 
 mod support;
 
+use siri_rs::et::EstimatedTimetableCapabilitiesResponse;
 use siri_rs::framework::SituationExchangeCapabilitiesResponse;
+use siri_rs::pt::ProductionTimetableCapabilitiesResponse;
 use siri_rs::sx::{PtSituationElement, RoadSituationElement};
+use siri_rs::vm::VehicleMonitoringCapabilitiesResponse;
 use siri_rs::Siri;
 use support::{compare, parse, validate, validator_available, VALIDATOR_MISSING};
 
@@ -26,6 +29,15 @@ fn round_trip(root: &str, xml: &str) -> siri_rs::Result<String> {
         "Siri" => siri_rs::to_string_pretty(&siri_rs::from_str::<Siri>(xml)?),
         "SituationExchangeCapabilitiesResponse" => siri_rs::to_string_pretty(&siri_rs::from_str::<
             SituationExchangeCapabilitiesResponse,
+        >(xml)?),
+        "ProductionTimetableCapabilitiesResponse" => siri_rs::to_string_pretty(
+            &siri_rs::from_str::<ProductionTimetableCapabilitiesResponse>(xml)?,
+        ),
+        "EstimatedTimetableCapabilitiesResponse" => siri_rs::to_string_pretty(&siri_rs::from_str::<
+            EstimatedTimetableCapabilitiesResponse,
+        >(xml)?),
+        "VehicleMonitoringCapabilitiesResponse" => siri_rs::to_string_pretty(&siri_rs::from_str::<
+            VehicleMonitoringCapabilitiesResponse,
         >(xml)?),
         "PtSituationElement" => {
             siri_rs::to_string_pretty(&siri_rs::from_str::<PtSituationElement>(xml)?)

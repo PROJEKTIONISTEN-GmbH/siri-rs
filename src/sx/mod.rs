@@ -78,9 +78,9 @@ pub use consequence::{Consequence, PtConsequences};
 pub use delivery::{
     Network, NetworkContext, SituationContext, SituationExchangeDelivery, Situations,
 };
+pub use crate::model::RequestedLines;
 pub use request::{
-    RequestedLines, RoadFilter, SituationExchangeRequest, SituationExchangeSubscriptionRequest,
-    SituationRoadFilter,
+    RoadFilter, SituationExchangeRequest, SituationExchangeSubscriptionRequest, SituationRoadFilter,
 };
 pub use situation::{PtSituationElement, Reason, RoadSituationElement};
 

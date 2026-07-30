@@ -2,7 +2,20 @@
 
 use serde::{Deserialize, Serialize};
 
+use crate::types::{CountryRef, ParticipantRef};
+
 siri_ref! {
+    /// Identifies a block, i.e. a day's work for one vehicle.
+    BlockRef;
+    /// Identifies the sequence of journeys a single vehicle runs within a block.
+    CourseOfJourneyRef;
+    /// Identifies an edition of a timetable.
+    VersionRef;
+    /// Identifies a situation within the participant that raised it.
+    ///
+    /// The number stays the same across every update to the situation; the update's
+    /// `Version` distinguishes the revisions.
+    SituationNumber;
     /// Identifies an operator, i.e. a company running services.
     OperatorRef;
     /// Identifies a part of an operator's organisation.
@@ -49,6 +62,73 @@ siri_ref! {
     ProductCategoryRef;
     /// Identifies a vehicle feature.
     VehicleFeatureRef;
+    /// Identifies a quay — the boarding position within a stop place.
+    QuayRef;
+}
+
+/// A reference to a situation, either by its number alone or in full.
+///
+/// The short form works within one participant's own data; the full form names the
+/// participant, and optionally the revision, so that a situation raised elsewhere
+/// can be referred to without ambiguity.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SituationRef {
+    /// The situation, by number alone.
+    #[serde(rename = "SituationSimpleRef", default, skip_serializing_if = "Option::is_none")]
+    pub situation_simple_ref: Option<SituationNumber>,
+    /// The situation, named in full.
+    #[serde(rename = "SituationFullRef", default, skip_serializing_if = "Option::is_none")]
+    pub situation_full_ref: Option<SituationFullRef>,
+}
+
+impl SituationRef {
+    /// A reference by situation number alone.
+    pub fn simple(situation_number: impl Into<SituationNumber>) -> Self {
+        Self {
+            situation_simple_ref: Some(situation_number.into()),
+            situation_full_ref: None,
+        }
+    }
+}
+
+/// A situation named by the participant that raised it, and optionally by revision.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SituationFullRef {
+    /// The country the raising participant belongs to.
+    #[serde(rename = "VersionCountryRef", default, skip_serializing_if = "Option::is_none")]
+    pub version_country_ref: Option<CountryRef>,
+    /// The participant that raised the situation.
+    #[serde(rename = "ParticipantRef")]
+    pub participant_ref: ParticipantRef,
+    /// The situation's number within that participant.
+    #[serde(rename = "SituationNumber")]
+    pub situation_number: SituationNumber,
+    /// The country the updating participant belongs to.
+    #[serde(rename = "UpdateCountryRef", default, skip_serializing_if = "Option::is_none")]
+    pub update_country_ref: Option<CountryRef>,
+    /// The participant that made the revision being referred to.
+    #[serde(rename = "UpdateParticipantRef", default, skip_serializing_if = "Option::is_none")]
+    pub update_participant_ref: Option<ParticipantRef>,
+    /// The revision being referred to.
+    #[serde(rename = "Version", default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<i64>,
+}
+
+impl SituationFullRef {
+    /// A reference to the given participant's situation.
+    pub fn new(
+        participant_ref: impl Into<ParticipantRef>,
+        situation_number: impl Into<SituationNumber>,
+    ) -> Self {
+        Self {
+            version_country_ref: None,
+            participant_ref: participant_ref.into(),
+            situation_number: situation_number.into(),
+            update_country_ref: None,
+            update_participant_ref: None,
+            version: None,
+        }
+    }
 }
 
 /// A line, optionally narrowed to one direction of travel.
@@ -78,6 +158,16 @@ impl LineDirection {
             direction_ref: Some(direction_ref.into()),
         }
     }
+}
+
+/// Lines, each optionally narrowed to one direction, that a request filters on.
+///
+/// The schema gives every service that filters by line the same `Lines` wrapper.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct RequestedLines {
+    /// The lines and directions.
+    #[serde(rename = "LineDirection")]
+    pub line_direction: Vec<LineDirection>,
 }
 
 /// A journey identified by the operational day it runs on plus its timetable id.

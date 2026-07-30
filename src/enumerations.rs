@@ -2780,3 +2780,344 @@ siri_enum! {
     }
 }
 
+
+siri_enum! {
+    /// Passenger load status of a VEHICLE - GTFS-R / TPEG Pts045
+    Occupancy as "OccupancyEnumeration" {
+        /// TPEG Pts45_0, unknown
+        Unknown = "unknown",
+        /// GTFS-R "EMPTY". The vehicle is considered empty by most measures, and
+        /// has few or no passengers onboard, but is still accepting passengers.
+        Empty = "empty",
+        /// GTFS-R "MANY_SEATS_AVAILABLE" / TPEG Pts45_1, many seats available.
+        ManySeatsAvailable = "manySeatsAvailable",
+        /// GTFS-R "FEW_SEATS_AVAILABLE" / TPEG Pts45_2, few seats available.
+        FewSeatsAvailable = "fewSeatsAvailable",
+        /// GTFS-R "STANDING_ROOM_ONLY" / TPEG Pts45_4, standing room only.
+        StandingRoomOnly = "standingRoomOnly",
+        /// GTFS-R "CRUSHED_STANDING_ROOM_ONLY". The vehicle can currently
+        /// accommodate only standing passengers and has limited space for them.
+        CrushedStandingRoomOnly = "crushedStandingRoomOnly",
+        /// GTFS-R "FULL" / TPEG Pts45_5, full
+        Full = "full",
+        /// GTFS-R "NOT_ACCEPTING_PASSENGERS". The vehicle cannot accept passengers.
+        NotAcceptingPassengers = "notAcceptingPassengers",
+        /// TPEG Pts45_255, undefined occupancy
+        Undefined = "undefined",
+        /// DEPRECATED since SIRI 2.1 - use a more specific value
+        SeatsAvailable = "seatsAvailable",
+        /// DEPRECATED since SIRI 2.1 - use a more specific value
+        StandingAvailable = "standingAvailable",
+    }
+}
+
+siri_enum! {
+    /// Classification of the rate of progress of VEHICLE according a fixed list of values.
+    ProgressRate as "ProgressRateEnumeration" {
+        /// Vehicle is stationary.
+        NoProgress = "noProgress",
+        /// Vehicle is proceeding slower than normal.
+        SlowProgress = "slowProgress",
+        /// Vehicle is proceeding at a normal rate.
+        NormalProgress = "normalProgress",
+        /// Vehicle is proceeding faster than normal.
+        FastProgress = "fastProgress",
+        /// There is no data.
+        Unknown = "unknown",
+    }
+}
+
+siri_enum! {
+    /// Classification of the State of the VEHICLE JOURNEY according to a fixed list
+    /// of values.
+    VehicleStatus as "VehicleStatusEnumeration" {
+        /// Service is expected to be performed.
+        Expected = "expected",
+        /// Service is not expected to be run. For instance a flexible service that
+        /// has not yet been preordered.
+        NotExpected = "notExpected",
+        /// cancelled
+        Cancelled = "cancelled",
+        /// assigned
+        Assigned = "assigned",
+        /// signedOn
+        SignedOn = "signedOn",
+        /// atOrigin
+        AtOrigin = "atOrigin",
+        /// Service has departed from first stop.
+        InProgress = "inProgress",
+        /// aborted
+        Aborted = "aborted",
+        /// offRoute
+        OffRoute = "offRoute",
+        /// It has been detected that the Service was completed.
+        Completed = "completed",
+        /// It is assumed that the Service has completed.
+        AssumedCompleted = "assumedCompleted",
+        /// notRun
+        NotRun = "notRun",
+    }
+}
+
+siri_enum! {
+    /// Allowed types activity for FirstOrLastJourney.
+    FirstOrLastJourney as "FirstOrLastJourneyEnumeration" {
+        /// firstServiceOfDay
+        FirstServiceOfDay = "firstServiceOfDay",
+        /// otherService
+        OtherService = "otherService",
+        /// lastServiceOfDay
+        LastServiceOfDay = "lastServiceOfDay",
+        /// unspecified
+        Unspecified = "unspecified",
+    }
+}
+
+siri_enum! {
+    /// Possible reasons for a change in prediction (in)accuracy.
+    PredictionInaccurateReason as "PredictionInaccurateReasonEnumeration" {
+        /// Prediction is inaccurate because of a traffic jam.
+        VehicleInTrafficJam = "vehicleInTrafficJam",
+        /// Prediction is inaccurate because of technical problems.
+        TechnicalProblem = "technicalProblem",
+        /// Prediction is inaccurate because of a despatching alteration.
+        DispatchAction = "dispatchAction",
+        /// Prediction is inaccurate because communication errors have prevented
+        /// any updates.
+        MissingUpdate = "missingUpdate",
+        /// Prediction is inaccurate but the reason is unknown.
+        Unknown = "unknown",
+    }
+}
+
+siri_enum! {
+    /// Allowed types of relation between JOURNEYs.
+    JourneyRelationType as "JourneyRelationTypeEnumeration" {
+        /// The journey is a continuation of the specified RelatedJourney at the
+        /// stop point given in CallInfo. Passengers don't need to change vehicles.
+        ContinuationOfJourney = "ContinuationOfJourney",
+        /// The journey is continued by the specified RelatedJourney at the stop
+        /// point given in CallInfo. Passengers don't need to change vehicles.
+        ContinuedByJourney = "ContinuedByJourney",
+        /// The journey splits into multiple RelatedJourneys at the stop point given
+        /// in CallInfo.
+        SplitsIntoJourneys = "SplitsIntoJourneys",
+        /// The journey is a continuation of a single RelatedJourney splitting into
+        /// multiple journeys at the stop point given in CallInfo.
+        ContinuationOfSplitJourney = "ContinuationOfSplitJourney",
+        /// The journey is the continuation of multiple RelatedJourneys joining
+        /// together at the stop point given in CallInfo.
+        JoiningOfJourneys = "JoiningOfJourneys",
+        /// The journey is continued by a single RelatedJourney after joining other
+        /// journeys at the stop point given in CallInfo.
+        ContinuedByJoinedJourney = "ContinuedByJoinedJourney",
+        /// The journey replaces one or more partially or fully cancelled
+        /// RelatedJourneys during the journey part named in JourneyPartInfo.
+        ReplacementOfJourney = "ReplacementOfJourney",
+        /// The partially or fully cancelled journey is replaced by one or more
+        /// RelatedJourneys during the journey part named in JourneyPartInfo.
+        ReplacedByJourney = "ReplacedByJourney",
+        /// The journey partially or fully supports one or more RelatedJourneys
+        /// during the journey part named in JourneyPartInfo.
+        SupportOfJourney = "SupportOfJourney",
+        /// The journey is partially or fully supported by one or more
+        /// RelatedJourneys during the journey part named in JourneyPartInfo.
+        SupportedByJourney = "SupportedByJourney",
+    }
+}
+
+siri_enum! {
+    /// Characterisation of nested QUAYs as part of a STOP ASSIGNMENT. (since SIRI 2.1)
+    TypeOfNestedQuay as "TypeOfNestedQuayEnumeration" {
+        /// A type of QUAY that consists of multiple QUAYs of type `platform`, e.g.
+        /// the lower and upper level of a station.
+        PlatformGroup = "platformGroup",
+        /// A type of QUAY that consists of at least two child QUAYs of type
+        /// `platformEdge`.
+        Platform = "platform",
+        /// A type of QUAY which allows direct access to a VEHICLE, e.g. an
+        /// on-street bus stop, or consists of child QUAYs of type `platformSector`.
+        PlatformEdge = "platformEdge",
+        /// A part of a `platformEdge`, e.g. "A", "B", "C", helping passengers find
+        /// a specific part of a vehicle.
+        PlatformSector = "platformSector",
+    }
+}
+
+siri_enum! {
+    /// Allowed values for TYPE OF TRAIN ELEMENT. (since SIRI 2.1)
+    TrainElementType as "TrainElementTypeEnumeration" {
+        /// buffetCar
+        BuffetCar = "buffetCar",
+        /// carriage
+        Carriage = "carriage",
+        /// engine
+        Engine = "engine",
+        /// carTransporter
+        CarTransporter = "carTransporter",
+        /// sleeperCarriage
+        SleeperCarriage = "sleeperCarriage",
+        /// luggageVan
+        LuggageVan = "luggageVan",
+        /// restaurantCarriage
+        RestaurantCarriage = "restaurantCarriage",
+        /// other
+        Other = "other",
+    }
+}
+
+siri_enum! {
+    /// Allowed values for TRAIN SIZE. (since SIRI 2.1)
+    TrainSize as "TrainSizeEnumeration" {
+        /// normal
+        Normal = "normal",
+        /// short
+        Short = "short",
+        /// long
+        Long = "long",
+    }
+}
+
+siri_enum! {
+    /// Allowed values for TYPE OF FUEL. (since SIRI 2.1)
+    TypeOfFuel as "TypeOfFuelEnumeration" {
+        /// petrol
+        Petrol = "petrol",
+        /// diesel
+        Diesel = "diesel",
+        /// naturalGas
+        NaturalGas = "naturalGas",
+        /// biodiesel
+        Biodiesel = "biodiesel",
+        /// electricity
+        Electricity = "electricity",
+        /// hydrogen
+        Hydrogen = "hydrogen",
+        /// other
+        Other = "other",
+        /// unknown
+        Unknown = "unknown",
+    }
+}
+
+siri_enum! {
+    /// Values for Fare Class Facility. (since SIRI 2.1)
+    ///
+    /// The published schema lists `secondClass` twice, once with a trailing space
+    /// left over from SIRI 2.0; both spell the same value, so there is one variant.
+    FareClass as "FareClassEnumeration" {
+        /// pti23_0
+        Unknown = "unknown",
+        /// pti23_6
+        FirstClass = "firstClass",
+        /// pti23_7
+        SecondClass = "secondClass",
+        /// pti23_8
+        ThirdClass = "thirdClass",
+        /// preferente
+        Preferente = "preferente",
+        /// pti23_6_1
+        PremiumClass = "premiumClass",
+        /// Business Class - pti23_10
+        BusinessClass = "businessClass",
+        /// Standard class - pti23_7
+        StandardClass = "standardClass",
+        /// turista
+        Turista = "turista",
+        /// pti23_9
+        EconomyClass = "economyClass",
+        /// any
+        Any = "any",
+    }
+}
+
+siri_enum! {
+    /// Allowed values for VEHICLE IN FORMATION STATUS CODE. (since SIRI 2.1)
+    VehicleInFormationStatus as "VehicleInFormationStatusEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// available
+        Available = "available",
+        /// notAvailable
+        NotAvailable = "notAvailable",
+        /// partiallyAvailable
+        PartiallyAvailable = "partiallyAvailable",
+        /// added
+        Added = "added",
+        /// removed
+        Removed = "removed",
+        /// defective
+        Defective = "defective",
+        /// closed
+        Closed = "closed",
+        /// booked
+        Booked = "booked",
+        /// noRestaurantService
+        NoRestaurantService = "noRestaurantService",
+        /// open
+        Open = "open",
+    }
+}
+
+siri_enum! {
+    /// Allowed values for FORMATION CHANGE CODE. (since SIRI 2.1)
+    FormationChange as "FormationChangeEnumeration" {
+        /// changedFormation
+        ChangedFormation = "changedFormation",
+        /// reversedFormation
+        ReversedFormation = "reversedFormation",
+        /// missingVehicles
+        MissingVehicles = "missingVehicles",
+        /// extraVehicles
+        ExtraVehicles = "extraVehicles",
+        /// missingTrainInCompoundTrain
+        MissingTrainInCompoundTrain = "missingTrainInCompoundTrain",
+        /// extraTrainInCompoundTrain
+        ExtraTrainInCompoundTrain = "extraTrainInCompoundTrain",
+        /// missingFamilyCoach
+        MissingFamilyCoach = "missingFamilyCoach",
+        /// missingThroughCoach
+        MissingThroughCoach = "missingThroughCoach",
+        /// missingLowFloorCoach
+        MissingLowFloorCoach = "missingLowFloorCoach",
+        /// missingRestaurantCoach
+        MissingRestaurantCoach = "missingRestaurantCoach",
+        /// missingWheelchairSpaces
+        MissingWheelchairSpaces = "missingWheelchairSpaces",
+    }
+}
+
+siri_enum! {
+    /// Detail Levels for Estimated Timetable Request.
+    EstimatedTimetableDetail as "EstimatedTimetableDetailEnumeration" {
+        /// Return only the minimum amount of optional data for each stop visit to
+        /// provide a display: a time at stop, LINE name and destination name.
+        Minimum = "minimum",
+        /// Return minimum and other available basic details for each stop visit.
+        /// Do not include data on times at next stop or destination.
+        Basic = "basic",
+        /// Return all basic data, and also origin VIA points and destination.
+        Normal = "normal",
+        /// Return, in addition to normal data, the estimated call data.
+        Calls = "calls",
+        /// Return all available data for each journey, including calls.
+        Full = "full",
+    }
+}
+
+siri_enum! {
+    /// Detail Levels for Vehicle Monitoring Request.
+    VehicleMonitoringDetail as "VehicleMonitoringDetailEnumeration" {
+        /// Return only the minimum amount of optional data for each stop event to
+        /// provide a display: a time, line name and destination name.
+        Minimum = "minimum",
+        /// Return minimum and other available basic details for each stop event.
+        /// Do not include data on time at next stop or destination.
+        Basic = "basic",
+        /// Return all basic data, and also arrival times at DESTINATION.
+        Normal = "normal",
+        /// Return all available data for each stop event, including previous and
+        /// onward CALLs with passing times for the JOURNEY PATTERN.
+        Calls = "calls",
+    }
+}

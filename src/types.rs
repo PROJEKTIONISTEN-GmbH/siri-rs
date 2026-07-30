@@ -33,6 +33,13 @@ siri_ref! {
     CapabilityRef;
     /// An ISO 3166-1 alpha-2 country code.
     CountryRef;
+    /// A producer's identifier for one item within a delivery.
+    ///
+    /// Quoting it lets a later message supersede or withdraw that item rather than
+    /// the whole delivery.
+    ItemIdentifier;
+    /// A reference to an item a producer identified earlier.
+    ItemRef;
 }
 
 /// A human-readable text with an optional language tag.
@@ -281,6 +288,74 @@ impl std::str::FromStr for Duration {
     }
 }
 
+/// An `xsd:dateTime` whose time-zone offset the schema leaves optional.
+///
+/// SIRI timestamps normally state an offset, and this crate reads those into
+/// [`chrono::DateTime<FixedOffset>`]. `xsd:dateTime` allows the offset to be left
+/// out, though, and the official Production Timetable examples do so for the period
+/// a timetable covers: `2001-12-17T14:20:00` is a wall-clock time in whichever zone
+/// the two ends have agreed on. Turning that into an instant would mean inventing
+/// the offset, so this type keeps the lexical form and offers the instant only when
+/// the document actually gave one.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct Timestamp(String);
+
+impl Timestamp {
+    /// Parses an `xsd:dateTime` lexical form, keeping it verbatim.
+    ///
+    /// ```
+    /// use siri_rs::types::Timestamp;
+    /// assert!(Timestamp::parse("2001-12-17T14:20:00")?.instant().is_none());
+    /// assert!(Timestamp::parse("2001-12-17T14:20:00+01:00")?.instant().is_some());
+    /// assert!(Timestamp::parse("yesterday").is_err());
+    /// # Ok::<(), siri_rs::Error>(())
+    /// ```
+    pub fn parse(lexical: impl Into<String>) -> Result<Self> {
+        let lexical = lexical.into();
+        if chrono::DateTime::parse_from_rfc3339(&lexical).is_ok()
+            || chrono::NaiveDateTime::parse_from_str(&lexical, "%Y-%m-%dT%H:%M:%S%.f").is_ok()
+        {
+            Ok(Self(lexical))
+        } else {
+            Err(Error::InvalidValue {
+                datatype: "xsd:dateTime",
+                value: lexical,
+            })
+        }
+    }
+
+    /// The lexical form as written on the wire.
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    /// The instant this names, or `None` when no offset was given.
+    pub fn instant(&self) -> Option<chrono::DateTime<chrono::FixedOffset>> {
+        chrono::DateTime::parse_from_rfc3339(&self.0).ok()
+    }
+}
+
+impl From<chrono::DateTime<chrono::FixedOffset>> for Timestamp {
+    fn from(instant: chrono::DateTime<chrono::FixedOffset>) -> Self {
+        Self(instant.to_rfc3339())
+    }
+}
+
+impl fmt::Display for Timestamp {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
+impl std::str::FromStr for Timestamp {
+    type Err = Error;
+
+    fn from_str(s: &str) -> Result<Self> {
+        Self::parse(s)
+    }
+}
+
 /// An element with no content, used by SIRI where the presence of the element is
 /// itself the value — `<All/>`, `<AllOperators/>`, `<WgsDecimalDegrees/>`.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -334,6 +409,26 @@ mod tests {
                 .unwrap();
         assert_eq!(text.lang.as_deref(), Some("DE"));
         assert_eq!(text.overridden, Some(true));
+    }
+
+    #[test]
+    fn a_timestamp_keeps_its_lexical_form_and_reports_whether_it_names_an_instant() {
+        let zoned = Timestamp::parse("2001-12-17T14:20:00+01:00").unwrap();
+        assert_eq!(zoned.as_str(), "2001-12-17T14:20:00+01:00");
+        assert_eq!(
+            zoned.instant(),
+            Some(
+                chrono::DateTime::parse_from_rfc3339("2001-12-17T14:20:00+01:00").unwrap()
+            )
+        );
+
+        let local = Timestamp::parse("2001-12-17T14:20:00").unwrap();
+        assert_eq!(local.as_str(), "2001-12-17T14:20:00");
+        assert_eq!(local.instant(), None);
+
+        for lexical in ["", "2001-12-17", "14:20:00", "2001-12-17 14:20:00"] {
+            assert!(Timestamp::parse(lexical).is_err(), "{lexical:?} should not parse");
+        }
     }
 
     #[test]
