@@ -23,7 +23,7 @@ serde = { version = "1", features = ["derive"] }
 # examples talk to localhost — a deployment adds reqwest's `default-tls` or
 # `rustls-tls` feature.
 axum = "0.7"
-chrono = { version = "0.4.38", features = ["clock"] }
+chrono = { version = "0.4.38", default-features = false, features = ["clock"] }
 reqwest = { version = "0.12", default-features = false, features = ["charset"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }

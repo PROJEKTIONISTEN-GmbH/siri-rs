@@ -82,7 +82,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let started = Utc::now().fixed_offset();
     let heartbeat = SiriDuration::parse("PT15S")?;
 
-    let direct = producer(ProducerConfig::new("MY-AGENCY").with_heartbeat(heartbeat.clone()), started);
+    let direct = producer(
+        ProducerConfig::new("MY-AGENCY").with_heartbeat(heartbeat.clone()),
+        started,
+    );
     let fetched = producer(
         ProducerConfig::new("MY-AGENCY")
             .with_fetched_delivery()
@@ -125,7 +128,10 @@ async fn answer(State(producer): State<SharedProducer>, body: String) -> Respons
     let message: Siri = match siri::from_str(&body) {
         Ok(message) => message,
         Err(complaint) => {
-            return (StatusCode::BAD_REQUEST, format!("unreadable SIRI: {complaint}\n"))
+            return (
+                StatusCode::BAD_REQUEST,
+                format!("unreadable SIRI: {complaint}\n"),
+            )
                 .into_response()
         }
     };

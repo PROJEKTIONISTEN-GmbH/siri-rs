@@ -36,7 +36,7 @@ use axum::Router;
 use chrono::{Duration, Utc};
 use tokio::sync::mpsc;
 
-use siri::pubsub::{Consumer, ConsumerEvent};
+use siri::pubsub::{Consumer, ConsumerEvent, Subscribed};
 use siri::sx::{PtSituationElement, SituationExchangeRequest};
 use siri::Siri;
 
@@ -101,15 +101,7 @@ async fn main() -> Result<(), Failure> {
     );
     let response = request(&client, &producer_url, &subscribe).await?;
     match interpret(&consumer, &response)? {
-        ConsumerEvent::Subscribed { outcomes } => {
-            for outcome in outcomes {
-                println!(
-                    "subscription {} was {}",
-                    outcome.subscription_ref,
-                    if outcome.accepted { "accepted" } else { "refused" }
-                );
-            }
-        }
+        ConsumerEvent::Subscribed { outcomes } => report(&outcomes),
         other => return Err(format!("expected a subscription outcome, got {other:?}").into()),
     }
 
@@ -166,7 +158,10 @@ async fn receive(State(state): State<Receiving>, body: String) -> Response {
     let message: Siri = match siri::from_str(&body) {
         Ok(message) => message,
         Err(complaint) => {
-            return (StatusCode::BAD_REQUEST, format!("unreadable SIRI: {complaint}\n"))
+            return (
+                StatusCode::BAD_REQUEST,
+                format!("unreadable SIRI: {complaint}\n"),
+            )
                 .into_response()
         }
     };
@@ -236,6 +231,21 @@ async fn fetch_the_data(state: Receiving, fetch: Siri) {
         }
         Ok(other) => eprintln!("! expected a delivery, got {other:?}"),
         Err(complaint) => eprintln!("! the delivery could not be read: {complaint}"),
+    }
+}
+
+/// Says what the producer made of each subscription that was asked for.
+fn report(outcomes: &[Subscribed]) {
+    for outcome in outcomes {
+        println!(
+            "subscription {} was {}",
+            outcome.subscription_ref,
+            if outcome.accepted {
+                "accepted"
+            } else {
+                "refused"
+            }
+        );
     }
 }
 

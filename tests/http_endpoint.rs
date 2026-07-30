@@ -189,7 +189,11 @@ async fn a_service_request_is_answered_over_http_without_a_subscription() {
         panic!("a service request is answered with a delivery");
     };
     assert_eq!(numbers(&situations), ["2026-0041", "2026-0042"]);
-    assert_eq!(producer.subscriptions(), 0, "a direct request opens nothing");
+    assert_eq!(
+        producer.subscriptions(),
+        0,
+        "a direct request opens nothing"
+    );
 
     wire.assert_every_message_was_valid();
     assert_eq!(
@@ -359,7 +363,9 @@ impl ProducerEndpoint {
         let (address, listener) = bind().await;
         let app = Router::new().route("/siri", post(answer).with_state(state.clone()));
         tokio::spawn(async move {
-            axum::serve(listener, app).await.expect("the producer serves");
+            axum::serve(listener, app)
+                .await
+                .expect("the producer serves");
         });
         tokio::spawn(deliver_when_due(state));
 
@@ -410,7 +416,11 @@ async fn deliver_when_due(state: ProducerState) {
     loop {
         ticker.tick().await;
         let now = Utc::now().fixed_offset();
-        let due = state.producer.lock().expect("the producer is usable").poll(now);
+        let due = state
+            .producer
+            .lock()
+            .expect("the producer is usable")
+            .poll(now);
         for outbound in due {
             send(&state, &client, &outbound).await;
         }
@@ -437,9 +447,9 @@ async fn send(state: &ProducerState, client: &reqwest::Client, outbound: &Outbou
     let acknowledgement = match response {
         Ok(response) => response.text().await.expect("a readable answer"),
         Err(complaint) => {
-            state
-                .wire
-                .failed(format!("the consumer at {address} refused a message: {complaint}"));
+            state.wire.failed(format!(
+                "the consumer at {address} refused a message: {complaint}"
+            ));
             return;
         }
     };
@@ -489,7 +499,9 @@ impl ConsumerEndpoint {
 
         let app = Router::new().route("/siri", post(receive).with_state(state));
         tokio::spawn(async move {
-            axum::serve(listener, app).await.expect("the consumer serves");
+            axum::serve(listener, app)
+                .await
+                .expect("the consumer serves");
         });
 
         Self {
@@ -505,12 +517,15 @@ impl ConsumerEndpoint {
         initial_termination_time: DateTime<FixedOffset>,
         now: DateTime<FixedOffset>,
     ) -> Siri {
-        self.consumer.lock().expect("the consumer is usable").subscribe(
-            identifier,
-            initial_termination_time,
-            SituationExchangeRequest::new(now),
-            now,
-        )
+        self.consumer
+            .lock()
+            .expect("the consumer is usable")
+            .subscribe(
+                identifier,
+                initial_termination_time,
+                SituationExchangeRequest::new(now),
+                now,
+            )
     }
 
     fn terminate_all(&self, now: DateTime<FixedOffset>) -> Siri {
