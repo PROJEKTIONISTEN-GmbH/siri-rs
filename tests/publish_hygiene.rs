@@ -92,7 +92,7 @@ fn published_files() -> Vec<PathBuf> {
     // This file spells out the very substrings it searches for, so scanning it would
     // always report itself. That it still recognises a leak is asserted separately by
     // `the_check_would_catch_a_leak`.
-    out.retain(|path| path.file_name().is_none_or(|name| name != THIS_FILE));
+    out.retain(|path| path.file_name().map_or(true, |name| name != THIS_FILE));
     out.sort();
     out
 }

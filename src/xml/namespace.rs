@@ -120,10 +120,10 @@ fn needs_normalisation(xml: &str) -> Result<bool> {
     loop {
         match reader.read_resolved_event()? {
             (_, Event::Eof) => return Ok(false),
-            (ns, Event::Start(e)) | (ns, Event::Empty(e)) => {
-                if is_siri(&ns) && e.name().prefix().is_some() {
-                    return Ok(true);
-                }
+            (ns, Event::Start(e)) | (ns, Event::Empty(e))
+                if is_siri(&ns) && e.name().prefix().is_some() =>
+            {
+                return Ok(true)
             }
             _ => {}
         }

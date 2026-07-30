@@ -139,7 +139,7 @@ pub fn parse(xml: &str) -> Element {
     root.expect("document has a root element")
 }
 
-fn push(stack: &mut Vec<Element>, root: &mut Option<Element>, element: Element) {
+fn push(stack: &mut [Element], root: &mut Option<Element>, element: Element) {
     match stack.last_mut() {
         Some(parent) => parent.children.push(element),
         None => *root = Some(element),
@@ -161,7 +161,7 @@ fn start_element(namespace: &ResolveResult<'_>, start: &quick_xml::events::Bytes
             continue;
         }
         let (resolved, local) = namespace_of_attribute(key);
-        if resolved.as_deref() == Some(XSI_NAMESPACE) {
+        if resolved == Some(XSI_NAMESPACE) {
             continue;
         }
         let value = attribute.unescape_value().expect("decodable attribute value");

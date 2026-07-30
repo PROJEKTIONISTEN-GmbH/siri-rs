@@ -59,8 +59,13 @@ fn an_affected_vehicle_journey_keeps_every_journey_condition_it_lists() {
 
 #[test]
 fn an_affected_facility_keeps_every_status_it_lists() {
-    let mut facility = AffectedFacility::default();
-    facility.facility_status = vec![FacilityStatus::NotAvailable, FacilityStatus::PartiallyAvailable];
+    let facility = AffectedFacility {
+        facility_status: vec![
+            FacilityStatus::NotAvailable,
+            FacilityStatus::PartiallyAvailable,
+        ],
+        ..Default::default()
+    };
 
     round_trip("AffectedFacility", &facility);
 }
@@ -80,8 +85,10 @@ fn an_affected_call_keeps_both_of_its_condition_lists() {
 
 #[test]
 fn a_consequence_keeps_every_service_condition_it_lists() {
-    let mut consequence = Consequence::default();
-    consequence.condition = vec![ServiceCondition::Disrupted, ServiceCondition::Diverted];
+    let consequence = Consequence {
+        condition: vec![ServiceCondition::Disrupted, ServiceCondition::Diverted],
+        ..Default::default()
+    };
 
     round_trip("Consequence", &consequence);
 }
