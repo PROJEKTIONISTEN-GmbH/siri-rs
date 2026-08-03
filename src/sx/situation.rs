@@ -23,8 +23,8 @@ use crate::sx::action::Actions;
 use crate::sx::affects::AffectsScope;
 use crate::sx::consequence::PtConsequences;
 use crate::types::{
-    CountryRef, DefaultedText, Extensions, HalfOpenTimestampOutputRange, NaturalLanguageString,
-    ParticipantRef,
+    AnyContent, CountryRef, DefaultedText, Extensions, HalfOpenTimestampOutputRange,
+    NaturalLanguageString, ParticipantRef,
 };
 
 pub use crate::model::{SituationFullRef, SituationNumber, SituationRef};
@@ -543,15 +543,16 @@ impl RoadSituationElement {
 
 /// A road situation as the DATEX II standard describes it.
 ///
-/// The element's content model belongs to DATEX II rather than SIRI, so this
-/// release round-trips the element and any character data it holds without
-/// interpreting it.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Datex2SituationRecord {
-    /// Character data directly inside the element, if any.
-    #[serde(rename = "$text", default, skip_serializing_if = "Option::is_none")]
-    pub text: Option<String>,
-}
+/// The element's content model belongs to DATEX II — the SIRI schema imports it and
+/// types the element as `D2LogicalModel:SituationRecord` — so it is carried through
+/// as the subtree it is, DATEX namespace included, rather than interpreted. A
+/// consumer that holds the DATEX types can read it into them with
+/// [`AnyContent::parse`].
+///
+/// That type is abstract in DATEX, so a record has to name its concrete subtype in
+/// an `xsi:type` attribute — the one thing a subtree cannot yet carry back; see
+/// [`AnyContent`] on attribute prefixes.
+pub type Datex2SituationRecord = AnyContent;
 
 /// The situations this one is related to.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

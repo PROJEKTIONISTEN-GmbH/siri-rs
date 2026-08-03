@@ -218,11 +218,18 @@ fn doc_test_scaffolding_in(text: &str) -> Vec<String> {
                     findings.push(format!("{}: fence ```{info}", number + 1));
                 }
             }
-        } else if open && trimmed.starts_with('#') {
+        } else if open && rustdoc_would_hide(trimmed) {
             findings.push(format!("{}: hidden line — {trimmed}", number + 1));
         }
     }
     findings
+}
+
+/// Whether rustdoc would drop this line from a rendered example: a `#` on its own, or
+/// one followed by a space. An attribute — `#[derive(…)]` — is source the reader is
+/// meant to see, and rustdoc shows it.
+fn rustdoc_would_hide(trimmed: &str) -> bool {
+    trimmed == "#" || trimmed.starts_with("# ")
 }
 
 #[test]
@@ -234,9 +241,18 @@ fn the_check_would_catch_doc_test_scaffolding() {
             .is_empty(),
         "a comment at the end of a line is not scaffolding"
     );
+    assert!(
+        doc_test_scaffolding_in("```rust\n#[derive(Debug)]\nstruct Setting;\n```\n").is_empty(),
+        "an attribute is source the reader is shown, not scaffolding"
+    );
     assert_eq!(
         doc_test_scaffolding_in("```rust\n# fn run() {\nlet answer = 42;\n# }\n```\n").len(),
         2
+    );
+    assert_eq!(
+        doc_test_scaffolding_in("```rust\n#\nlet answer = 42;\n```\n"),
+        ["2: hidden line — #"],
+        "a hash on its own hides the line it stands on"
     );
     assert_eq!(
         doc_test_scaffolding_in("```rust,no_run\nlet answer = 42;\n```\n"),

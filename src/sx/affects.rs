@@ -33,7 +33,7 @@ use crate::model::{
     ZoneProjection,
 };
 use crate::types::{
-    Duration, Empty, Extensions, NaturalLanguagePlaceName, NaturalLanguageString,
+    AnyContent, Duration, Empty, Extensions, NaturalLanguagePlaceName, NaturalLanguageString,
 };
 
 siri_ref! {
@@ -268,26 +268,19 @@ pub struct AffectedRoad {
 
 /// A group of road network locations described by the DATEX II standard.
 ///
-/// The element's content model belongs to DATEX II rather than SIRI, so this
-/// release round-trips the element and any character data it holds without
-/// interpreting it.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Datex2Locations {
-    /// Character data directly inside the element, if any.
-    #[serde(rename = "$text", default, skip_serializing_if = "Option::is_none")]
-    pub text: Option<String>,
-}
+/// The element's content model belongs to DATEX II — the SIRI schema imports it and
+/// types the element as `D2LogicalModel:GroupOfLocations` — so it is carried through
+/// as the subtree it is, DATEX namespace included, rather than interpreted. A
+/// consumer that holds the DATEX types can read it into them with
+/// [`AnyContent::parse`].
+pub type Datex2Locations = AnyContent;
 
 /// A stretch of road between two reference points, as DATEX II describes it.
 ///
-/// As with [`Datex2Locations`], the content model belongs to DATEX II and is
-/// round-tripped rather than interpreted.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Datex2Road {
-    /// Character data directly inside the element, if any.
-    #[serde(rename = "$text", default, skip_serializing_if = "Option::is_none")]
-    pub text: Option<String>,
-}
+/// As with [`Datex2Locations`], the content model belongs to DATEX II — here
+/// `D2LogicalModel:RoadsideReferencePointLinear` — and is carried through rather
+/// than interpreted.
+pub type Datex2Road = AnyContent;
 
 /// How far along a projected link a situation begins and ends.
 ///

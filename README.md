@@ -38,7 +38,11 @@ in Rust. Read a producer's feed, or run one.
   dropped, a vehicle moved to other work, a message sent to a driver;
 - the **journey model** these services share, down to train formations, occupancy
   and capacity, the facility model, and the GML polygon a flexible stop area may be
-  drawn as.
+  drawn as;
+- and **what SIRI leaves to the participants**: an `<Extensions>` payload, a
+  general-message body, the DATEX II record a road situation carries. Whatever those
+  hold — nested elements, attributes, repeated names, foreign namespaces — is carried
+  through whole, and can be read into a type of your own where you know the profile.
 
 It is **transport-agnostic**. The library owns the protocol; carrying bytes is
 yours. That keeps it usable from any HTTP stack, from a message queue, or from a
@@ -104,6 +108,59 @@ fn main() -> siri_rs::Result<()> {
 
 Both namespace bindings found in the wild are accepted — the SIRI namespace as the
 document default, or bound to a prefix.
+
+## Extensions and the rest of the open content
+
+`ExtensionsStructure` is an `xsd:any` wildcard: what a producer puts there belongs to
+a profile the standard does not describe — VDV, DATEX, an operator's own settings.
+The same is true of a general-message body and of the DATEX II records SIRI-SX embeds
+in a road situation. All of them arrive as an `AnyContent`, which holds the subtree as
+it was written — attributes, character data and children in order, namespaces
+included — and writes it back unchanged, so a producer relaying a feed relays the
+payload with it.
+
+Where the profile *is* known, the payload reads into a type of your own. The crate
+knows nothing about that type; it only offers the seam:
+
+```rust
+use serde::Deserialize;
+use siri_rs::Siri;
+
+#[derive(Deserialize)]
+struct OperatorSettings {
+    #[serde(rename = "@scope")]
+    scope: String,
+    #[serde(rename = "Setting")]
+    settings: Vec<Setting>,
+}
+
+#[derive(Deserialize)]
+struct Setting {
+    #[serde(rename = "@name")]
+    name: String,
+    #[serde(rename = "$text")]
+    value: String,
+}
+
+fn settings(message: &Siri) -> siri_rs::Result<Option<OperatorSettings>> {
+    let Some(subtree) = message
+        .payload
+        .as_check_status_request()
+        .and_then(|request| request.extensions.as_ref())
+        .and_then(|extensions| extensions.children_named("OperatorSettings").next())
+    else {
+        return Ok(None);
+    };
+    subtree.parse().map(Some)
+}
+```
+
+`AnyContent::from_payload` goes the other way, for a producer that has such a value
+and wants it on the wire.
+
+The one thing that does not come back is a prefix on an attribute *inside* such a
+payload: the reader reports attributes by local name, so `xsi:type="…"` returns as
+`type="…"`. `AnyContent`'s documentation says so, and a test pins it.
 
 ## Running an endpoint
 
@@ -291,10 +348,10 @@ cargo bench
 
 Two things follow from the measurements and are worth knowing when reading the code:
 
-- **Reading borrows.** A document that binds the SIRI namespace as its default — how
-  most feeds are written — is handed to the deserialiser as it arrived, with no copy
-  and no rewrite. Only a document that binds the namespace to a prefix is rewritten,
-  once, before it is read.
+- **Reading borrows.** A document written without namespace prefixes — how most feeds
+  are written — is handed to the deserialiser as it arrived, with no copy and no
+  rewrite. Only a document that does write a prefixed element is rewritten, once,
+  before it is read.
 - **Writing fills one buffer.** The declaration, the namespace and the body are
   produced into a single string rather than assembled from several.
 
@@ -318,8 +375,10 @@ is also what this crate builds its own benchmarks and examples with, so the numb
 Every CEN functional service is now modelled, so there is no list of services left
 to work through. What remains open is narrower:
 
-- structured `Extensions` payloads, which currently round-trip as opaque content;
-- a fuller DATEX II binding for the road-situation records SIRI-SX can embed;
+- a typed DATEX II binding for the road-situation records SIRI-SX can embed. They
+  round-trip whole today and read as subtrees, which is what a relaying producer
+  needs; what is not modelled is the DATEX type set itself, which is a standard of
+  its own and only worth transcribing if the fields are to be read as Rust;
 - Control Actions proved by round trip rather than by the schemas alone, once
   example messages for it exist.
 

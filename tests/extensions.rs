@@ -128,23 +128,30 @@ fn an_embedded_datex_record_reaches_the_reader_whole() {
         .and_then(|affected| affected.road.as_ref())
         .expect("the situation affects a road");
 
-    let primary = road
+    let location = road
         .children_named("roadsideReferencePointPrimaryLocation")
         .next()
-        .and_then(|location| location.children_named("roadsideReferencePoint").next())
-        .expect("the DATEX location names a primary reference point");
+        .expect("the DATEX record names a primary location");
     assert_eq!(
-        primary
-            .children_named("roadsideReferencePointIdentifier")
-            .next()
-            .map(|id| id.text.as_str()),
-        Some("A255-KM-3")
-    );
-    assert_eq!(
-        primary.attribute("xmlns"),
+        location.attribute("xmlns"),
         Some("http://datex2.eu/schema/2_0RC1/2_0"),
         "the DATEX namespace is what makes this a DATEX record"
     );
+
+    let primary = location
+        .children_named("roadsideReferencePoint")
+        .next()
+        .expect("the primary location names a reference point");
+    assert_eq!(
+        primary.attribute("xmlns"),
+        None,
+        "a descendant in the same namespace inherits the declaration above it"
+    );
+    let identifiers: Vec<&str> = primary
+        .children_named("roadsideReferencePointIdentifier")
+        .map(|id| id.text.as_str())
+        .collect();
+    assert_eq!(identifiers, ["A255-KM-3"]);
 }
 
 #[test]

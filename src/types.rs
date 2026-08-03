@@ -8,7 +8,7 @@
 use std::fmt;
 
 use chrono::{DateTime, FixedOffset};
-use serde::de::{self, MapAccess, Visitor};
+use serde::de::{self, DeserializeOwned, MapAccess, Visitor};
 use serde::ser::SerializeMap;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -549,22 +549,38 @@ impl Empty {
     }
 }
 
-/// An XML subtree the schema declares as `xsd:anyType`, kept as it was written.
+/// An XML subtree the schema leaves to the participants, kept as it was written.
 ///
-/// SIRI leaves a few payloads to the participants: the body of a general message,
-/// for instance, may be a plain sentence or a whole document in another vocabulary.
-/// There is nothing to model, so this keeps the subtree — attributes, character data
-/// and children in order, repeated names included — and writes it back unchanged.
+/// SIRI leaves several payloads open: the body of a general message may be a plain
+/// sentence or a whole document in another vocabulary, an `<Extensions>` element
+/// admits anything at all, and a road situation carries its DATEX II record. There
+/// is nothing to model, so this keeps the subtree — attributes, character data and
+/// children in order, repeated names included — and writes it back unchanged.
+///
+/// A payload the consumer *does* know the shape of can be read into a type of its
+/// own with [`parse`](Self::parse) and built from one with
+/// [`from_payload`](Self::from_payload); the crate needs to know nothing about that
+/// shape either way.
+///
+/// # Namespaces
+///
+/// A subtree may be qualified, and the namespace is part of what it means. A prefix
+/// binding is turned into the equivalent default declaration on the way in, so the
+/// namespace is kept in [`attributes`](Self::attributes) as `xmlns` and restated
+/// when the subtree is written; the prefix itself is not preserved, because the two
+/// spellings denote the same element.
 ///
 /// # Attribute prefixes
 ///
 /// The XML reader reports an attribute by its local name, so a prefix on an
-/// attribute inside such a subtree does not survive the read. The only prefix XML
-/// binds without a declaration is `xml`, and the only attributes it can carry are
-/// `xml:lang` and `xml:space`; those two are therefore restored on the way in and
-/// kept in [`attributes`](Self::attributes) with their prefix. An attribute named
-/// `lang` or `space` in no namespace at all — which the reader cannot tell apart
-/// from those two — is written back with the prefix it did not have.
+/// attribute inside such a subtree does not survive the read — `xsi:type="…"` is
+/// indistinguishable from `type="…"` by the time this type sees it, and is written
+/// back as the latter. The only prefix XML binds without a declaration is `xml`, and
+/// the only attributes it can carry are `xml:lang` and `xml:space`; those two are
+/// therefore restored on the way in and kept in
+/// [`attributes`](Self::attributes) with their prefix. An attribute named `lang` or
+/// `space` in no namespace at all — which the reader cannot tell apart from those
+/// two — is written back with the prefix it did not have.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct AnyContent {
     /// The element's attributes, without the leading `@` the wire format uses.
@@ -599,7 +615,77 @@ impl AnyContent {
             .find(|(key, _)| key == name)
             .map(|(_, value)| value.as_str())
     }
+
+    /// Reads this subtree into a type of the consumer's own.
+    ///
+    /// The profiles that put content here are outside SIRI, so the crate offers the
+    /// seam rather than the types: a consumer that knows one declares it the way any
+    /// other XML is declared to `serde` — `@name` for an attribute, `$text` for
+    /// character data, the element's name for a child — and reads the subtree into
+    /// it. What is read is the subtree's content; its own element name is held by
+    /// whatever carries it and is not matched against `T`.
+    ///
+    /// ```
+    /// use serde::Deserialize;
+    ///
+    /// #[derive(Deserialize)]
+    /// struct Diagnostics {
+    ///     #[serde(rename = "@level")]
+    ///     level: String,
+    ///     #[serde(rename = "Counter")]
+    ///     counter: u32,
+    /// }
+    ///
+    /// let xml = r#"<Siri xmlns="http://www.siri.org.uk/siri">
+    ///   <CheckStatusRequest>
+    ///     <RequestTimestamp>2004-12-17T09:30:47-05:00</RequestTimestamp>
+    ///     <RequestorRef>EREWHON</RequestorRef>
+    ///     <Extensions>
+    ///       <Diagnostics level="verbose"><Counter>17</Counter></Diagnostics>
+    ///     </Extensions>
+    ///   </CheckStatusRequest>
+    /// </Siri>"#;
+    ///
+    /// let message: siri_rs::Siri = siri_rs::from_str(xml)?;
+    /// let extensions = message
+    ///     .payload
+    ///     .as_check_status_request()
+    ///     .and_then(|request| request.extensions.as_ref())
+    ///     .unwrap();
+    ///
+    /// let diagnostics: Diagnostics = extensions
+    ///     .children_named("Diagnostics")
+    ///     .next()
+    ///     .unwrap()
+    ///     .parse()?;
+    /// assert_eq!(diagnostics.level, "verbose");
+    /// assert_eq!(diagnostics.counter, 17);
+    /// # Ok::<(), siri_rs::Error>(())
+    /// ```
+    pub fn parse<T: DeserializeOwned>(&self) -> Result<T> {
+        let element = quick_xml::se::to_string_with_root(PAYLOAD_ELEMENT, self)?;
+        quick_xml::de::from_str(&element).map_err(Error::from)
+    }
+
+    /// Builds a subtree out of a value of the consumer's own, the inverse of
+    /// [`parse`](Self::parse).
+    ///
+    /// A value that serialises to something other than an element — a bare number,
+    /// say — is an error rather than a subtree.
+    pub fn from_payload<T: Serialize + ?Sized>(payload: &T) -> Result<Self> {
+        let element = quick_xml::se::to_string_with_root(PAYLOAD_ELEMENT, payload)?;
+        quick_xml::de::from_str(&element).map_err(Error::from)
+    }
 }
+
+/// The element name [`AnyContent::parse`] and [`AnyContent::from_payload`] write
+/// around a subtree while it is XML.
+///
+/// Both go through the wire format, so that a consumer's type sees exactly what it
+/// would have seen reading the payload as a document of its own. The name is the one
+/// thing the subtree does not carry — an element's name belongs to whatever holds it
+/// — so it is supplied here and discarded on the way back.
+const PAYLOAD_ELEMENT: &str = "Payload";
 
 impl Serialize for AnyContent {
     fn serialize<S: Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
@@ -665,15 +751,14 @@ impl<'de> Deserialize<'de> for AnyContent {
 
 /// Implementation-defined content carried in a SIRI `<Extensions>` element.
 ///
-/// The schema declares `Extensions` as `xsd:anyType`, so its children are outside
-/// SIRI. This release round-trips the element and any character data it holds;
-/// structured extension payloads are not modelled.
-#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Extensions {
-    /// Character data directly inside the element, if any.
-    #[serde(rename = "$text", default, skip_serializing_if = "Option::is_none")]
-    pub text: Option<String>,
-}
+/// The schema declares the element as a wildcard — `xsd:any` with
+/// `processContents="lax"` — so whatever it holds belongs to a profile outside SIRI:
+/// a VDV or DATEX payload, an operator's own settings, anything the two participants
+/// agreed on. It is therefore the same thing as any other subtree the schema leaves
+/// open, and is carried through by the same [`AnyContent`]: nothing is interpreted,
+/// nothing is dropped, and a consumer that knows the payload's shape can read it into
+/// a type of its own with [`AnyContent::parse`].
+pub type Extensions = AnyContent;
 
 #[cfg(test)]
 mod tests {

@@ -56,8 +56,8 @@
 //!
 //! # Speed
 //!
-//! [`from_str`] hands the document to the deserialiser borrowed unless something
-//! binds the SIRI namespace to a prefix, and [`to_string`] produces the finished
+//! [`from_str`] hands the document to the deserialiser borrowed unless it writes an
+//! element with a namespace prefix, and [`to_string`] produces the finished
 //! document — declaration, namespace and body — into a single buffer. What is left
 //! is the profile the finished program is built with, which a library cannot impose
 //! on its consumer: a program that wants the calls into this crate optimised across
@@ -68,7 +68,7 @@
 //! # How the schema is modelled
 //!
 //! The XML Schema is the authority; where idiomatic Rust and schema fidelity
-//! disagree, fidelity wins and the API absorbs the awkwardness. Three conventions
+//! disagree, fidelity wins and the API absorbs the awkwardness. Four conventions
 //! follow from that:
 //!
 //! * **Field order is element order.** Serialisation writes struct fields in
@@ -80,6 +80,11 @@
 //!   the alternatives are not single elements and cannot carry an enum's tag. Such
 //!   types offer constructors for each alternative and an accessor that reports
 //!   which one is present — see [`model::Location::position`].
+//! * **What the schema leaves open is kept, not interpreted.** An `<Extensions>`
+//!   payload, a general-message body and an embedded DATEX II record belong to
+//!   profiles outside SIRI, so they are held as the subtree they are and written
+//!   back unchanged — and read into a consumer's own type where it has one. See
+//!   [`types::AnyContent`].
 //!
 //! # Conformance
 //!
