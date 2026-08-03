@@ -50,14 +50,11 @@ harness = false
 name = "pubsub"
 harness = false
 
-# What the benchmarks and the examples are built with. A library cannot impose a
-# profile on the program that uses it, so this governs this crate's own artefacts
-# only; the recommended settings for a consumer are on the front page.
+# What a release build of this crate's own artefacts uses, benchmarks included —
+# `bench` inherits from `release`. A library cannot impose a profile on the program
+# that uses it, so this settles nothing downstream; the settings a consumer should
+# ask for are on the front page.
 [profile.release]
-lto = "fat"
-codegen-units = 1
-
-[profile.bench]
 lto = "fat"
 codegen-units = 1
 

@@ -80,7 +80,7 @@ fn published_files() -> Vec<PathBuf> {
         root.join("LICENSE-MIT"),
         root.join("LICENSE-APACHE"),
     ];
-    for directory in ["src", "examples"] {
+    for directory in ["src", "examples", "benches"] {
         collect(&root.join(directory), &mut out);
     }
     for entry in std::fs::read_dir(root.join("tests")).expect("readable test directory") {
