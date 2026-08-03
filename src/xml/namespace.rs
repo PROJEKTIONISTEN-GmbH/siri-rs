@@ -26,10 +26,10 @@ const NAMESPACE_BYTES: &[u8] = NAMESPACE.as_bytes();
 
 /// Rewrites SIRI-namespaced elements to their unprefixed local names.
 ///
-/// Returns the input unchanged when no element carries a prefix for the SIRI
-/// namespace, which is the common case and costs a single scan.
+/// Returns the input unchanged when nothing binds the SIRI namespace to a prefix,
+/// which is the common case and costs a substring search rather than a parse.
 pub fn normalise(xml: &str) -> Result<Cow<'_, str>> {
-    if !needs_normalisation(xml)? {
+    if !binds_the_namespace_to_a_prefix(xml) {
         return Ok(Cow::Borrowed(xml));
     }
 
@@ -48,13 +48,13 @@ pub fn normalise(xml: &str) -> Result<Cow<'_, str>> {
             }
             (ns, Event::End(e)) => {
                 let name = if is_siri(&ns) {
-                    e.local_name().as_ref().to_vec()
+                    e.local_name().into_inner()
                 } else {
-                    e.name().as_ref().to_vec()
+                    e.name().into_inner()
                 };
                 write(
                     &mut writer,
-                    Event::End(BytesEnd::new(String::from_utf8_lossy(&name))),
+                    Event::End(BytesEnd::new(String::from_utf8_lossy(name))),
                 )?;
             }
             (_, event) => write(&mut writer, event)?,
@@ -88,11 +88,11 @@ fn into_string(bytes: Vec<u8>) -> Result<String> {
 /// content keeps resolving — is carried over verbatim.
 fn rewrite_start(ns: &ResolveResult<'_>, start: &BytesStart<'_>) -> Result<BytesStart<'static>> {
     let name = if is_siri(ns) {
-        start.local_name().as_ref().to_vec()
+        start.local_name().into_inner()
     } else {
-        start.name().as_ref().to_vec()
+        start.name().into_inner()
     };
-    let mut out = BytesStart::new(String::from_utf8_lossy(&name).into_owned());
+    let mut out = BytesStart::new(String::from_utf8_lossy(name));
     for attr in start.attributes().with_checks(false) {
         let attr = attr.map_err(quick_xml::Error::InvalidAttr)?;
         if declares_siri_namespace(&attr) {
@@ -113,21 +113,25 @@ fn declares_siri_namespace(attr: &quick_xml::events::attributes::Attribute<'_>) 
     is_declaration && attr.value.as_ref() == NAMESPACE_BYTES
 }
 
-/// True when at least one element resolves to the SIRI namespace through a prefix.
-fn needs_normalisation(xml: &str) -> Result<bool> {
-    let mut reader = NsReader::from_str(xml);
-    reader.config_mut().trim_text(false);
-    loop {
-        match reader.read_resolved_event()? {
-            (_, Event::Eof) => return Ok(false),
-            (ns, Event::Start(e)) | (ns, Event::Empty(e))
-                if is_siri(&ns) && e.name().prefix().is_some() =>
-            {
-                return Ok(true)
-            }
-            _ => {}
-        }
-    }
+/// True when the document's text binds the SIRI namespace to a prefix.
+///
+/// A prefixed element can only exist where a declaration binds its prefix, and the
+/// resolver binds what the declaration literally says — so a document whose text
+/// holds no `xmlns:…="http://www.siri.org.uk/siri"` cannot carry one, and finding
+/// that out costs a substring search instead of reading the whole document.
+///
+/// The other direction is deliberately approximate: a binding nothing uses, or one
+/// written inside a comment, sends the document down the rewriting path, which
+/// leaves such a document as it was.
+fn binds_the_namespace_to_a_prefix(xml: &str) -> bool {
+    xml.match_indices(NAMESPACE).any(|(at, _)| {
+        xml[..at]
+            .trim_end_matches(['"', '\''])
+            .trim_end()
+            .strip_suffix('=')
+            .and_then(|attribute| attribute.split_whitespace().next_back())
+            .is_some_and(|name| name.starts_with("xmlns:"))
+    })
 }
 
 /// Writes `xmlns="http://www.siri.org.uk/siri"` onto the root element of a
@@ -173,6 +177,52 @@ fn with_default_namespace(start: &BytesStart<'_>) -> BytesStart<'static> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_prefix_binding_is_recognised_however_it_is_spaced() {
+        assert!(binds_the_namespace_to_a_prefix(
+            r#"<s:Siri xmlns:s="http://www.siri.org.uk/siri">"#
+        ));
+        assert!(binds_the_namespace_to_a_prefix(
+            "<s:Siri xmlns:s = 'http://www.siri.org.uk/siri'>"
+        ));
+        assert!(binds_the_namespace_to_a_prefix(
+            "<s:Siri\n\txmlns:s=\"http://www.siri.org.uk/siri\">"
+        ));
+    }
+
+    #[test]
+    fn text_that_merely_names_the_namespace_is_not_a_prefix_binding() {
+        assert!(!binds_the_namespace_to_a_prefix(
+            r#"<Siri xmlns="http://www.siri.org.uk/siri">"#
+        ));
+        assert!(!binds_the_namespace_to_a_prefix(
+            r#"<Siri xsi:schemaLocation="http://www.siri.org.uk/siri ../xsd/siri.xsd">"#
+        ));
+        assert!(!binds_the_namespace_to_a_prefix(
+            "<Note>http://www.siri.org.uk/siri</Note>"
+        ));
+    }
+
+    #[test]
+    fn a_document_that_only_points_at_the_schema_is_left_alone() {
+        let xml = concat!(
+            r#"<Siri xmlns="http://www.siri.org.uk/siri""#,
+            r#" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance""#,
+            r#" xsi:schemaLocation="http://www.siri.org.uk/siri ../xsd/siri.xsd">"#,
+            r#"<Foo>1</Foo></Siri>"#
+        );
+        assert!(matches!(normalise(xml).unwrap(), Cow::Borrowed(_)));
+    }
+
+    #[test]
+    fn a_prefix_nothing_uses_costs_a_rewrite_but_changes_nothing() {
+        let xml = concat!(
+            r#"<Siri xmlns="http://www.siri.org.uk/siri""#,
+            r#" xmlns:s="http://www.siri.org.uk/siri"><Foo>1</Foo></Siri>"#
+        );
+        assert_eq!(normalise(xml).unwrap(), "<Siri><Foo>1</Foo></Siri>");
+    }
 
     #[test]
     fn documents_using_the_default_binding_are_left_alone() {

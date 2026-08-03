@@ -73,14 +73,13 @@ const DECLARATION: &str = r#"<?xml version="1.0" encoding="UTF-8"?>"#;
 /// Fails unless the first element of `xml` is `T::ELEMENT_NAME`.
 ///
 /// Without this check a document rooted at the wrong message would deserialise into
-/// `T` field by field and quietly produce a value the sender never meant.
+/// `T` field by field and quietly produce a value the sender never meant. Only the
+/// name that fails is spelled out, so the check that passes allocates nothing.
 fn check_root<T: SiriRoot>(xml: &str) -> Result<()> {
     let mut reader = quick_xml::Reader::from_str(xml);
     loop {
-        let found = match reader.read_event()? {
-            quick_xml::events::Event::Start(e) | quick_xml::events::Event::Empty(e) => {
-                String::from_utf8_lossy(e.local_name().as_ref()).into_owned()
-            }
+        let element = match reader.read_event()? {
+            quick_xml::events::Event::Start(e) | quick_xml::events::Event::Empty(e) => e,
             quick_xml::events::Event::Eof => {
                 return Err(Error::UnexpectedRoot {
                     expected: T::ELEMENT_NAME,
@@ -89,12 +88,13 @@ fn check_root<T: SiriRoot>(xml: &str) -> Result<()> {
             }
             _ => continue,
         };
-        return if found == T::ELEMENT_NAME {
+        let found = element.local_name();
+        return if found.as_ref() == T::ELEMENT_NAME.as_bytes() {
             Ok(())
         } else {
             Err(Error::UnexpectedRoot {
                 expected: T::ELEMENT_NAME,
-                found,
+                found: String::from_utf8_lossy(found.as_ref()).into_owned(),
             })
         };
     }
