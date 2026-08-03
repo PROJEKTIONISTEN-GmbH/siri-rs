@@ -20,16 +20,17 @@ use chrono::{DateTime, Duration, FixedOffset};
 use siri_rs::ca::{
     CallCancellationAction, CancelledConnection, ChangeOfJourneyTiming, ChangeOfStopPointStatus,
     ChangedPoint, ControlAction, ControlActionCapabilitiesResponse, ControlActionDelivery,
-    ControlActionKind, ControlActionReason, ControlActionRequest,
-    ControlActionServiceCapabilities, ControlActionSubscriptionRequest, ControlActions,
+    ControlActionFilter, ControlActionKind, ControlActionMultipleRequest, ControlActionReason,
+    ControlActionRequest, ControlActionServiceCapabilities, ControlActionSubscriptionRequest,
+    ControlActions,
     AddedControlActions, DatedCallRef, DriverMessage, DriverMessages, DriverScope,
     ExtraConnection,
     FlexibleJourneyActivation, GroupOfControlActions, GroupsOfControlActions, JourneyCreation,
     JourneyEnd, JourneyPatternModification, JourneyScope, JourneyStart, MessageContents,
     MiddleCall, ModifiedConnection, PointInJourneyPatternRef, RelativeTime, RemovedControlActions,
     RevokedControlAction,
-    RevokedControlActions, StopPointStatusTimeScope, StopRefs, TargetPoint, VehicleDetecting,
-    VehicleDetectings, VehicleWorkAssignment,
+    RevokedControlActions, SituationDescription, StopPointStatusTimeScope, StopRefs, TargetPoint,
+    VehicleDetecting, VehicleDetectings, VehicleWorkAssignment,
 };
 use siri_rs::enumerations::{
     ChangeModel, ChangeOfJourneyTimingType, ControlActionReasonCategory, StopPlaceStatus,
@@ -37,7 +38,7 @@ use siri_rs::enumerations::{
 };
 use siri_rs::framework::{ServiceDelivery, ServiceRequest, SubscriptionRequest};
 use siri_rs::model::{FramedVehicleJourneyRef, ValidityCondition};
-use siri_rs::types::{Duration as SiriDuration, NaturalLanguageString};
+use siri_rs::types::{DefaultedText, Duration as SiriDuration, NaturalLanguageString};
 use siri_rs::{Siri, SiriRoot};
 use support::{validate_with_substitution_groups, validator_available, VALIDATOR_MISSING};
 
@@ -66,6 +67,27 @@ fn a_request_for_control_actions_is_valid_and_reads_back() {
     );
     let read = round_trip(&message);
     assert_eq!(read, message);
+}
+
+/// The form asking about several topics at once, one filter each.
+#[test]
+fn a_multiple_request_for_control_actions_is_valid_and_reads_back() {
+    let request = ControlActionMultipleRequest::new(
+        now(),
+        vec![
+            ControlActionFilter::for_operator("USTRA"),
+            ControlActionFilter {
+                line_ref: vec!["10".into()],
+                ..ControlActionFilter::for_operator("REGIOBUS")
+            },
+        ],
+    );
+
+    let message = Siri::new(
+        VERSION,
+        ServiceRequest::new(now(), "CONTROL-ROOM", vec![request.into()]),
+    );
+    assert_eq!(round_trip(&message), message);
 }
 
 #[test]
@@ -228,6 +250,12 @@ fn every_action() -> Vec<(&'static str, ControlAction)> {
             "JourneyCancellation",
             ControlAction {
                 journey_cancellation: Some(JourneyScope::for_journey(journey())),
+                // The other choice this record carries: what to tell passengers,
+                // when no situation has been written for the action yet.
+                situation_description: Some(SituationDescription {
+                    summary: vec![DefaultedText::with_lang("EN", "The 08:15 will not run")],
+                    ..SituationDescription::default()
+                }),
                 ..action()
             },
         ),

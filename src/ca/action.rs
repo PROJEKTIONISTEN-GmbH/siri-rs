@@ -482,7 +482,7 @@ pub struct JourneyCreation {
     /// The identifier the new journey is to be known by.
     #[serde(rename = "NewJourneyCode")]
     pub new_journey_code: String,
-    /// The operational day it runs on, when not today.
+    /// The operational day it runs on, as an `xsd:date`; today when absent.
     #[serde(rename = "OperatingDayDate", default, skip_serializing_if = "Option::is_none")]
     pub operating_day_date: Option<String>,
 }
