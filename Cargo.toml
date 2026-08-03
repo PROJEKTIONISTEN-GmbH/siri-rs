@@ -11,6 +11,12 @@ readme = "README.md"
 keywords = ["siri", "public-transport", "gtfs-realtime", "vdv", "xml"]
 categories = ["parser-implementations", "encoding", "api-bindings"]
 
+# The measurements live in `benches/`, so the library itself is not a benchmark
+# target; leaving it as one would hand `cargo bench`'s arguments to a harness that
+# does not understand them.
+[lib]
+bench = false
+
 [dependencies]
 chrono = { version = "0.4.38", default-features = false, features = ["std", "serde", "alloc"] }
 quick-xml = { version = "0.37", features = ["serialize"] }
@@ -27,6 +33,33 @@ chrono = { version = "0.4.38", default-features = false, features = ["clock"] }
 reqwest = { version = "0.12", default-features = false, features = ["charset"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
+
+# The benchmark harness. Its report generation and its thread pool are left out:
+# the benchmarks below are single-threaded and read as text on the terminal.
+criterion = { version = "0.5", default-features = false, features = ["cargo_bench_support"] }
+
+[[bench]]
+name = "parse"
+harness = false
+
+[[bench]]
+name = "serialize"
+harness = false
+
+[[bench]]
+name = "pubsub"
+harness = false
+
+# What the benchmarks and the examples are built with. A library cannot impose a
+# profile on the program that uses it, so this governs this crate's own artefacts
+# only; the recommended settings for a consumer are on the front page.
+[profile.release]
+lto = "fat"
+codegen-units = 1
+
+[profile.bench]
+lto = "fat"
+codegen-units = 1
 
 [lints.rust]
 missing_docs = "deny"

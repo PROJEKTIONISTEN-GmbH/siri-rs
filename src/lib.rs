@@ -54,6 +54,17 @@
 //! # Ok::<(), siri_rs::Error>(())
 //! ```
 //!
+//! # Speed
+//!
+//! [`from_str`] hands the document to the deserialiser borrowed unless something
+//! binds the SIRI namespace to a prefix, and [`to_string`] produces the finished
+//! document — declaration, namespace and body — into a single buffer. What is left
+//! is the profile the finished program is built with, which a library cannot impose
+//! on its consumer: a program that wants the calls into this crate optimised across
+//! the crate boundary asks for `lto` and `codegen-units = 1` in its own
+//! `[profile.release]`. `benches/` measures reading, writing and one turn of the
+//! publish/subscribe cycle over the official example documents.
+//!
 //! # How the schema is modelled
 //!
 //! The XML Schema is the authority; where idiomatic Rust and schema fidelity

@@ -276,6 +276,43 @@ The schema-validation tests shell out to `xmllint`, which is part of libxml2
 (Debian/Ubuntu: `apt install libxml2-utils`, macOS: `brew install libxml2`). They
 fail with a pointer to this note if it is missing rather than passing quietly.
 
+## Performance
+
+SIRI is a large standard, and the types that transcribe it are large with it. What a
+feed handler actually spends its time on is narrower: reading a document, writing
+one, and one turn of the publish/subscribe cycle. Those three are measured in
+`benches/`, over the same official example documents the conformance suite reads —
+from a check-status request of a few hundred bytes to a situation exchange of a
+hundred kilobytes:
+
+```sh
+cargo bench
+```
+
+Two things follow from the measurements and are worth knowing when reading the code:
+
+- **Reading borrows.** A document that binds the SIRI namespace as its default — how
+  most feeds are written — is handed to the deserialiser as it arrived, with no copy
+  and no rewrite. Only a document that binds the namespace to a prefix is rewritten,
+  once, before it is read.
+- **Writing fills one buffer.** The declaration, the namespace and the body are
+  produced into a single string rather than assembled from several.
+
+The rest is the profile the finished program is built with, and a library cannot
+impose that on its consumer. A program that cares about the last of the speed should
+ask for it in its own manifest:
+
+```text
+[profile.release]
+lto = "fat"        # "thin" if link time matters more than the last few per cent
+codegen-units = 1
+panic = "abort"    # only if the program has no use for unwinding
+```
+
+`lto` is what lets a consumer's optimiser see through the calls into this crate; it
+is also what this crate builds its own benchmarks and examples with, so the numbers
+`cargo bench` prints are the numbers such a consumer gets.
+
 ## Roadmap
 
 Every CEN functional service is now modelled, so there is no list of services left
