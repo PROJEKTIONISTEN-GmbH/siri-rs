@@ -10,7 +10,11 @@ mod support;
 use chrono::{DateTime, Duration, FixedOffset};
 
 use siri_rs::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
-use siri_rs::pubsub::{Consumer, ConsumerEvent, Producer, ProducerConfig, SituationExchange, SituationSource};
+use siri_rs::framework::ServiceDeliveryPayload;
+use siri_rs::pubsub::{
+    Consumer, ConsumerEvent, Producer, ProducerConfig, SituationExchange, SituationSource,
+    SubscriptionState,
+};
 use siri_rs::sx::situation::SituationSource as Source;
 use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
 use siri_rs::types::{DefaultedText, Duration as SiriDuration, HalfOpenTimestampOutputRange};
@@ -214,6 +218,181 @@ fn a_fetched_delivery_subscription_announces_before_it_delivers() {
 
     // The fetch settled the debt: polling again announces nothing.
     assert!(producer.poll(now).is_empty());
+}
+
+/// Opens the three subscriptions the two tests below start from: two held by a
+/// departure board that named an address for its deliveries, one by a passenger app
+/// that named none. Returns the consumers, board first.
+fn subscribe_two_consumers(
+    producer: &mut Producer<Disruptions, SituationExchange>,
+    now: DateTime<FixedOffset>,
+) -> [Consumer<SituationExchange>; 2] {
+    const BOARD: usize = 0;
+    const APP: usize = 1;
+
+    let mut consumers = [
+        Consumer::<SituationExchange>::new("DEPARTURE-BOARD").at_address("board"),
+        Consumer::<SituationExchange>::new("PASSENGER-APP"),
+    ];
+    for (consumer, identifier) in [
+        (BOARD, "board-lifts"),
+        (BOARD, "board-escalators"),
+        (APP, "app-lifts"),
+    ] {
+        let subscribe = consumers[consumer].subscribe(
+            identifier,
+            now + Duration::hours(12),
+            SituationExchangeRequest::new(now),
+            now,
+        );
+        let response = producer
+            .handle(&subscribe, now)
+            .expect("the producer answers")
+            .expect("a subscription request is answered");
+        consumers[consumer]
+            .handle(&response, now)
+            .expect("the consumer reads it");
+    }
+    consumers
+}
+
+#[test]
+fn every_subscription_is_delivered_to_the_subscriber_that_opened_it() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    let now = now();
+    let mut producer = Producer::new(
+        ProducerConfig::new("MY-AGENCY"),
+        Disruptions(vec![situation(now, "2026-0041", Severity::Normal)]),
+    );
+
+    subscribe_two_consumers(&mut producer, now);
+    assert_eq!(producer.subscriptions().len(), 3);
+
+    let outbound = producer.poll(now);
+    let addressed: Vec<(&str, Option<&str>, &str)> = outbound
+        .iter()
+        .map(|out| {
+            exchanged("ServiceDelivery", &out.message);
+            let delivery = out
+                .message
+                .payload
+                .as_service_delivery()
+                .expect("a due subscription is delivered to");
+            let ServiceDeliveryPayload::SituationExchangeDelivery(situations) = &delivery.deliveries
+                [0]
+            else {
+                panic!("a situation exchange producer delivers situations");
+            };
+            (
+                out.recipient.as_str(),
+                out.address.as_ref().map(|address| address.as_str()),
+                situations
+                    .subscription_ref
+                    .as_ref()
+                    .expect("a delivery says which subscription it satisfies")
+                    .as_str(),
+            )
+        })
+        .collect();
+
+    assert_eq!(
+        addressed,
+        [
+            ("DEPARTURE-BOARD", Some("board"), "board-lifts"),
+            ("DEPARTURE-BOARD", Some("board"), "board-escalators"),
+            ("PASSENGER-APP", None, "app-lifts"),
+        ],
+        "each subscription is delivered once, to its own subscriber, at the address it named"
+    );
+
+    assert!(
+        producer.poll(now).is_empty(),
+        "a delivery settles every subscription it went to"
+    );
+
+    producer.source_mut().0.push(situation(now, "2026-0042", Severity::Severe));
+    producer.data_changed();
+    assert_eq!(
+        producer.poll(now).len(),
+        3,
+        "changed data falls due for every subscription again"
+    );
+}
+
+#[test]
+fn a_fetch_settles_only_the_subscriptions_of_the_consumer_that_asked() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    let now = now();
+    let mut producer = Producer::new(
+        ProducerConfig::new("MY-AGENCY").with_fetched_delivery(),
+        Disruptions(vec![situation(now, "2026-0041", Severity::Normal)]),
+    );
+
+    let [mut board, _app] = subscribe_two_consumers(&mut producer, now);
+
+    let announcements = producer.poll(now);
+    assert_eq!(announcements.len(), 3);
+    let identifiers: Vec<String> = announcements
+        .iter()
+        .map(|out| {
+            out.message
+                .payload
+                .as_data_ready_notification()
+                .expect("a fetched-delivery producer announces")
+                .message_identifier
+                .as_ref()
+                .expect("an announcement is identifiable")
+                .as_str()
+                .to_owned()
+        })
+        .collect();
+    assert_eq!(
+        identifiers,
+        ["MY-AGENCY-1", "MY-AGENCY-2", "MY-AGENCY-3"],
+        "each announcement carries an identifier of its own"
+    );
+
+    let ConsumerEvent::DataReady { fetch, .. } = board
+        .handle(&announcements[0].message, now)
+        .expect("the consumer reads the announcement")
+    else {
+        panic!("a data-ready notification asks the consumer to fetch");
+    };
+    let delivery = producer
+        .handle(&fetch, now)
+        .expect("the producer answers")
+        .expect("a data supply request is answered");
+    exchanged("ServiceDelivery", &delivery);
+
+    let delivered = delivery
+        .payload
+        .as_service_delivery()
+        .expect("the answer is a service delivery");
+    assert_eq!(
+        delivered.deliveries.len(),
+        2,
+        "the fetch collects everything that subscriber is owed, and nothing else"
+    );
+
+    let waiting: Vec<(&str, bool)> = producer
+        .subscriptions()
+        .iter()
+        .map(|held| {
+            (
+                held.subscription_ref.as_str(),
+                matches!(held.state, SubscriptionState::AwaitingFetch(_)),
+            )
+        })
+        .collect();
+    assert_eq!(
+        waiting,
+        [
+            ("board-lifts", false),
+            ("board-escalators", false),
+            ("app-lifts", true),
+        ],
+        "the other consumer's announcement is still outstanding"
+    );
 }
 
 #[test]

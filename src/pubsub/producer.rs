@@ -179,11 +179,11 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
                 Ok(Some(self.close_subscriptions(request, now)))
             }
             SiriPayload::DataSupplyRequest(request) => {
-                let consumer = request.consumer_ref.clone().ok_or_else(|| Error::InvalidValue {
+                let consumer = request.consumer_ref.as_ref().ok_or_else(|| Error::InvalidValue {
                     datatype: "DataSupplyRequest/ConsumerRef",
                     value: String::new(),
                 })?;
-                Ok(Some(self.supply(&consumer, now)))
+                Ok(Some(self.supply(consumer, now)))
             }
             SiriPayload::CheckStatusRequest(_) => Ok(Some(envelope(CheckStatusResponse {
                 shortest_possible_cycle: self.config.shortest_possible_cycle.clone(),
@@ -326,28 +326,27 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
     }
 
     /// Builds the delivery a consumer's outstanding fetch is waiting for.
+    ///
+    /// Noted by position first and worked through afterwards, for the reason
+    /// [`Self::pending_deliveries`] gives.
     fn supply(&mut self, consumer: &ParticipantRef, now: DateTime<FixedOffset>) -> Siri {
-        let waiting: Vec<Subscription<Svc>> = self
+        let waiting: Vec<usize> = self
             .subscriptions
             .iter()
-            .filter(|held| {
+            .enumerate()
+            .filter(|(_, held)| {
                 held.subscriber_ref == *consumer
                     && matches!(held.state, SubscriptionState::AwaitingFetch(_))
             })
-            .cloned()
+            .map(|(index, _)| index)
             .collect();
 
-        let deliveries = waiting
-            .iter()
-            .map(|subscription| Svc::service_delivery(self.subscription_delivery(subscription, now)))
-            .collect();
-
-        for held in &mut self.subscriptions {
-            if held.subscriber_ref == *consumer
-                && matches!(held.state, SubscriptionState::AwaitingFetch(_))
-            {
-                held.state = SubscriptionState::Idle;
-            }
+        let mut deliveries = Vec::with_capacity(waiting.len());
+        for index in waiting {
+            deliveries.push(Svc::service_delivery(
+                self.subscription_delivery(&self.subscriptions[index], now),
+            ));
+            self.subscriptions[index].state = SubscriptionState::Idle;
         }
 
         envelope(ServiceDelivery::new(
@@ -357,79 +356,81 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
         ))
     }
 
+    /// The messages the subscriptions that are owed one have fallen due for.
+    ///
+    /// The subscriptions that are due are noted by position first, and worked
+    /// through afterwards, because building a message reads the subscription while
+    /// recording what was sent writes to it. Taking them out of the producer instead
+    /// would settle that by copying every one of them — including the request it
+    /// holds — for each turn of the cycle.
     fn pending_deliveries(&mut self, now: DateTime<FixedOffset>) -> Vec<Outbound> {
-        let due: Vec<Subscription<Svc>> = self
+        let due: Vec<usize> = self
             .subscriptions
             .iter()
-            .filter(|held| held.state == SubscriptionState::DeliveryDue)
-            .cloned()
+            .enumerate()
+            .filter(|(_, held)| held.state == SubscriptionState::DeliveryDue)
+            .map(|(index, _)| index)
             .collect();
 
-        due.into_iter()
-            .map(|subscription| {
-                let message = match self.config.delivery_method {
-                    DeliveryMethod::Direct => envelope(ServiceDelivery::new(
+        let mut outbound = Vec::with_capacity(due.len());
+        for index in due {
+            let message = match self.config.delivery_method {
+                DeliveryMethod::Direct => {
+                    let delivery = self.subscription_delivery(&self.subscriptions[index], now);
+                    self.subscriptions[index].state = SubscriptionState::Idle;
+                    envelope(ServiceDelivery::new(
                         now,
                         self.config.producer_ref.clone(),
-                        vec![Svc::service_delivery(
-                            self.subscription_delivery(&subscription, now),
-                        )],
-                    )),
-                    DeliveryMethod::Fetched => {
-                        let identifier = self.mint_message_id();
-                        self.set_state(
-                            &subscription.subscription_ref,
-                            SubscriptionState::AwaitingFetch(identifier.clone()),
-                        );
-                        envelope(DataReadyNotification {
-                            message_identifier: Some(identifier),
-                            ..DataReadyNotification::new(now, self.config.producer_ref.clone())
-                        })
-                    }
-                };
-                if self.config.delivery_method == DeliveryMethod::Direct {
-                    self.set_state(&subscription.subscription_ref, SubscriptionState::Idle);
+                        vec![Svc::service_delivery(delivery)],
+                    ))
                 }
-                Outbound {
-                    recipient: subscription.subscriber_ref.clone(),
-                    address: subscription.consumer_address.clone(),
-                    message,
+                DeliveryMethod::Fetched => {
+                    let identifier = self.mint_message_id();
+                    self.subscriptions[index].state =
+                        SubscriptionState::AwaitingFetch(identifier.clone());
+                    envelope(DataReadyNotification {
+                        message_identifier: Some(identifier),
+                        ..DataReadyNotification::new(now, self.config.producer_ref.clone())
+                    })
                 }
-            })
-            .collect()
+            };
+            outbound.push(Outbound {
+                recipient: self.subscriptions[index].subscriber_ref.clone(),
+                address: self.subscriptions[index].consumer_address.clone(),
+                message,
+            });
+        }
+        outbound
     }
 
     fn expire_subscriptions(&mut self, now: DateTime<FixedOffset>) -> Vec<Outbound> {
-        let expired: Vec<Subscription<Svc>> = self
-            .subscriptions
-            .iter()
-            .filter(|held| held.initial_termination_time <= now)
-            .cloned()
-            .collect();
-        self.subscriptions
-            .retain(|held| held.initial_termination_time > now);
-
-        expired
-            .into_iter()
-            .map(|subscription| Outbound {
-                recipient: subscription.subscriber_ref.clone(),
-                address: subscription.consumer_address.clone(),
+        let producer_ref = &self.config.producer_ref;
+        let mut outbound = Vec::new();
+        self.subscriptions.retain(|held| {
+            if held.initial_termination_time > now {
+                return true;
+            }
+            outbound.push(Outbound {
+                recipient: held.subscriber_ref.clone(),
+                address: held.consumer_address.clone(),
                 message: envelope(crate::framework::SubscriptionTerminatedNotification {
                     response_timestamp: now,
-                    producer_ref: Some(self.config.producer_ref.clone()),
+                    producer_ref: Some(producer_ref.clone()),
                     address: None,
                     response_message_identifier: None,
                     request_message_ref: None,
                     delegator_address: None,
                     delegator_ref: None,
-                    subscriber_ref: Some(subscription.subscriber_ref.clone()),
+                    subscriber_ref: Some(held.subscriber_ref.clone()),
                     subscription_filter_ref: None,
-                    subscription_ref: subscription.subscription_ref.clone(),
+                    subscription_ref: held.subscription_ref.clone(),
                     error_condition: None,
                     extensions: None,
                 }),
-            })
-            .collect()
+            });
+            false
+        });
+        outbound
     }
 
     fn due_heartbeat(&mut self, now: DateTime<FixedOffset>) -> Option<Outbound> {
@@ -440,8 +441,9 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
         }
         self.last_heartbeat = Some(now);
 
-        let recipient = self.subscriptions.first()?.subscriber_ref.clone();
-        let address = self.subscriptions.first()?.consumer_address.clone();
+        let subscriber = self.subscriptions.first()?;
+        let recipient = subscriber.subscriber_ref.clone();
+        let address = subscriber.consumer_address.clone();
         Some(Outbound {
             recipient,
             address,
@@ -473,16 +475,6 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
 
     fn delivery_for(&self, request: &Svc::Request, now: DateTime<FixedOffset>) -> Svc::Delivery {
         Svc::delivery(now, self.source.items(request))
-    }
-
-    fn set_state(&mut self, subscription_ref: &SubscriptionRef, state: SubscriptionState) {
-        if let Some(held) = self
-            .subscriptions
-            .iter_mut()
-            .find(|held| held.subscription_ref == *subscription_ref)
-        {
-            held.state = state;
-        }
     }
 
     fn mint_message_id(&mut self) -> MessageQualifier {
