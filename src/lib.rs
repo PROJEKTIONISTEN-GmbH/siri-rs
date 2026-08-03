@@ -8,7 +8,8 @@
 //! service on top of it: the planned timetable and the timetable as it is actually
 //! running, the two of them seen from a stop, the vehicles running it, the
 //! interchanges between them planned and monitored, free-form messages, the state
-//! of passenger facilities, and the incidents and disruptions that perturb it all.
+//! of passenger facilities, the incidents and disruptions that perturb it all, and
+//! what a control room decides to do about them.
 //!
 //! Both roles are supported: use it to consume a producer's feed, or to run one.
 //!
@@ -26,6 +27,7 @@
 //! | [`cm`] | Connection Monitoring: whether those interchanges will be made |
 //! | [`gm`] | General Message: free-form messages on named channels |
 //! | [`fm`] | Facility Monitoring: whether the lift is working |
+//! | [`ca`] | Control Actions: what the control room has decided to do |
 //! | [`sx`] | Situation Exchange requests, deliveries and `PtSituationElement` |
 //! | [`pubsub`] | The subscription state machines and the transport seam |
 //! | [`model`] | The journey model, references and locations shared across services |
@@ -74,7 +76,8 @@
 //! schemas and example documents: each example is parsed, written back out,
 //! compared to the original element by element, and validated against the schema.
 //! `tests/fixtures/README.md` lists the documents covered, including the German
-//! VDV 736 profile.
+//! VDV 736 profile. [`ca`] is the one service with no example documents to check
+//! against, and its own documentation says what is checked instead.
 
 #![deny(missing_docs)]
 #![forbid(unsafe_code)]
@@ -82,6 +85,7 @@
 #[macro_use]
 mod macros;
 
+pub mod ca;
 pub mod cm;
 pub mod ct;
 pub mod enumerations;

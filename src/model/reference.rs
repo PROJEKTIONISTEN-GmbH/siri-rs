@@ -20,6 +20,8 @@ siri_ref! {
     OperatorRef;
     /// Identifies a part of an operator's organisation.
     OperationalUnitRef;
+    /// Identifies a transport authority, in IFOPT terms.
+    AuthorityRef;
     /// Identifies a line — a named group of routes presented to the public as one.
     LineRef;
     /// Identifies a direction of travel along a line.

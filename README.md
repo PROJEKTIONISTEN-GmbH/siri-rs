@@ -33,6 +33,9 @@ in Rust. Read a producer's feed, or run one.
 - **Situation Exchange (SIRI-SX)**: incidents and disruptions, complete — validity
   and publication windows, sources, classifiers and reasons, everything a
   situation affects, its consequences, and the publishing actions it triggers;
+- **Control Actions (SIRI-CA)**: what a control room has decided to do about all
+  that — a journey put on or taken off, a stop closed, an interchange held or
+  dropped, a vehicle moved to other work, a message sent to a driver;
 - the **journey model** these services share, down to train formations, occupancy
   and capacity, the facility model, and the GML polygon a flexible stop area may be
   drawn as.
@@ -250,6 +253,12 @@ transcribes, so a mistyped wire value is a test failure rather than a rejected
 message in production. Losing an enumeration from that check is itself a failure:
 the count is compared with the number the crate declares.
 
+One service is the exception, and says so: **Control Actions ships no example
+documents at all**, so there is nothing to read back and compare. It is checked
+against the schemas instead — a message is built for every control action the
+schema allows and each is validated — which is a weaker guarantee than the other
+services have. Example messages would make it the same guarantee.
+
 `tests/fixtures/README.md` lists the documents covered and where they come from.
 
 ## Running the tests
@@ -264,18 +273,13 @@ fail with a pointer to this note if it is missing rather than passing quietly.
 
 ## Roadmap
 
-The framework, the publish/subscribe hub and the journey model are complete and
-service-independent; the remaining work is one functional service at a time, each on
-this foundation:
+Every CEN functional service is now modelled, so there is no list of services left
+to work through. What remains open is narrower:
 
-- Stop Monitoring (SIRI-SM) and Stop Timetable (SIRI-ST)
-- Connection Monitoring (SIRI-CM) and Connection Timetable (SIRI-CT)
-- General Message (SIRI-GM), Facility Monitoring (SIRI-FM), Control Actions (SIRI-CA)
-
-Also open: structured `Extensions` payloads, which currently round-trip as opaque
-content; the facility model the journey services may embed a condition from, which
-arrives with Facility Monitoring; and a fuller DATEX II binding for the
-road-situation records SIRI-SX can embed.
+- structured `Extensions` payloads, which currently round-trip as opaque content;
+- a fuller DATEX II binding for the road-situation records SIRI-SX can embed;
+- Control Actions proved by round trip rather than by the schemas alone, once
+  example messages for it exist.
 
 ## Licence
 

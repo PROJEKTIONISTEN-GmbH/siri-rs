@@ -3,6 +3,7 @@
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
+use crate::ca::ControlActionSubscriptionRequest;
 use crate::cm::ConnectionMonitoringSubscriptionRequest;
 use crate::ct::ConnectionTimetableSubscriptionRequest;
 use crate::et::EstimatedTimetableSubscriptionRequest;
@@ -111,6 +112,8 @@ pub enum SubscriptionRequestPayload {
     GeneralMessageSubscriptionRequest(Box<GeneralMessageSubscriptionRequest>),
     /// A subscription to the state of passenger facilities.
     FacilityMonitoringSubscriptionRequest(Box<FacilityMonitoringSubscriptionRequest>),
+    /// A subscription to what a control room decides.
+    ControlActionSubscriptionRequest(Box<ControlActionSubscriptionRequest>),
     /// A subscription to situations.
     SituationExchangeSubscriptionRequest(Box<SituationExchangeSubscriptionRequest>),
 }
@@ -166,6 +169,12 @@ impl From<GeneralMessageSubscriptionRequest> for SubscriptionRequestPayload {
 impl From<FacilityMonitoringSubscriptionRequest> for SubscriptionRequestPayload {
     fn from(request: FacilityMonitoringSubscriptionRequest) -> Self {
         Self::FacilityMonitoringSubscriptionRequest(Box::new(request))
+    }
+}
+
+impl From<ControlActionSubscriptionRequest> for SubscriptionRequestPayload {
+    fn from(request: ControlActionSubscriptionRequest) -> Self {
+        Self::ControlActionSubscriptionRequest(Box::new(request))
     }
 }
 

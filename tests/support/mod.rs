@@ -27,6 +27,17 @@ pub fn schema_path() -> PathBuf {
     fixtures_dir().join("xsd/siri.xsd")
 }
 
+/// The root schema's substitution-group variant.
+///
+/// `siri.xsd` lists the functional services a `<Siri>` message may carry one by
+/// one; `siriSg.xsd` accepts whatever substitutes for the abstract service
+/// elements instead. The two agree on every service the published list mentions —
+/// but the list leaves Control Actions out, so a control-action message can only
+/// be validated against this one.
+pub fn substitution_group_schema_path() -> PathBuf {
+    fixtures_dir().join("xsd/siriSg.xsd")
+}
+
 /// One official example document.
 pub struct Fixture {
     /// Path relative to `tests/fixtures/xml`, used as the test's label.
@@ -281,11 +292,22 @@ Install it (Debian/Ubuntu: `apt install libxml2-utils`, macOS: `brew install lib
 /// Validates a document against the SIRI schema, returning the validator's
 /// complaint when it does not.
 pub fn validate(xml: &str) -> Result<(), String> {
+    validate_against(xml, schema_path())
+}
+
+/// Validates a document against the substitution-group variant of the schema.
+///
+/// See [`substitution_group_schema_path`] for when that is the one to use.
+pub fn validate_with_substitution_groups(xml: &str) -> Result<(), String> {
+    validate_against(xml, substitution_group_schema_path())
+}
+
+fn validate_against(xml: &str, schema: PathBuf) -> Result<(), String> {
     let file = temp_file(xml);
     let output = Command::new("xmllint")
         .arg("--noout")
         .arg("--schema")
-        .arg(schema_path())
+        .arg(schema)
         .arg(&file)
         .output()
         .expect("xmllint runs");

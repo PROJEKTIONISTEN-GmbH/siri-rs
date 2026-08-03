@@ -505,6 +505,8 @@ fn request_name(payload: &crate::framework::ServiceRequestPayload) -> &'static s
         Payload::ConnectionMonitoringRequest(_) => "ConnectionMonitoringRequest",
         Payload::GeneralMessageRequest(_) => "GeneralMessageRequest",
         Payload::FacilityMonitoringRequest(_) => "FacilityMonitoringRequest",
+        Payload::ControlActionRequest(_) => "ControlActionRequest",
+        Payload::ControlActionMultipleRequest(_) => "ControlActionMultipleRequest",
         Payload::SituationExchangeRequest(_) => "SituationExchangeRequest",
     }
 }
@@ -527,6 +529,7 @@ fn subscription_name(payload: &crate::framework::SubscriptionRequestPayload) -> 
         }
         Payload::GeneralMessageSubscriptionRequest(_) => "GeneralMessageSubscriptionRequest",
         Payload::FacilityMonitoringSubscriptionRequest(_) => "FacilityMonitoringSubscriptionRequest",
+        Payload::ControlActionSubscriptionRequest(_) => "ControlActionSubscriptionRequest",
         Payload::SituationExchangeSubscriptionRequest(_) => "SituationExchangeSubscriptionRequest",
     }
 }

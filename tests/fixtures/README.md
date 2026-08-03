@@ -43,11 +43,11 @@ incident from first report through two updates to its closure.
 
 `examples/siri_exu_capability/exd_allServices_capabilitiesResponse.xml` is the only
 document in the directories above that is not here. It states the capabilities of
-all eleven functional services in one message, and the two this release does not
-implement — Situation Exchange Discovery and Control Actions — would each need a
-capability structure of their own before the document could be read. The companion
-request document, `exd_allServices_capabilitiesRequest.xml`, *is* included — a
-capability request carries no service-specific content, so all eleven are supported.
+all eleven functional services in one message, and one of them — Situation Exchange
+Discovery — would need a capability structure of its own before the document could
+be read. The companion request document, `exd_allServices_capabilitiesRequest.xml`,
+*is* included — a capability request carries no service-specific content, so all
+eleven are supported.
 
 `examples/occupancy` is out of scope: those documents exercise the occupancy
 extension profile rather than a functional service.

@@ -73,12 +73,13 @@ pub use projection::{
     ZoneProjection,
 };
 pub use reference::{
-    BlockRef, ClearDownRef, ConnectionLinkRef, ControlActionRef, CourseOfJourneyRef, DataFrameRef,
-    DatedVehicleJourneyRef, DestinationRef, DirectionRef, EquipmentRef, EquipmentTypeRef,
-    FacilityRef, FeatureRef, FramedVehicleJourneyRef, InterchangeRef, JourneyPatternRef,
-    LineDirection, LineRef, MonitoringRef, OperationalUnitRef, OperatorRef, OrganisationRef,
-    PlaceRef, ProductCategoryRef, QuayRef, RequestedLines, RouteRef, ServiceFeatureRef, SiteRef,
-    SituationFullRef, SituationNumber, SituationRef, StopAreaRef, StopPlaceComponentRef,
-    StopPlaceRef, StopPointRef, VehicleFeatureRef, VehicleJourneyRef, VehicleRef, VersionRef,
+    AuthorityRef, BlockRef, ClearDownRef, ConnectionLinkRef, ControlActionRef, CourseOfJourneyRef,
+    DataFrameRef, DatedVehicleJourneyRef, DestinationRef, DirectionRef, EquipmentRef,
+    EquipmentTypeRef, FacilityRef, FeatureRef, FramedVehicleJourneyRef, InterchangeRef,
+    JourneyPatternRef, LineDirection, LineRef, MonitoringRef, OperationalUnitRef, OperatorRef,
+    OrganisationRef, PlaceRef, ProductCategoryRef, QuayRef, RequestedLines, RouteRef,
+    ServiceFeatureRef, SiteRef, SituationFullRef, SituationNumber, SituationRef, StopAreaRef,
+    StopPlaceComponentRef, StopPlaceRef, StopPointRef, VehicleFeatureRef, VehicleJourneyRef,
+    VehicleRef, VersionRef,
 };
 pub use targeted_journey::{TargetedCall, TargetedVehicleJourney};

@@ -3847,3 +3847,123 @@ siri_enum! {
         Full = "full",
     }
 }
+
+siri_enum! {
+    /// Why a CONTROL ACTION was taken.
+    ControlActionReasonCategory as "ControlActionReasonCategory" {
+        /// accident
+        Accident = "accident",
+        /// assault
+        Assault = "assault",
+        /// vandalism
+        Vandalism = "vandalism",
+        /// noDriver
+        NoDriver = "noDriver",
+        /// strike
+        Strike = "strike",
+        /// vehicleShortage
+        VehicleShortage = "vehicleShortage",
+        /// technicalFailure
+        TechnicalFailure = "technicalFailure",
+        /// vehicleBreakdown
+        VehicleBreakdown = "vehicleBreakdown",
+        /// infrastructurFailure
+        InfrastructurFailure = "infrastructurFailure",
+        /// delays
+        Delays = "delays",
+        /// reducedspeed
+        Reducedspeed = "reducedspeed",
+        /// weather
+        Weather = "weather",
+        /// congestion
+        Congestion = "congestion",
+        /// roadwork
+        Roadwork = "roadwork",
+        /// changedRoute
+        ChangedRoute = "changedRoute",
+        /// traficIncident
+        TraficIncident = "traficIncident",
+        /// earlydeparture
+        Earlydeparture = "earlydeparture",
+        /// wrongRoute
+        WrongRoute = "wrongRoute",
+        /// policeDecision
+        PoliceDecision = "policeDecision",
+        /// safety
+        Safety = "safety",
+        /// smoke
+        Smoke = "smoke",
+        /// medical
+        Medical = "medical",
+        /// heavyload
+        Heavyload = "heavyload",
+        /// restoreOperation
+        RestoreOperation = "restoreOperation",
+        /// maintenance
+        Maintenance = "maintenance",
+        /// serviceInfo
+        ServiceInfo = "serviceInfo",
+        /// marketingInfo
+        MarketingInfo = "marketingInfo",
+        /// other
+        Other = "other",
+    }
+}
+
+siri_enum! {
+    /// How a change to one passing time is carried over to the calls that follow it.
+    ChangeModel as "ChangeModelEnumeration" {
+        /// minimal
+        Minimal = "minimal",
+        /// linear
+        Linear = "linear",
+        /// statistic
+        Statistic = "statistic",
+    }
+}
+
+siri_enum! {
+    /// What a CONTROL ACTION has made of a stop.
+    StopPlaceStatus as "StopPlaceStatusEnumeration" {
+        /// limitedAccess
+        LimitedAccess = "limitedAccess",
+        /// closed
+        Closed = "closed",
+        /// attention
+        Attention = "attention",
+    }
+}
+
+siri_enum! {
+    /// Why the passing times of a journey were changed.
+    ChangeOfJourneyTimingType as "ChangeOfJourneyTimingTypeEnumeration" {
+        /// respacing
+        Respacing = "respacing",
+        /// resorption
+        Resorption = "resorption",
+        /// departureLag
+        DepartureLag = "departureLag",
+        /// interchangeSecuring
+        InterchangeSecuring = "interchangeSecuring",
+        /// trafic
+        Trafic = "trafic",
+        /// other
+        Other = "other",
+    }
+}
+
+siri_enum! {
+    /// What kind of journey was activated by a CONTROL ACTION.
+    TypeOfActivatedJourney as "TypeOfActivatedJourneyEnumeration" {
+        /// virtualLineJourney
+        VirtualLineJourney = "virtualLineJourney",
+        /// otherFlexibleJourney
+        OtherFlexibleJourney = "otherFlexibleJourney",
+        /// planedReplacement
+        PlanedReplacement = "planedReplacement",
+        /// planedReinforcement
+        PlanedReinforcement = "planedReinforcement",
+        /// other
+        Other = "other",
+    }
+}

@@ -8,6 +8,10 @@
 //!
 //! Each control action the schema allows is exercised once, because the schema's
 //! choice between them is the part of this service most easily got wrong.
+//!
+//! The messages are validated against `siriSg.xsd` rather than `siri.xsd`: the
+//! published list of services a `<Siri>` message may carry leaves Control Actions
+//! out, and only the substitution-group variant of the schema accepts them.
 
 mod support;
 
@@ -18,12 +22,14 @@ use siri_rs::ca::{
     ChangedPoint, ControlAction, ControlActionCapabilitiesResponse, ControlActionDelivery,
     ControlActionKind, ControlActionReason, ControlActionRequest,
     ControlActionServiceCapabilities, ControlActionSubscriptionRequest, ControlActions,
-    DatedCallRef, DriverMessage, DriverMessages, DriverScope, ExtraConnection,
+    AddedControlActions, DatedCallRef, DriverMessage, DriverMessages, DriverScope,
+    ExtraConnection,
     FlexibleJourneyActivation, GroupOfControlActions, GroupsOfControlActions, JourneyCreation,
     JourneyEnd, JourneyPatternModification, JourneyScope, JourneyStart, MessageContents,
-    MiddleCall, ModifiedConnection, PointInJourneyPatternRef, RelativeTime, RevokedControlAction,
-    RevokedControlActions, StopRefs, StopPointStatusTimeScope, TargetPoint, TimeScope,
-    VehicleDetecting, VehicleDetectings, VehicleWorkAssignment,
+    MiddleCall, ModifiedConnection, PointInJourneyPatternRef, RelativeTime, RemovedControlActions,
+    RevokedControlAction,
+    RevokedControlActions, StopPointStatusTimeScope, StopRefs, TargetPoint, VehicleDetecting,
+    VehicleDetectings, VehicleWorkAssignment,
 };
 use siri_rs::enumerations::{
     ChangeModel, ChangeOfJourneyTimingType, ControlActionReasonCategory, StopPlaceStatus,
@@ -33,7 +39,7 @@ use siri_rs::framework::{ServiceDelivery, ServiceRequest, SubscriptionRequest};
 use siri_rs::model::{FramedVehicleJourneyRef, ValidityCondition};
 use siri_rs::types::{Duration as SiriDuration, NaturalLanguageString};
 use siri_rs::{Siri, SiriRoot};
-use support::{validate, validator_available, VALIDATOR_MISSING};
+use support::{validate_with_substitution_groups, validator_available, VALIDATOR_MISSING};
 
 /// The version the messages built here declare.
 const VERSION: &str = "2.1";
@@ -111,8 +117,12 @@ fn a_delivery_carries_groups_revocations_messages_and_detections() {
         groups_of_control_actions: Some(GroupsOfControlActions {
             group_of_control_actions: vec![GroupOfControlActions {
                 purpose_of_grouping: Some(NaturalLanguageString::new("The bridge is shut")),
-                added_control_action_ref: vec!["CA-4711".into()],
-                removed_control_action_ref: vec!["CA-4710".into()],
+                added_control_actions: Some(AddedControlActions {
+                    added_control_action_ref: vec!["CA-4711".into()],
+                }),
+                removed_control_actions: Some(RemovedControlActions {
+                    removed_control_action_ref: vec!["CA-4710".into()],
+                }),
                 ..GroupOfControlActions::for_master_case("bridge-works", "MC-2026-0041")
             }],
         }),
@@ -161,7 +171,7 @@ fn the_capabilities_of_a_control_action_service_are_valid_and_read_back() {
     );
 
     let xml = siri_rs::to_string(&response).expect("the response is writable");
-    if let Err(complaint) = validate(&xml) {
+    if let Err(complaint) = validate_with_substitution_groups(&xml) {
         panic!("the capabilities response is not valid SIRI:\n{xml}\n{complaint}");
     }
     let read: ControlActionCapabilitiesResponse =
@@ -338,11 +348,11 @@ fn every_action() -> Vec<(&'static str, ControlAction)> {
                 // rather than one dated journey.
                 journey_cancellation: Some(JourneyScope::on_line(
                     "10",
-                    TimeScope::from(ValidityCondition {
+                    ValidityCondition {
                         from_date_time: Some(now()),
                         to_date_time: Some(now() + Duration::hours(2)),
                         ..ValidityCondition::default()
-                    }),
+                    },
                 )),
                 ..action()
             },
@@ -376,7 +386,7 @@ fn round_trip(message: &Siri) -> Siri {
 fn assert_valid(message: &Siri, what: &str) {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     let xml = siri_rs::to_string(message).expect("the message is writable");
-    if let Err(complaint) = validate(&xml) {
+    if let Err(complaint) = validate_with_substitution_groups(&xml) {
         panic!("{what} is not valid SIRI:\n{xml}\n{complaint}");
     }
 }

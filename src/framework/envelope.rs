@@ -19,6 +19,7 @@ use crate::framework::subscription::{
     SubscriptionRequest, SubscriptionResponse, SubscriptionTerminatedNotification,
     TerminateSubscriptionRequest, TerminateSubscriptionResponse,
 };
+use crate::ca::{ControlActionDelivery, ControlActionMultipleRequest, ControlActionRequest};
 use crate::cm::{
     ConnectionMonitoringDistributorDelivery, ConnectionMonitoringFeederDelivery,
     ConnectionMonitoringRequest,
@@ -246,6 +247,10 @@ pub enum ServiceRequestPayload {
     GeneralMessageRequest(Box<GeneralMessageRequest>),
     /// A request for the state of passenger facilities.
     FacilityMonitoringRequest(Box<FacilityMonitoringRequest>),
+    /// A request for what a control room has decided.
+    ControlActionRequest(Box<ControlActionRequest>),
+    /// A request for those decisions across several topics at once.
+    ControlActionMultipleRequest(Box<ControlActionMultipleRequest>),
     /// A request for situations.
     SituationExchangeRequest(Box<SituationExchangeRequest>),
 }
@@ -307,6 +312,18 @@ impl From<GeneralMessageRequest> for ServiceRequestPayload {
 impl From<FacilityMonitoringRequest> for ServiceRequestPayload {
     fn from(request: FacilityMonitoringRequest) -> Self {
         Self::FacilityMonitoringRequest(Box::new(request))
+    }
+}
+
+impl From<ControlActionRequest> for ServiceRequestPayload {
+    fn from(request: ControlActionRequest) -> Self {
+        Self::ControlActionRequest(Box::new(request))
+    }
+}
+
+impl From<ControlActionMultipleRequest> for ServiceRequestPayload {
+    fn from(request: ControlActionMultipleRequest) -> Self {
+        Self::ControlActionMultipleRequest(Box::new(request))
     }
 }
 
@@ -407,6 +424,8 @@ pub enum ServiceDeliveryPayload {
     GeneralMessageDelivery(Box<GeneralMessageDelivery>),
     /// Facility states from the Facility Monitoring service.
     FacilityMonitoringDelivery(Box<FacilityMonitoringDelivery>),
+    /// Decisions from the Control Action service.
+    ControlActionDelivery(Box<ControlActionDelivery>),
     /// Situations from the Situation Exchange service.
     SituationExchangeDelivery(Box<SituationExchangeDelivery>),
 }
@@ -468,6 +487,12 @@ impl From<GeneralMessageDelivery> for ServiceDeliveryPayload {
 impl From<FacilityMonitoringDelivery> for ServiceDeliveryPayload {
     fn from(delivery: FacilityMonitoringDelivery) -> Self {
         Self::FacilityMonitoringDelivery(Box::new(delivery))
+    }
+}
+
+impl From<ControlActionDelivery> for ServiceDeliveryPayload {
+    fn from(delivery: ControlActionDelivery) -> Self {
+        Self::ControlActionDelivery(Box::new(delivery))
     }
 }
 
