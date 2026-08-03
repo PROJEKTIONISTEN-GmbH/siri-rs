@@ -14,13 +14,14 @@ mod support;
 
 use chrono::{DateTime, Duration, FixedOffset};
 
-use siri_rs::cm::{ConnectionMonitoringRequest, MonitoredFeederArrival};
+use siri_rs::cm::{ConnectingTimeFilter, ConnectionMonitoringRequest, MonitoredFeederArrival};
 use siri_rs::ct::{ConnectionTimetableRequest, TimetabledFeederArrival};
-use siri_rs::enumerations::FacilityStatus;
+use siri_rs::enumerations::FacilityStatus as Availability;
 use siri_rs::fm::FacilityMonitoringRequest;
 use siri_rs::gm::{GeneralMessageRequest, InfoMessage};
 use siri_rs::model::{
-    FacilityCondition, InterchangeJourney, MonitoredVehicleJourney, TargetedVehicleJourney,
+    FacilityCondition, FacilityStatus, InterchangeJourney, MonitoredVehicleJourney,
+    TargetedVehicleJourney,
 };
 use siri_rs::pubsub::{
     ConnectionMonitoringFeeder, ConnectionMonitoringFeederSource, ConnectionTimetable,
@@ -89,7 +90,11 @@ fn the_hub_carries_a_connection_monitoring_subscription() {
             expected_arrival_time: Some(now() + Duration::minutes(14)),
             ..MonitoredFeederArrival::new(now(), "CL-Kroepcke", InterchangeJourney::new("10", "OUT"))
         }]),
-        ConnectionMonitoringRequest::for_journeys(now(), "CL-Kroepcke", Vec::new()),
+        ConnectionMonitoringRequest::for_line(
+            now(),
+            "CL-Kroepcke",
+            ConnectingTimeFilter::new("10", "OUT"),
+        ),
     );
 
     assert_eq!(arrivals.len(), 1);
@@ -123,13 +128,13 @@ fn the_hub_carries_a_facility_monitoring_subscription() {
     let conditions = subscribe_and_collect::<_, FacilityMonitoring>(
         Lifts(vec![FacilityCondition::for_reference(
             "lift-platform-3",
-            FacilityStatus::NotAvailable,
+            FacilityStatus::new(Availability::NotAvailable),
         )]),
         FacilityMonitoringRequest::new(now()),
     );
 
     assert_eq!(conditions.len(), 1);
-    assert_eq!(conditions[0].facility_status, FacilityStatus::NotAvailable);
+    assert_eq!(conditions[0].facility_status.status, Availability::NotAvailable);
 }
 
 /// Opens a subscription, lets the producer answer it, and returns what was delivered.

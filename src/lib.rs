@@ -4,10 +4,11 @@
 //! real-time public transport data. This crate implements the SIRI **framework**
 //! (message envelope, request/response, discovery and capabilities), the full
 //! **publish/subscribe data hub** (subscription lifecycle, data-ready
-//! notifications, fetched and direct delivery, heartbeats), and four functional
-//! services on top of it: the planned timetable (**SIRI-PT**), the timetable as it
-//! is actually running (**SIRI-ET**), the vehicles running it (**SIRI-VM**), and the
-//! incidents and disruptions that perturb it (**SIRI-SX**).
+//! notifications, fetched and direct delivery, heartbeats), and every functional
+//! service on top of it: the planned timetable and the timetable as it is actually
+//! running, the two of them seen from a stop, the vehicles running it, the
+//! interchanges between them planned and monitored, free-form messages, the state
+//! of passenger facilities, and the incidents and disruptions that perturb it all.
 //!
 //! Both roles are supported: use it to consume a producer's feed, or to run one.
 //!
@@ -18,7 +19,13 @@
 //! | [`framework`] | The `<Siri>` envelope and every framework message |
 //! | [`pt`] | Production Timetable: the day's plan |
 //! | [`et`] | Estimated Timetable: the plan as it is running |
+//! | [`st`] | Stop Timetable: the plan at one stop |
+//! | [`sm`] | Stop Monitoring: what is due at one stop now |
 //! | [`vm`] | Vehicle Monitoring: where the vehicles are |
+//! | [`ct`] | Connection Timetable: the interchanges planned over a link |
+//! | [`cm`] | Connection Monitoring: whether those interchanges will be made |
+//! | [`gm`] | General Message: free-form messages on named channels |
+//! | [`fm`] | Facility Monitoring: whether the lift is working |
 //! | [`sx`] | Situation Exchange requests, deliveries and `PtSituationElement` |
 //! | [`pubsub`] | The subscription state machines and the transport seam |
 //! | [`model`] | The journey model, references and locations shared across services |

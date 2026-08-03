@@ -17,14 +17,25 @@ in Rust. Read a producer's feed, or run one.
   and the interchanges planned around them;
 - **Estimated Timetable (SIRI-ET)**: the same journeys as they are actually running
   — delays, cancellations, journeys added today, stops skipped;
+- **Stop Timetable (SIRI-ST)**: the same plan seen from one stop, as timetabled
+  visits;
+- **Stop Monitoring (SIRI-SM)**: the departure board — what is due at a stop now,
+  how late it is running, and why the board is empty when it is;
 - **Vehicle Monitoring (SIRI-VM)**: where the vehicles are, how they are getting on,
   and which stops they have served and have still to serve;
+- **Connection Timetable (SIRI-CT)** and **Connection Monitoring (SIRI-CM)**: the
+  interchanges planned over a connection link, and how they are going — the feeder
+  side reporting its arrivals, the distributor side deciding whether to wait;
+- **General Message (SIRI-GM)**: free-form messages on named channels, for what the
+  structured services have no field for;
+- **Facility Monitoring (SIRI-FM)**: whether the lift, the ticket machine or the
+  accessible toilet is working, and what that means for passengers who need it;
 - **Situation Exchange (SIRI-SX)**: incidents and disruptions, complete — validity
   and publication windows, sources, classifiers and reasons, everything a
   situation affects, its consequences, and the publishing actions it triggers;
-- the **journey model** the timetable and monitoring services share, down to train
-  formations, occupancy and capacity, and the GML polygon a flexible stop area may
-  be drawn as.
+- the **journey model** these services share, down to train formations, occupancy
+  and capacity, the facility model, and the GML polygon a flexible stop area may be
+  drawn as.
 
 It is **transport-agnostic**. The library owns the protocol; carrying bytes is
 yours. That keeps it usable from any HTTP stack, from a message queue, or from a
@@ -179,14 +190,13 @@ records a delivery carried, the acknowledgement and the fetch request a data-rea
 notification calls for, a heartbeat, a subscription that ended.
 
 Which service the two speak is decided once. A producer takes it from its source —
-implementing `SituationSource`, `EstimatedTimetableSource`,
-`ProductionTimetableSource` or `VehicleMonitoringSource` is what makes it a producer
-of that service — and a consumer is told directly, as
-`Consumer::<EstimatedTimetable>::new(…)`. Everything else is the same code.
+implementing `SituationSource`, `StopMonitoringSource`, `FacilityMonitoringSource`
+or any of the others is what makes it a producer of that service — and a consumer is
+told directly, as `Consumer::<EstimatedTimetable>::new(…)`. Everything else is the
+same code.
 
-Three pairs of examples run all of it against a real socket. Each producer serves a
-route and a timer; each consumer subscribes, receives on a route of its own, prints
-what arrives and unsubscribes before it stops.
+Four pairs of examples run all of it against a real socket. Each producer serves a
+route and a timer; each consumer prints what arrives and unsubscribes before it stops.
 **`examples/sx_producer_axum.rs`** serves one route per delivery method, so pushing a
 delivery and announcing one for collection are both visible in a single run, and
 **`examples/sx_consumer_reqwest.rs`** follows the announced path all the way through.
@@ -194,6 +204,10 @@ delivery and announcing one for collection are both visible in a single run, and
 and lets the delay grow while **`examples/et_consumer_reqwest.rs`** is watching.
 **`examples/vm_producer_axum.rs`** moves a vehicle every few seconds, which
 **`examples/vm_consumer_reqwest.rs`** follows across the map.
+**`examples/sm_producer_axum.rs`** keeps a departure board where one tram keeps losing
+time, and **`examples/sm_consumer_reqwest.rs`** asks for it both ways round: first by
+polling, the way a display redraws itself, then by subscribing and watching the delay
+grow.
 
 ```sh
 cargo run --example sx_producer_axum     # in one terminal…
@@ -204,13 +218,18 @@ cargo run --example et_consumer_reqwest
 
 cargo run --example vm_producer_axum
 cargo run --example vm_consumer_reqwest
+
+cargo run --example sm_producer_axum
+cargo run --example sm_consumer_reqwest
 ```
 
-`tests/http_endpoint.rs` and `tests/http_journey_services.rs` run that wiring on a
-port the operating system picks and drive full cycles through it — announced
-delivery, pushed delivery, a heartbeat, a plain service request — validating every
-body that crosses the wire against the official schemas and pinning the order of the
-exchange.
+`tests/http_endpoint.rs`, `tests/http_journey_services.rs` and
+`tests/http_stop_monitoring.rs` run that wiring on a port the operating system picks
+and drive full cycles through it — announced delivery, pushed delivery, a heartbeat,
+a plain service request — validating every body that crosses the wire against the
+official schemas and pinning the order of the exchange. `tests/hub_services.rs` does
+the same in process for every service the crate models, so none of them can quietly
+stop fitting the hub.
 
 axum, reqwest and tokio are development dependencies, and stay that way. Which
 transport to use is the application's decision; the examples make one so that the
