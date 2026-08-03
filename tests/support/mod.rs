@@ -1,9 +1,11 @@
-//! Shared machinery for the conformance tests: fixtures, semantic XML comparison
-//! and schema validation.
+//! Shared machinery for the conformance tests: fixtures, semantic XML comparison,
+//! schema validation and — in [`http`] — a producer and a consumer on a real port.
 //!
 //! Cargo compiles this module separately into each integration-test binary, and no
 //! single binary uses all of it.
 #![allow(dead_code)]
+
+pub mod http;
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
