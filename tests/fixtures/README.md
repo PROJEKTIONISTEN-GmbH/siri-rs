@@ -25,6 +25,12 @@ The official example documents, grouped by the part of the standard they exercis
 | `pt/` | `examples/siri_exm_PT` | 4 |
 | `et/` | `examples/siri_exm_ET` | 4 |
 | `vm/` | `examples/siri_exm_VM` | 7 |
+| `sm/` | `examples/siri_exm_SM` | 9 |
+| `st/` | `examples/siri_exm_ST` | 4 |
+| `cm/` | `examples/siri_exm_CM` | 5 |
+| `ct/` | `examples/siri_exm_CT` | 4 |
+| `gm/` | `examples/siri_exm_GM` | 5 |
+| `fm/` | `examples/siri_exm_FM` | 4 |
 | `sx/` | `examples/siri_exm_SX` | 9 |
 | `sx/vdv736/` | `examples/siri_exm_SX/VDV736_exm` | 4 |
 | `discovery/` | `examples/siri_exu_discovery` | 10 |
@@ -37,15 +43,17 @@ incident from first report through two updates to its closure.
 
 `examples/siri_exu_capability/exd_allServices_capabilitiesResponse.xml` is the only
 document in the directories above that is not here. It states the capabilities of
-all eleven functional services, seven of which this release does not implement;
-including it would mean modelling seven capability structures for services whose
-messages the crate cannot read anyway. The companion request document,
-`exd_allServices_capabilitiesRequest.xml`, *is* included — a capability request
-carries no service-specific content, so all eleven are supported.
+all eleven functional services in one message, and the two this release does not
+implement — Situation Exchange Discovery and Control Actions — would each need a
+capability structure of their own before the document could be read. The companion
+request document, `exd_allServices_capabilitiesRequest.xml`, *is* included — a
+capability request carries no service-specific content, so all eleven are supported.
 
-The example directories for the remaining functional services
-(`examples/siri_exm_{ST,SM,CT,CM,GM,FM}` and `examples/occupancy`) are out of scope
-for the same reason and will arrive with those services.
+`examples/occupancy` is out of scope: those documents exercise the occupancy
+extension profile rather than a functional service.
+
+The Control Actions service ships no example messages at all, so it is covered by
+the schemas alone; `src/ca` says so in its own documentation.
 
 No VDV 454 example messages are shipped with the schema repository, so the German
 profile of the timetable services is covered here only in so far as the schemas
