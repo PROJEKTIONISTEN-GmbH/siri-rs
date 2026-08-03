@@ -23,7 +23,7 @@ use siri_rs::st::StopTimetableCapabilitiesResponse;
 use siri_rs::sx::{PtSituationElement, RoadSituationElement};
 use siri_rs::vm::VehicleMonitoringCapabilitiesResponse;
 use siri_rs::Siri;
-use support::{compare, parse, validate, validator_available, VALIDATOR_MISSING};
+use support::{compare, parse, validate, validator_available, Fixture, VALIDATOR_MISSING};
 
 /// Reads a document into `T` and writes it straight back out.
 fn rewrite<T: siri_rs::SiriRoot>(xml: &str) -> siri_rs::Result<String> {
@@ -74,11 +74,12 @@ fn round_trip(root: &str, xml: &str) -> Result<String, String> {
     written.map_err(|error| format!("cannot round-trip: {error}"))
 }
 
-#[test]
-fn every_official_example_round_trips_without_loss() {
+/// Reads every document, writes it back and reports each one that lost, invented or
+/// reordered content.
+fn round_trip_differences(fixtures: Vec<Fixture>) -> Vec<String> {
     let mut failures = Vec::new();
 
-    for fixture in support::fixtures() {
+    for fixture in fixtures {
         let root = support::root_element(&fixture.xml);
         let written = match round_trip(&root, &fixture.xml) {
             Ok(written) => written,
@@ -92,20 +93,15 @@ fn every_official_example_round_trips_without_loss() {
         }
     }
 
-    assert!(
-        failures.is_empty(),
-        "{} of the official examples did not round-trip:\n{}",
-        failures.len(),
-        failures.join("\n")
-    );
+    failures
 }
 
-#[test]
-fn every_official_example_is_written_back_as_schema_valid_xml() {
-    assert!(validator_available(), "{VALIDATOR_MISSING}");
+/// Reads every document, writes it back and reports each written document the
+/// validator rejects.
+fn written_documents_the_validator_rejects(fixtures: Vec<Fixture>) -> Vec<String> {
     let mut failures = Vec::new();
 
-    for fixture in support::fixtures() {
+    for fixture in fixtures {
         let root = support::root_element(&fixture.xml);
         let written = match round_trip(&root, &fixture.xml) {
             Ok(written) => written,
@@ -119,6 +115,24 @@ fn every_official_example_is_written_back_as_schema_valid_xml() {
         }
     }
 
+    failures
+}
+
+#[test]
+fn every_official_example_round_trips_without_loss() {
+    let failures = round_trip_differences(support::fixtures());
+    assert!(
+        failures.is_empty(),
+        "{} of the official examples did not round-trip:\n{}",
+        failures.len(),
+        failures.join("\n")
+    );
+}
+
+#[test]
+fn every_official_example_is_written_back_as_schema_valid_xml() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    let failures = written_documents_the_validator_rejects(support::fixtures());
     assert!(
         failures.is_empty(),
         "{} of the written documents did not validate:\n{}",
@@ -127,14 +141,42 @@ fn every_official_example_is_written_back_as_schema_valid_xml() {
     );
 }
 
-/// The fixtures themselves are the official examples, unmodified. If they stopped
-/// validating, the copy would have drifted from the published schemas.
+/// The derived documents cover content the official examples leave uncovered —
+/// extension payloads and an embedded DATEX II record. They are held to the same
+/// bar; `tests/fixtures/derived/README.md` says what each is derived from.
+#[test]
+fn every_derived_example_round_trips_without_loss() {
+    let failures = round_trip_differences(support::derived_fixtures());
+    assert!(
+        failures.is_empty(),
+        "{} of the derived examples did not round-trip:\n{}",
+        failures.len(),
+        failures.join("\n")
+    );
+}
+
+#[test]
+fn every_derived_example_is_written_back_as_schema_valid_xml() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    let failures = written_documents_the_validator_rejects(support::derived_fixtures());
+    assert!(
+        failures.is_empty(),
+        "{} of the written derived documents did not validate:\n{}",
+        failures.len(),
+        failures.join("\n")
+    );
+}
+
+/// The fixtures are valid SIRI before the crate touches them: the official ones
+/// because they are the published examples unmodified — if they stopped validating,
+/// the copy would have drifted from the published schemas — and the derived ones
+/// because a fixture the schema rejects would prove nothing.
 #[test]
 fn the_fixtures_are_valid_siri_to_begin_with() {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     let mut failures = Vec::new();
 
-    for fixture in support::fixtures() {
+    for fixture in support::fixtures().into_iter().chain(support::derived_fixtures()) {
         if let Err(complaint) = validate(&fixture.xml) {
             failures.push(format!("{}:\n{complaint}", fixture.name));
         }
@@ -234,6 +276,22 @@ fn the_expected_documents_are_covered() {
     ];
 
     let present: Vec<String> = support::fixtures()
+        .into_iter()
+        .map(|fixture| fixture.name.replace('\\', "/"))
+        .collect();
+    assert_eq!(present, EXPECTED);
+}
+
+/// The derived documents, listed for the same reason: losing one would quietly
+/// shrink the suite. `tests/fixtures/derived/README.md` records their provenance.
+#[test]
+fn the_expected_derived_documents_are_covered() {
+    const EXPECTED: &[&str] = &[
+        "framework/exa_checkStatus_request_extensions.xml",
+        "sx/exx_situationExchange_road_datex.xml",
+    ];
+
+    let present: Vec<String> = support::derived_fixtures()
         .into_iter()
         .map(|fixture| fixture.name.replace('\\', "/"))
         .collect();

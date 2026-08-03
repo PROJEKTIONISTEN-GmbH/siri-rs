@@ -38,9 +38,9 @@ pub fn substitution_group_schema_path() -> PathBuf {
     fixtures_dir().join("xsd/siriSg.xsd")
 }
 
-/// One official example document.
+/// One example document.
 pub struct Fixture {
-    /// Path relative to `tests/fixtures/xml`, used as the test's label.
+    /// Path relative to the directory it was collected from, used as the test's label.
     pub name: String,
     /// Absolute path on disk.
     pub path: PathBuf,
@@ -48,9 +48,22 @@ pub struct Fixture {
     pub xml: String,
 }
 
-/// Every example document under `tests/fixtures/xml`, in a stable order.
+/// Every official example document under `tests/fixtures/xml`, in a stable order.
 pub fn fixtures() -> Vec<Fixture> {
-    let root = fixtures_dir().join("xml");
+    fixtures_under("xml")
+}
+
+/// Every document under `tests/fixtures/derived`, in a stable order.
+///
+/// These are not published CEN material: they are derived from the schemas and the
+/// official examples to cover content no official example carries.
+/// `tests/fixtures/derived/README.md` records what each is derived from.
+pub fn derived_fixtures() -> Vec<Fixture> {
+    fixtures_under("derived")
+}
+
+fn fixtures_under(directory: &str) -> Vec<Fixture> {
+    let root = fixtures_dir().join(directory);
     let mut paths = Vec::new();
     collect_xml(&root, &mut paths);
     paths.sort();

@@ -751,6 +751,38 @@ mod tests {
     }
 
     #[test]
+    fn an_extension_payload_survives_being_read_and_written_back() {
+        // `ExtensionsStructure` is an `xsd:any` wildcard, so a payload is whatever the
+        // participants agreed on: elements, attributes, repeated names, any depth.
+        let element = concat!(
+            r#"<Extensions><ProfileVersion>1.4</ProfileVersion>"#,
+            r#"<OperatorSettings scope="regional"><Setting name="Language">EN</Setting>"#,
+            r#"<Setting name="MaximumAge">15</Setting></OperatorSettings></Extensions>"#
+        );
+
+        let extensions: Extensions = quick_xml::de::from_str(element).unwrap();
+        let settings = extensions.children_named("OperatorSettings").next().unwrap();
+        assert_eq!(settings.attribute("scope"), Some("regional"));
+        assert_eq!(settings.children_named("Setting").count(), 2);
+
+        assert_eq!(
+            quick_xml::se::to_string_with_root("Extensions", &extensions).unwrap(),
+            element
+        );
+    }
+
+    #[test]
+    fn an_extension_that_is_absent_empty_or_only_text_is_written_back_as_it_was() {
+        for element in ["<Extensions/>", "<Extensions>opaque</Extensions>"] {
+            let extensions: Extensions = quick_xml::de::from_str(element).unwrap();
+            assert_eq!(
+                quick_xml::se::to_string_with_root("Extensions", &extensions).unwrap(),
+                element
+            );
+        }
+    }
+
+    #[test]
     fn unmodelled_content_that_is_only_text_stays_only_text() {
         let content: AnyContent = quick_xml::de::from_str("<Content>Beware the Ides</Content>").unwrap();
         assert_eq!(content, AnyContent::text("Beware the Ides"));

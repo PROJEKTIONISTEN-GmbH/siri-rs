@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<siri:RoadSituationElement xmlns:d2="http://datex2.eu/schema/2_0RC1/2_0" xmlns:siri="http://www.siri.org.uk/siri" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.siri.org.uk/siri ../../xsd/siri.xsd">
+	<siri:CreationTime>2001-12-17T09:30:47.0Z</siri:CreationTime>
+	<siri:CountryRef>de</siri:CountryRef>
+	<siri:ParticipantRef>RAILCO01</siri:ParticipantRef>
+	<siri:SituationNumber>000354</siri:SituationNumber>
+	<siri:Source>
+		<siri:SourceType>feed</siri:SourceType>
+		<siri:SourceMethod>roadAuthorities</siri:SourceMethod>
+	</siri:Source>
+	<siri:ValidityPeriod>
+		<siri:StartTime>2001-12-17T09:30:47.0Z</siri:StartTime>
+		<siri:EndTime>2001-12-17T10:30:47.0Z</siri:EndTime>
+	</siri:ValidityPeriod>
+	<siri:AlertCause>roadClosed</siri:AlertCause>
+	<siri:Severity>severe</siri:Severity>
+	<siri:Summary overridden="true" xml:lang="EN">Access road to Barchester Station closed</siri:Summary>
+	<siri:Affects>
+		<siri:Roads>
+			<siri:AffectedRoad>
+				<siri:Road>
+					<d2:roadsideReferencePointPrimaryLocation>
+						<d2:roadsideReferencePoint>
+							<d2:roadsideReferencePointIdentifier>A255-KM-3</d2:roadsideReferencePointIdentifier>
+							<d2:roadNumber>A255</d2:roadNumber>
+							<d2:directionBound>northBound</d2:directionBound>
+						</d2:roadsideReferencePoint>
+					</d2:roadsideReferencePointPrimaryLocation>
+					<d2:roadsideReferencePointSecondaryLocation>
+						<d2:roadsideReferencePoint>
+							<d2:roadsideReferencePointIdentifier>A255-KM-7</d2:roadsideReferencePointIdentifier>
+							<d2:roadNumber>A255</d2:roadNumber>
+						</d2:roadsideReferencePoint>
+					</d2:roadsideReferencePointSecondaryLocation>
+				</siri:Road>
+			</siri:AffectedRoad>
+		</siri:Roads>
+	</siri:Affects>
+</siri:RoadSituationElement>
