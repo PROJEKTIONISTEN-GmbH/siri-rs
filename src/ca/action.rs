@@ -600,14 +600,16 @@ impl MiddleCall {
 
 /// Part of a journey taken out of the plan.
 ///
-/// The calls dropped are named in one of four ways — everything before a point,
-/// everything after one, a list of points, or everything between two — which
-/// [`CallCancellationAction::before`], [`CallCancellationAction::after`],
-/// [`CallCancellationAction::at`] and [`CallCancellationAction::between`] build.
+/// The first seven fields are the schema's journey scope, written out here as the
+/// schema writes them — the group is included, not nested — and the constructors
+/// take a [`JourneyScope`] rather than the seven. The calls dropped are named in
+/// one of four ways: everything before a point, everything after one, a list of
+/// points, or everything between two, which [`CallCancellationAction::before`],
+/// [`CallCancellationAction::after`], [`CallCancellationAction::at`] and
+/// [`CallCancellationAction::between`] build.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CallCancellationAction {
-    /// The journey, by the timetable identifier alone — the schema's journey scope,
-    /// whose seven elements are written here as the schema writes them.
+    /// The journey, by the timetable identifier alone.
     #[serde(rename = "VehicleJourneyRef", default, skip_serializing_if = "Option::is_none")]
     pub vehicle_journey_ref: Option<VehicleJourneyRef>,
     /// Every journey running in this direction of its line.
@@ -759,10 +761,12 @@ impl FlexibleJourneyActivation {
 }
 
 /// A journey now calling somewhere else.
+///
+/// As in [`CallCancellationAction`], the first seven fields are the schema's
+/// journey scope written out in place.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct JourneyPatternModification {
-    /// The journey, by the timetable identifier alone — the schema's journey scope,
-    /// whose seven elements are written here as the schema writes them.
+    /// The journey, by the timetable identifier alone.
     #[serde(rename = "VehicleJourneyRef", default, skip_serializing_if = "Option::is_none")]
     pub vehicle_journey_ref: Option<VehicleJourneyRef>,
     /// Every journey running in this direction of its line.

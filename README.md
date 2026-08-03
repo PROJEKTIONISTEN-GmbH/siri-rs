@@ -12,7 +12,7 @@ in Rust. Read a producer's feed, or run one.
   capabilities and discovery;
 - the **publish/subscribe data hub**: the full subscription lifecycle, direct and
   fetched delivery, check-status and heartbeat, termination — as types *and* as
-  the state machines that drive them, for any of the services below;
+  the state machines that drive them, for the services below;
 - **Production Timetable (SIRI-PT)**: the day's plan — dated journeys, their calls,
   and the interchanges planned around them;
 - **Estimated Timetable (SIRI-ET)**: the same journeys as they are actually running
@@ -197,6 +197,11 @@ implementing `SituationSource`, `StopMonitoringSource`, `FacilityMonitoringSourc
 or any of the others is what makes it a producer of that service — and a consumer is
 told directly, as `Consumer::<EstimatedTimetable>::new(…)`. Everything else is the
 same code.
+
+Two deliveries do not fit that shape and are built directly from the types instead:
+the distributor half of Connection Monitoring, which answers with three kinds of
+decision rather than one kind of record, and Control Actions, which carries five
+kinds of payload at once.
 
 Four pairs of examples run all of it against a real socket. Each producer serves a
 route and a timer; each consumer prints what arrives and unsubscribes before it stops.
