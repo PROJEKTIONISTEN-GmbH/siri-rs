@@ -48,27 +48,29 @@ pub fn from_str<T: SiriRoot>(xml: &str) -> Result<T> {
 
 /// Writes a SIRI document as a single line of XML, prefixed by an XML declaration.
 pub fn to_string<T: SiriRoot>(value: &T) -> Result<String> {
-    let body = quick_xml::se::to_string_with_root(T::ELEMENT_NAME, value)?;
-    Ok(format!(
-        "{DECLARATION}\n{}",
-        namespace::declare_default_namespace(&body)?
-    ))
+    let mut document = String::from(PROLOGUE);
+    let serialiser = quick_xml::se::Serializer::with_root(&mut document, Some(T::ELEMENT_NAME))
+        .map_err(Error::from)?;
+    value.serialize(serialiser).map_err(Error::from)?;
+    namespace::declare_default_namespace(&mut document, PROLOGUE.len(), T::ELEMENT_NAME);
+    Ok(document)
 }
 
 /// Writes a SIRI document indented with tabs, the layout the official examples use.
 pub fn to_string_pretty<T: SiriRoot>(value: &T) -> Result<String> {
-    let mut body = String::new();
-    let mut serialiser =
-        quick_xml::se::Serializer::with_root(&mut body, Some(T::ELEMENT_NAME)).map_err(Error::from)?;
+    let mut document = String::from(PROLOGUE);
+    let mut serialiser = quick_xml::se::Serializer::with_root(&mut document, Some(T::ELEMENT_NAME))
+        .map_err(Error::from)?;
     serialiser.indent('\t', 1);
     value.serialize(serialiser).map_err(Error::from)?;
-    Ok(format!(
-        "{DECLARATION}\n{}",
-        namespace::declare_default_namespace(&body)?
-    ))
+    namespace::declare_default_namespace(&mut document, PROLOGUE.len(), T::ELEMENT_NAME);
+    Ok(document)
 }
 
-const DECLARATION: &str = r#"<?xml version="1.0" encoding="UTF-8"?>"#;
+/// The XML declaration every document written here opens with, and the line break
+/// after it. The root element follows immediately, which is what tells
+/// [`namespace::declare_default_namespace`] where to write the namespace.
+const PROLOGUE: &str = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
 
 /// Fails unless the first element of `xml` is `T::ELEMENT_NAME`.
 ///

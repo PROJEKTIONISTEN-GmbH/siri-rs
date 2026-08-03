@@ -135,44 +135,28 @@ fn binds_the_namespace_to_a_prefix(xml: &str) -> bool {
 }
 
 /// Writes `xmlns="http://www.siri.org.uk/siri"` onto the root element of a
-/// serialised document.
+/// serialised document, in place.
 ///
 /// The serde serialiser has no notion of namespaces, so it emits bare element
-/// names. This pass adds the single declaration that puts the whole document into
-/// the SIRI namespace, which is how every official example is written.
-pub fn declare_default_namespace(xml: &str) -> Result<String> {
-    let mut reader = quick_xml::Reader::from_str(xml);
-    reader.config_mut().trim_text(false);
-    let mut writer = Writer::new(Vec::new());
-    let mut root_seen = false;
-
-    loop {
-        let event = reader.read_event()?;
-        match event {
-            Event::Eof => break,
-            Event::Start(e) if !root_seen => {
-                root_seen = true;
-                write(&mut writer, Event::Start(with_default_namespace(&e)))?;
-            }
-            Event::Empty(e) if !root_seen => {
-                root_seen = true;
-                write(&mut writer, Event::Empty(with_default_namespace(&e)))?;
-            }
-            other => write(&mut writer, other)?,
-        }
-    }
-
-    into_string(writer.into_inner())
+/// names. This adds the single declaration that puts the whole document into the
+/// SIRI namespace, which is how every official example is written.
+///
+/// `root_at` is where the root element's `<` is. The serialiser writes that element
+/// first and writes the name it was handed verbatim, so the declaration's place —
+/// straight after the name, ahead of the element's own attributes — follows from the
+/// name's length, and the document does not have to be read back to find it.
+pub(crate) fn declare_default_namespace(document: &mut String, root_at: usize, root: &str) {
+    debug_assert!(
+        document[root_at..].starts_with('<') && document[root_at + 1..].starts_with(root),
+        "the serialiser opens the document with <{root}"
+    );
+    document.insert_str(root_at + 1 + root.len(), DEFAULT_BINDING);
 }
 
-fn with_default_namespace(start: &BytesStart<'_>) -> BytesStart<'static> {
-    let mut out = BytesStart::new(String::from_utf8_lossy(start.name().as_ref()).into_owned());
-    out.push_attribute(("xmlns", NAMESPACE));
-    for attr in start.attributes().with_checks(false).flatten() {
-        out.push_attribute(attr);
-    }
-    out.into_owned()
-}
+/// The declaration [`declare_default_namespace`] inserts, spelled out so that it goes
+/// in as one piece; `the_default_binding_names_the_namespace` keeps it in step with
+/// [`NAMESPACE`].
+const DEFAULT_BINDING: &str = r#" xmlns="http://www.siri.org.uk/siri""#;
 
 #[cfg(test)]
 mod tests {
@@ -259,16 +243,33 @@ mod tests {
 
     #[test]
     fn the_root_element_gains_the_default_declaration() {
-        let out = declare_default_namespace(r#"<Siri version="2.1"><Foo/></Siri>"#).unwrap();
+        let mut document = String::from(r#"<Siri version="2.1"><Foo/></Siri>"#);
+        declare_default_namespace(&mut document, 0, "Siri");
         assert_eq!(
-            out,
+            document,
             r#"<Siri xmlns="http://www.siri.org.uk/siri" version="2.1"><Foo/></Siri>"#
         );
     }
 
     #[test]
     fn an_empty_root_element_gains_the_default_declaration() {
-        let out = declare_default_namespace("<Siri/>").unwrap();
-        assert_eq!(out, r#"<Siri xmlns="http://www.siri.org.uk/siri"/>"#);
+        let mut document = String::from("<Siri/>");
+        declare_default_namespace(&mut document, 0, "Siri");
+        assert_eq!(document, r#"<Siri xmlns="http://www.siri.org.uk/siri"/>"#);
+    }
+
+    #[test]
+    fn what_precedes_the_root_element_is_left_where_it_is() {
+        let mut document = String::from("<?xml version=\"1.0\"?>\n<Siri/>");
+        declare_default_namespace(&mut document, 22, "Siri");
+        assert_eq!(
+            document,
+            "<?xml version=\"1.0\"?>\n<Siri xmlns=\"http://www.siri.org.uk/siri\"/>"
+        );
+    }
+
+    #[test]
+    fn the_default_binding_names_the_namespace() {
+        assert_eq!(DEFAULT_BINDING, format!(" xmlns=\"{NAMESPACE}\""));
     }
 }
