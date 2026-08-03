@@ -28,9 +28,9 @@ use siri_rs::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowS
 use siri_rs::pubsub::{
     Consumer, ConsumerEvent, Outbound, Producer, ProducerConfig, SituationExchange, SituationSource,
 };
-use siri_rs::sx::situation::{HalfOpenTimestampOutputRange, SituationSource as Source};
+use siri_rs::sx::situation::SituationSource as Source;
 use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
-use siri_rs::types::{DefaultedText, Duration as SiriDuration};
+use siri_rs::types::{DefaultedText, Duration as SiriDuration, HalfOpenTimestampOutputRange};
 use siri_rs::Siri;
 use support::{validate, validator_available, VALIDATOR_MISSING};
 

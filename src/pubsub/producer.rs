@@ -497,7 +497,14 @@ fn request_name(payload: &crate::framework::ServiceRequestPayload) -> &'static s
     match payload {
         Payload::ProductionTimetableRequest(_) => "ProductionTimetableRequest",
         Payload::EstimatedTimetableRequest(_) => "EstimatedTimetableRequest",
+        Payload::StopTimetableRequest(_) => "StopTimetableRequest",
+        Payload::StopMonitoringRequest(_) => "StopMonitoringRequest",
+        Payload::StopMonitoringMultipleRequest(_) => "StopMonitoringMultipleRequest",
         Payload::VehicleMonitoringRequest(_) => "VehicleMonitoringRequest",
+        Payload::ConnectionTimetableRequest(_) => "ConnectionTimetableRequest",
+        Payload::ConnectionMonitoringRequest(_) => "ConnectionMonitoringRequest",
+        Payload::GeneralMessageRequest(_) => "GeneralMessageRequest",
+        Payload::FacilityMonitoringRequest(_) => "FacilityMonitoringRequest",
         Payload::SituationExchangeRequest(_) => "SituationExchangeRequest",
     }
 }
@@ -509,7 +516,17 @@ fn subscription_name(payload: &crate::framework::SubscriptionRequestPayload) -> 
             "ProductionTimetableSubscriptionRequest"
         }
         Payload::EstimatedTimetableSubscriptionRequest(_) => "EstimatedTimetableSubscriptionRequest",
+        Payload::StopTimetableSubscriptionRequest(_) => "StopTimetableSubscriptionRequest",
+        Payload::StopMonitoringSubscriptionRequest(_) => "StopMonitoringSubscriptionRequest",
         Payload::VehicleMonitoringSubscriptionRequest(_) => "VehicleMonitoringSubscriptionRequest",
+        Payload::ConnectionTimetableSubscriptionRequest(_) => {
+            "ConnectionTimetableSubscriptionRequest"
+        }
+        Payload::ConnectionMonitoringSubscriptionRequest(_) => {
+            "ConnectionMonitoringSubscriptionRequest"
+        }
+        Payload::GeneralMessageSubscriptionRequest(_) => "GeneralMessageSubscriptionRequest",
+        Payload::FacilityMonitoringSubscriptionRequest(_) => "FacilityMonitoringSubscriptionRequest",
         Payload::SituationExchangeSubscriptionRequest(_) => "SituationExchangeSubscriptionRequest",
     }
 }

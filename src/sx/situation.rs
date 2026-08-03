@@ -14,16 +14,18 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{
-    AlertCause, Audience, DayType, EndTimePrecision, EndTimeStatus, ImageContent, InformationStatus,
-    LinkContent, ProbabilityOfOccurrence, PublicEventType, QualityIndex, RelatedTo, ReportType,
-    ScopeType, Sensitivity, Severity, SituationSourceType, SourceType, VerificationStatus,
-    WorkflowStatus,
+    AlertCause, Audience, DayType, ImageContent, InformationStatus, LinkContent,
+    ProbabilityOfOccurrence, PublicEventType, QualityIndex, RelatedTo, ReportType, ScopeType,
+    Sensitivity, Severity, SituationSourceType, SourceType, VerificationStatus, WorkflowStatus,
 };
 use crate::model::ControlActionRef;
 use crate::sx::action::Actions;
 use crate::sx::affects::AffectsScope;
 use crate::sx::consequence::PtConsequences;
-use crate::types::{CountryRef, DefaultedText, Extensions, NaturalLanguageString, ParticipantRef};
+use crate::types::{
+    CountryRef, DefaultedText, Extensions, HalfOpenTimestampOutputRange, NaturalLanguageString,
+    ParticipantRef,
+};
 
 pub use crate::model::{SituationFullRef, SituationNumber, SituationRef};
 
@@ -700,82 +702,6 @@ impl SituationSource {
             external_code: None,
             source_file: None,
             extensions: None,
-        }
-    }
-}
-
-/// A period that starts at a known instant and may not have a stated end.
-///
-/// This is the form a producer publishes: when the end is unknown, the status says
-/// whether the disruption is expected to be a short or a long one, which is what a
-/// passenger information system needs in order to word the message.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct HalfOpenTimestampOutputRange {
-    /// The inclusive start of the period.
-    #[serde(rename = "StartTime")]
-    pub start_time: DateTime<FixedOffset>,
-    /// The inclusive end of the period, if it is known.
-    #[serde(rename = "EndTime", default, skip_serializing_if = "Option::is_none")]
-    pub end_time: Option<DateTime<FixedOffset>>,
-    /// How to read an absent end: as short term, long term, or simply unknown.
-    #[serde(rename = "EndTimeStatus", default, skip_serializing_if = "Option::is_none")]
-    pub end_time_status: Option<EndTimeStatus>,
-}
-
-impl HalfOpenTimestampOutputRange {
-    /// A period whose end is not yet known.
-    pub fn starting_at(start_time: DateTime<FixedOffset>) -> Self {
-        Self {
-            start_time,
-            end_time: None,
-            end_time_status: None,
-        }
-    }
-
-    /// A period between two instants, both inclusive.
-    pub fn between(start_time: DateTime<FixedOffset>, end_time: DateTime<FixedOffset>) -> Self {
-        Self {
-            start_time,
-            end_time: Some(end_time),
-            end_time_status: None,
-        }
-    }
-}
-
-/// A period that starts at a known instant and may not have a stated end.
-///
-/// This is the form a consumer sends when asking for data: the precision says how
-/// exactly the end is meant, so that a request ending "today" is not read as ending
-/// at midnight exactly.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct HalfOpenTimestampInputRange {
-    /// The inclusive start of the period.
-    #[serde(rename = "StartTime")]
-    pub start_time: DateTime<FixedOffset>,
-    /// The inclusive end of the period, if it is bounded.
-    #[serde(rename = "EndTime", default, skip_serializing_if = "Option::is_none")]
-    pub end_time: Option<DateTime<FixedOffset>>,
-    /// How exactly the end is to be taken; the default is to the second.
-    #[serde(rename = "EndTimePrecision", default, skip_serializing_if = "Option::is_none")]
-    pub end_time_precision: Option<EndTimePrecision>,
-}
-
-impl HalfOpenTimestampInputRange {
-    /// A period whose end is left open.
-    pub fn starting_at(start_time: DateTime<FixedOffset>) -> Self {
-        Self {
-            start_time,
-            end_time: None,
-            end_time_precision: None,
-        }
-    }
-
-    /// A period between two instants, both inclusive.
-    pub fn between(start_time: DateTime<FixedOffset>, end_time: DateTime<FixedOffset>) -> Self {
-        Self {
-            start_time,
-            end_time: Some(end_time),
-            end_time_precision: None,
         }
     }
 }

@@ -4,22 +4,26 @@ mod accessibility;
 mod call;
 mod dated_journey;
 mod estimated_journey;
+mod facility;
 mod feature;
 mod formation;
+mod interchange_journey;
 mod journey;
 mod location;
 mod mode;
 mod monitored_journey;
 mod projection;
 mod reference;
+mod targeted_journey;
 
 pub use accessibility::{
     AccessibilityAssessment, AccessibilityLimitation, AccessibilityLimitations,
-    PassengerAccessibilityNeeds, Suitabilities, Suitability, Timeband, Timebands, UserNeed,
-    UserNeedKind, ValidityCondition,
+    AssessmentSuitabilities, PassengerAccessibilityNeeds, Suitabilities, Suitability, Timeband,
+    Timebands, UserNeed, UserNeedKind, ValidityCondition, ACSB_NAMESPACE, IFOPT_NAMESPACE,
 };
 pub use call::{
-    BoardingPositionRef, FlexibleAreaRef, PlannedStopAssignment, StandingPlace, StopAssignment,
+    BoardingPositionRef, FlexibleAreaRef, MaximumNumberOfCalls, PlannedStopAssignment,
+    StandingPlace, StopAssignment,
 };
 pub use dated_journey::{
     ContextualisedConnectionLink, DatedCall, DatedCalls, DatedVehicleJourney,
@@ -31,6 +35,13 @@ pub use estimated_journey::{
     EstimatedVehicleJourney, JourneyAlteration, JourneyIdentity, RecordedCall, RecordedCalls,
     WillWait,
 };
+pub use facility::{
+    AnnotatedFacility, CountedAmount, CountedItemsIdList, EquipmentAvailability, EquipmentFeatures,
+    Facility, FacilityChange, FacilityCondition, FacilityFeature, FacilityFeatureKind,
+    FacilityFeatures, FacilityLimitations, FacilityLocation, FacilityStatus, FacilitySubject,
+    MobilityDisruption, MonitoredCounting, MonitoringInformation, MonitoringValidityCondition,
+    Remedy, TypeOfValue,
+};
 pub use feature::{ProductCategory, ServiceFeature, VehicleFeature};
 pub use formation::{
     CompoundTrain, CompoundTrainItem, CompoundTrains, EntranceToVehicleRef, FormationAssignment, FormationCondition,
@@ -41,6 +52,7 @@ pub use formation::{
     TrainInCompoundTrainItem, TrainInCompoundTrainRef, TrainItem, TrainRef, Trains,
     TrainsInCompoundTrain, TypeOfActionRef, VehicleInFormationStatusRecord, VehicleOccupancy,
 };
+pub use interchange_journey::InterchangeJourney;
 pub use journey::{
     Branding, BrandingRef, CompoundTrainRef, ConnectingJourneyRef, DatedVehicleJourneyIndirectRef,
     Direction, GroupOfLinesRef, JourneyPartInfo, JourneyPartRef, JourneyParts, JourneyPlaceRef,
@@ -61,10 +73,12 @@ pub use projection::{
     ZoneProjection,
 };
 pub use reference::{
-    BlockRef, ConnectionLinkRef, ControlActionRef, CourseOfJourneyRef, DataFrameRef,
-    DatedVehicleJourneyRef, DestinationRef, DirectionRef, FacilityRef, FramedVehicleJourneyRef,
-    InterchangeRef, JourneyPatternRef, LineDirection, LineRef, OperationalUnitRef, OperatorRef,
-    PlaceRef, ProductCategoryRef, QuayRef, RequestedLines, RouteRef, ServiceFeatureRef, SituationFullRef,
-    SituationNumber, SituationRef, StopAreaRef, StopPlaceComponentRef, StopPlaceRef, StopPointRef,
-    VehicleFeatureRef, VehicleJourneyRef, VehicleRef, VersionRef,
+    BlockRef, ClearDownRef, ConnectionLinkRef, ControlActionRef, CourseOfJourneyRef, DataFrameRef,
+    DatedVehicleJourneyRef, DestinationRef, DirectionRef, EquipmentRef, EquipmentTypeRef,
+    FacilityRef, FeatureRef, FramedVehicleJourneyRef, InterchangeRef, JourneyPatternRef,
+    LineDirection, LineRef, MonitoringRef, OperationalUnitRef, OperatorRef, OrganisationRef,
+    PlaceRef, ProductCategoryRef, QuayRef, RequestedLines, RouteRef, ServiceFeatureRef, SiteRef,
+    SituationFullRef, SituationNumber, SituationRef, StopAreaRef, StopPlaceComponentRef,
+    StopPlaceRef, StopPointRef, VehicleFeatureRef, VehicleJourneyRef, VehicleRef, VersionRef,
 };
+pub use targeted_journey::{TargetedCall, TargetedVehicleJourney};

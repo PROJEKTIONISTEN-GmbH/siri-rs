@@ -11,13 +11,20 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{CommunicationsTransportMethod, CompressionMethod};
+use crate::cm::ConnectionMonitoringCapabilitiesResponse;
+use crate::ct::ConnectionTimetableCapabilitiesResponse;
 use crate::et::EstimatedTimetableCapabilitiesResponse;
+use crate::fm::FacilityMonitoringCapabilitiesResponse;
+use crate::gm::GeneralMessageCapabilitiesResponse;
 use crate::pt::ProductionTimetableCapabilitiesResponse;
+use crate::sm::StopMonitoringCapabilitiesResponse;
+use crate::st::StopTimetableCapabilitiesResponse;
 use crate::vm::VehicleMonitoringCapabilitiesResponse;
 use crate::framework::error_condition::{ErrorCondition, ServiceRequestError};
-use crate::model::{ConnectionLinkRef, DirectionRef, LineRef, OperatorRef};
+use crate::model::{ConnectionLinkRef, DirectionRef, LineRef, MonitoringRef, OperatorRef};
 use crate::types::{
-    Duration, Empty, EndpointAddress, Extensions, MessageQualifier, MessageRef, ParticipantRef,
+    DefaultedBoolean, Duration, Empty, EndpointAddress, Extensions, MessageQualifier, MessageRef,
+    ParticipantRef,
 };
 use crate::xml::SiriRoot;
 
@@ -225,8 +232,20 @@ pub enum CapabilitiesResponsePayload {
     ProductionTimetableCapabilitiesResponse(ProductionTimetableCapabilitiesResponse),
     /// What the Estimated Timetable service offers.
     EstimatedTimetableCapabilitiesResponse(EstimatedTimetableCapabilitiesResponse),
+    /// What the Stop Timetable service offers.
+    StopTimetableCapabilitiesResponse(StopTimetableCapabilitiesResponse),
+    /// What the Stop Monitoring service offers.
+    StopMonitoringCapabilitiesResponse(StopMonitoringCapabilitiesResponse),
     /// What the Vehicle Monitoring service offers.
     VehicleMonitoringCapabilitiesResponse(VehicleMonitoringCapabilitiesResponse),
+    /// What the Connection Timetable service offers.
+    ConnectionTimetableCapabilitiesResponse(ConnectionTimetableCapabilitiesResponse),
+    /// What the Connection Monitoring service offers.
+    ConnectionMonitoringCapabilitiesResponse(ConnectionMonitoringCapabilitiesResponse),
+    /// What the General Message service offers.
+    GeneralMessageCapabilitiesResponse(GeneralMessageCapabilitiesResponse),
+    /// What the Facility Monitoring service offers.
+    FacilityMonitoringCapabilitiesResponse(FacilityMonitoringCapabilitiesResponse),
     /// What the Situation Exchange service offers.
     SituationExchangeCapabilitiesResponse(SituationExchangeCapabilitiesResponse),
 }
@@ -243,9 +262,45 @@ impl From<EstimatedTimetableCapabilitiesResponse> for CapabilitiesResponsePayloa
     }
 }
 
+impl From<StopTimetableCapabilitiesResponse> for CapabilitiesResponsePayload {
+    fn from(response: StopTimetableCapabilitiesResponse) -> Self {
+        Self::StopTimetableCapabilitiesResponse(response)
+    }
+}
+
+impl From<StopMonitoringCapabilitiesResponse> for CapabilitiesResponsePayload {
+    fn from(response: StopMonitoringCapabilitiesResponse) -> Self {
+        Self::StopMonitoringCapabilitiesResponse(response)
+    }
+}
+
 impl From<VehicleMonitoringCapabilitiesResponse> for CapabilitiesResponsePayload {
     fn from(response: VehicleMonitoringCapabilitiesResponse) -> Self {
         Self::VehicleMonitoringCapabilitiesResponse(response)
+    }
+}
+
+impl From<ConnectionTimetableCapabilitiesResponse> for CapabilitiesResponsePayload {
+    fn from(response: ConnectionTimetableCapabilitiesResponse) -> Self {
+        Self::ConnectionTimetableCapabilitiesResponse(response)
+    }
+}
+
+impl From<ConnectionMonitoringCapabilitiesResponse> for CapabilitiesResponsePayload {
+    fn from(response: ConnectionMonitoringCapabilitiesResponse) -> Self {
+        Self::ConnectionMonitoringCapabilitiesResponse(response)
+    }
+}
+
+impl From<GeneralMessageCapabilitiesResponse> for CapabilitiesResponsePayload {
+    fn from(response: GeneralMessageCapabilitiesResponse) -> Self {
+        Self::GeneralMessageCapabilitiesResponse(response)
+    }
+}
+
+impl From<FacilityMonitoringCapabilitiesResponse> for CapabilitiesResponsePayload {
+    fn from(response: FacilityMonitoringCapabilitiesResponse) -> Self {
+        Self::FacilityMonitoringCapabilitiesResponse(response)
     }
 }
 
@@ -671,9 +726,9 @@ pub enum OperatorPermissionItem {
 /// Whether a participant may see one named operator's situations.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OperatorPermission {
-    /// Whether access is granted or withheld.
+    /// Whether access is granted or withheld; an empty element grants it.
     #[serde(rename = "Allow")]
-    pub allow: bool,
+    pub allow: DefaultedBoolean,
     /// The operator the decision is about.
     #[serde(rename = "OperatorRef")]
     pub operator_ref: OperatorRef,
@@ -721,9 +776,9 @@ pub enum LinePermissionItem {
 /// Whether a participant may see one named line's situations.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LinePermission {
-    /// Whether access is granted or withheld.
+    /// Whether access is granted or withheld; an empty element grants it.
     #[serde(rename = "Allow")]
-    pub allow: bool,
+    pub allow: DefaultedBoolean,
     /// The line the decision is about.
     #[serde(rename = "LineRef")]
     pub line_ref: LineRef,
@@ -857,12 +912,80 @@ pub enum ConnectionLinkPermissionItem {
 /// Whether a participant may see one named connection link's services.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ConnectionLinkPermission {
-    /// Whether access is granted or withheld.
+    /// Whether access is granted or withheld; an empty element grants it.
     #[serde(rename = "Allow")]
-    pub allow: bool,
+    pub allow: DefaultedBoolean,
     /// The connection link the decision is about.
     #[serde(rename = "ConnectionLinkRef")]
     pub connection_link_ref: ConnectionLinkRef,
+}
+
+/// Whether and how a stop service checks requests against the permissions of the
+/// participant making them.
+///
+/// Stop Monitoring and Stop Timetable check the same three things, so the schema
+/// gives them one structure.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MonitoringCapabilityAccessControl {
+    /// Whether requests are checked against permissions at all.
+    #[serde(rename = "RequestChecking")]
+    pub request_checking: bool,
+    /// Whether the operator a request names is checked against its permissions.
+    #[serde(rename = "CheckOperatorRef", default, skip_serializing_if = "Option::is_none")]
+    pub check_operator_ref: Option<bool>,
+    /// Whether the line a request names is checked against its permissions.
+    #[serde(rename = "CheckLineRef", default, skip_serializing_if = "Option::is_none")]
+    pub check_line_ref: Option<bool>,
+    /// Whether the monitoring point a request names is checked against its permissions.
+    #[serde(rename = "CheckMonitoringRef", default, skip_serializing_if = "Option::is_none")]
+    pub check_monitoring_ref: Option<bool>,
+}
+
+/// Which monitoring points a participant may ask about.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct StopMonitorPermissions {
+    /// The entries, all of the same kind.
+    #[serde(rename = "$value")]
+    pub items: Vec<StopMonitorPermissionItem>,
+}
+
+impl StopMonitorPermissions {
+    /// Permission covering every monitoring point the service knows about.
+    pub fn allow_all() -> Self {
+        Self {
+            items: vec![StopMonitorPermissionItem::AllowAll(true)],
+        }
+    }
+
+    /// Permission listed point by point.
+    pub fn per_stop(permissions: Vec<StopMonitorPermission>) -> Self {
+        Self {
+            items: permissions
+                .into_iter()
+                .map(StopMonitorPermissionItem::StopMonitorPermission)
+                .collect(),
+        }
+    }
+}
+
+/// One entry of a [`StopMonitorPermissions`] list.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum StopMonitorPermissionItem {
+    /// Whether every monitoring point known to the service is covered.
+    AllowAll(bool),
+    /// A decision about one named monitoring point.
+    StopMonitorPermission(StopMonitorPermission),
+}
+
+/// Whether a participant may ask about one named monitoring point.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct StopMonitorPermission {
+    /// Whether access is granted or withheld; an empty element grants it.
+    #[serde(rename = "Allow")]
+    pub allow: DefaultedBoolean,
+    /// The monitoring point the decision is about.
+    #[serde(rename = "MonitoringRef")]
+    pub monitoring_ref: MonitoringRef,
 }
 
 #[cfg(test)]
@@ -1072,7 +1195,7 @@ mod tests {
     #[test]
     fn per_line_permissions_keep_the_directions_they_are_limited_to() {
         let permissions = LinePermissions::per_line(vec![LinePermission {
-            allow: true,
+            allow: true.into(),
             line_ref: LineRef::new("Line564"),
             direction_ref: vec![DirectionRef::new("NORTH")],
         }]);

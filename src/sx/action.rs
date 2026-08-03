@@ -27,6 +27,7 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{ActionStatus, Perspective, ScopeType};
+use crate::model::OrganisationRef;
 use crate::sx::affects::AffectsScope;
 use crate::sx::situation::{Image, InfoLink};
 use crate::types::{DefaultedText, Duration, Extensions, NaturalLanguageString, ParticipantRef};
@@ -34,11 +35,6 @@ use crate::types::{DefaultedText, Duration, Extensions, NaturalLanguageString, P
 siri_ref! {
     /// Identifies one action within the situation that owns it.
     ActionRef;
-    /// Identifies the organisation that owns a piece of passenger information.
-    ///
-    /// The owner is not necessarily the system that sent the message: a data hub may
-    /// relay information whose wording another organisation is answerable for.
-    OrganisationRef;
 }
 
 /// Everything that should be done to publish a situation.

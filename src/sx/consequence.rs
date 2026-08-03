@@ -16,12 +16,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{
     AdviceType, ArrivalBoardingActivity, DelayBand, DelaysType, DepartureBoardingActivity,
-    Encumbrance, MedicalNeed, Mobility, PyschosensoryNeed, ServiceCondition, Severity,
-    TicketRestriction,
+    ServiceCondition, Severity, TicketRestriction,
 };
+use crate::model::Suitabilities;
 use crate::sx::affects::AffectsScope;
-use crate::sx::situation::HalfOpenTimestampOutputRange;
-use crate::types::{Duration, Extensions, NaturalLanguageString};
+use crate::types::{Duration, Extensions, HalfOpenTimestampOutputRange, NaturalLanguageString};
 
 siri_ref! {
     /// Identifies a pre-agreed advisory notice held by both sender and receiver.
@@ -110,91 +109,6 @@ pub struct Consequence {
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<Extensions>,
-}
-
-/// How an effect bears on passengers with particular accessibility needs.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Suitabilities {
-    /// The effect on one passenger need.
-    #[serde(rename = "Suitability")]
-    pub suitability: Vec<Suitability>,
-}
-
-impl Suitabilities {
-    /// The effects on a set of passenger needs.
-    pub fn new(suitability: Vec<Suitability>) -> Self {
-        Self { suitability }
-    }
-}
-
-/// Whether the affected service remains usable by a passenger with a given need.
-///
-/// A lift out of service, for example, is `notSuitable` for a wheelchair user while
-/// leaving the service usable by everyone else.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct Suitability {
-    /// Whether the service suits the passenger need named below.
-    #[serde(rename = "Suitable")]
-    pub suitable: crate::enumerations::Suitability,
-    /// The passenger need this judgement is about.
-    #[serde(rename = "UserNeed")]
-    pub user_need: UserNeed,
-}
-
-impl Suitability {
-    /// A judgement about one passenger need.
-    pub fn new(suitable: crate::enumerations::Suitability, user_need: UserNeed) -> Self {
-        Self {
-            suitable,
-            user_need,
-        }
-    }
-}
-
-/// A requirement a passenger has that may constrain which services they can use.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct UserNeed {
-    /// Which kind of need this is.
-    #[serde(rename = "$value")]
-    pub need: UserNeedKind,
-    /// Whether the need is being excluded rather than included; absent means the
-    /// need is included.
-    #[serde(rename = "Excluded", default, skip_serializing_if = "Option::is_none")]
-    pub excluded: Option<bool>,
-    /// How important this need is relative to the passenger's other needs, on a
-    /// scale of one to five.
-    #[serde(rename = "NeedRanking", default, skip_serializing_if = "Option::is_none")]
-    pub need_ranking: Option<i64>,
-    /// Implementation-defined content.
-    #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
-    pub extensions: Option<Extensions>,
-}
-
-impl UserNeed {
-    /// A need with no ranking and no exclusion.
-    pub fn new(need: UserNeedKind) -> Self {
-        Self {
-            need,
-            excluded: None,
-            need_ranking: None,
-            extensions: None,
-        }
-    }
-}
-
-/// The four families of passenger need, of which a [`UserNeed`] names exactly one.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub enum UserNeedKind {
-    /// A need arising from how the passenger moves, e.g. using a wheelchair.
-    MobilityNeed(Mobility),
-    /// A need arising from sight, hearing or cognition, or from an aversion to
-    /// lifts, escalators, confined spaces or crowds.
-    PsychosensoryNeed(PyschosensoryNeed),
-    /// A medical condition that constrains the choice of service.
-    MedicalNeed(MedicalNeed),
-    /// Something the passenger is carrying or accompanied by, e.g. a pushchair or
-    /// oversize baggage.
-    EncumbranceNeed(Encumbrance),
 }
 
 /// What passengers should do about a disruption.
@@ -299,6 +213,7 @@ pub struct Easements {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::model::UserNeedKind;
     use quick_xml::de::from_str;
     use quick_xml::se::to_string_with_root;
 
@@ -401,12 +316,15 @@ mod tests {
         assert_eq!(from_str::<Consequence>(&written).unwrap(), consequence);
     }
 
+    /// The wrapper is SIRI's own, its entries are the accessibility annex's, and the
+    /// consequence has to write both halves under the namespace each belongs to.
     #[test]
     fn a_suitability_names_exactly_one_kind_of_passenger_need() {
         let xml = concat!(
             "<Suitabilities><Suitability>",
-            "<Suitable>notSuitable</Suitable>",
-            "<UserNeed><MobilityNeed>wheelchair</MobilityNeed><NeedRanking>1</NeedRanking></UserNeed>",
+            "<acsb:Suitable>notSuitable</acsb:Suitable>",
+            "<acsb:UserNeed><acsb:MobilityNeed>wheelchair</acsb:MobilityNeed>",
+            "<acsb:NeedRanking>1</acsb:NeedRanking></acsb:UserNeed>",
             "</Suitability></Suitabilities>",
         );
 
@@ -417,7 +335,7 @@ mod tests {
         assert_eq!(need.need_ranking, Some(1));
 
         let written = to_string_with_root("Suitabilities", &suitabilities).unwrap();
-        assert!(written.contains("<MobilityNeed>wheelchair</MobilityNeed>"));
+        assert!(written.contains("<acsb:MobilityNeed>wheelchair</acsb:MobilityNeed>"));
         assert!(!written.contains("PsychosensoryNeed"));
         assert_eq!(from_str::<Suitabilities>(&written).unwrap(), suitabilities);
     }

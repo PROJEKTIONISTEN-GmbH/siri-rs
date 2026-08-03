@@ -7,7 +7,9 @@ use crate::enumerations::VehicleModesOfTransport;
 use crate::model::{
     LineDirection, OperatorRef, ProductCategoryRef, RequestedLines, StopPointRef, VersionRef,
 };
-use crate::types::{Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier, Timestamp};
+use crate::types::{
+    ClosedTimestampRange, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier,
+};
 
 /// A request for the planned timetable a producer holds.
 ///
@@ -27,7 +29,7 @@ pub struct ProductionTimetableRequest {
     pub message_identifier: Option<MessageQualifier>,
     /// Only journeys running within this period.
     #[serde(rename = "ValidityPeriod", default, skip_serializing_if = "Option::is_none")]
-    pub validity_period: Option<TimetableValidityPeriod>,
+    pub validity_period: Option<ClosedTimestampRange>,
     /// Only journeys from this edition of the timetable.
     #[serde(rename = "TimetableVersionRef", default, skip_serializing_if = "Option::is_none")]
     pub timetable_version_ref: Option<VersionRef>,
@@ -99,7 +101,7 @@ impl ProductionTimetableRequest {
     }
 
     /// The same request, narrowed to journeys running within the given period.
-    pub fn within(mut self, validity_period: TimetableValidityPeriod) -> Self {
+    pub fn within(mut self, validity_period: ClosedTimestampRange) -> Self {
         self.validity_period = Some(validity_period);
         self
     }
@@ -108,30 +110,6 @@ impl ProductionTimetableRequest {
     pub fn for_lines(mut self, line_direction: Vec<LineDirection>) -> Self {
         self.lines = Some(RequestedLines { line_direction });
         self
-    }
-}
-
-/// The stretch of time a timetable request or delivery is about.
-///
-/// Unlike the half-open ranges elsewhere in SIRI this one is closed: a timetable
-/// always covers a period that ends.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-pub struct TimetableValidityPeriod {
-    /// When the period starts.
-    #[serde(rename = "StartTime")]
-    pub start_time: Timestamp,
-    /// When it ends.
-    #[serde(rename = "EndTime")]
-    pub end_time: Timestamp,
-}
-
-impl TimetableValidityPeriod {
-    /// The period between the two instants.
-    pub fn between(start_time: DateTime<FixedOffset>, end_time: DateTime<FixedOffset>) -> Self {
-        Self {
-            start_time: start_time.into(),
-            end_time: end_time.into(),
-        }
     }
 }
 
@@ -191,7 +169,7 @@ mod tests {
     #[test]
     fn a_validity_period_is_written_before_the_other_filters() {
         let request = ProductionTimetableRequest::new(timestamp())
-            .within(TimetableValidityPeriod::between(timestamp(), timestamp()))
+            .within(ClosedTimestampRange::between(timestamp(), timestamp()))
             .for_lines(vec![LineDirection::new("123")]);
 
         let xml = quick_xml::se::to_string_with_root("ProductionTimetableRequest", &request)

@@ -11,42 +11,67 @@
 
 mod support;
 
+use siri_rs::cm::ConnectionMonitoringCapabilitiesResponse;
+use siri_rs::ct::ConnectionTimetableCapabilitiesResponse;
 use siri_rs::et::EstimatedTimetableCapabilitiesResponse;
+use siri_rs::fm::FacilityMonitoringCapabilitiesResponse;
 use siri_rs::framework::SituationExchangeCapabilitiesResponse;
+use siri_rs::gm::GeneralMessageCapabilitiesResponse;
 use siri_rs::pt::ProductionTimetableCapabilitiesResponse;
+use siri_rs::sm::{StopMonitoringCapabilitiesResponse, StopMonitoringPermissions};
+use siri_rs::st::StopTimetableCapabilitiesResponse;
 use siri_rs::sx::{PtSituationElement, RoadSituationElement};
 use siri_rs::vm::VehicleMonitoringCapabilitiesResponse;
 use siri_rs::Siri;
 use support::{compare, parse, validate, validator_available, VALIDATOR_MISSING};
 
+/// Reads a document into `T` and writes it straight back out.
+fn rewrite<T: siri_rs::SiriRoot>(xml: &str) -> siri_rs::Result<String> {
+    siri_rs::to_string_pretty(&siri_rs::from_str::<T>(xml)?)
+}
+
 /// Reads a document into the type its root element names, then writes it back out.
 ///
 /// SIRI declares every message as a global element, so a document may be rooted at
 /// something other than `<Siri>`. Every root the fixtures use is listed here; an
-/// unlisted one is a gap in the harness rather than something to skip quietly.
-fn round_trip(root: &str, xml: &str) -> siri_rs::Result<String> {
-    match root {
-        "Siri" => siri_rs::to_string_pretty(&siri_rs::from_str::<Siri>(xml)?),
-        "SituationExchangeCapabilitiesResponse" => siri_rs::to_string_pretty(&siri_rs::from_str::<
-            SituationExchangeCapabilitiesResponse,
-        >(xml)?),
-        "ProductionTimetableCapabilitiesResponse" => siri_rs::to_string_pretty(
-            &siri_rs::from_str::<ProductionTimetableCapabilitiesResponse>(xml)?,
-        ),
-        "EstimatedTimetableCapabilitiesResponse" => siri_rs::to_string_pretty(&siri_rs::from_str::<
-            EstimatedTimetableCapabilitiesResponse,
-        >(xml)?),
-        "VehicleMonitoringCapabilitiesResponse" => siri_rs::to_string_pretty(&siri_rs::from_str::<
-            VehicleMonitoringCapabilitiesResponse,
-        >(xml)?),
-        "PtSituationElement" => {
-            siri_rs::to_string_pretty(&siri_rs::from_str::<PtSituationElement>(xml)?)
+/// unlisted one is reported as a failure rather than skipped quietly.
+fn round_trip(root: &str, xml: &str) -> Result<String, String> {
+    let written = match root {
+        "Siri" => rewrite::<Siri>(xml),
+        "ConnectionMonitoringCapabilitiesResponse" => {
+            rewrite::<ConnectionMonitoringCapabilitiesResponse>(xml)
         }
-        "RoadSituationElement" => {
-            siri_rs::to_string_pretty(&siri_rs::from_str::<RoadSituationElement>(xml)?)
+        "ConnectionTimetableCapabilitiesResponse" => {
+            rewrite::<ConnectionTimetableCapabilitiesResponse>(xml)
         }
-        other => panic!("no document type is registered for root element <{other}>"),
-    }
+        "EstimatedTimetableCapabilitiesResponse" => {
+            rewrite::<EstimatedTimetableCapabilitiesResponse>(xml)
+        }
+        "FacilityMonitoringCapabilitiesResponse" => {
+            rewrite::<FacilityMonitoringCapabilitiesResponse>(xml)
+        }
+        "GeneralMessageCapabilitiesResponse" => rewrite::<GeneralMessageCapabilitiesResponse>(xml),
+        "ProductionTimetableCapabilitiesResponse" => {
+            rewrite::<ProductionTimetableCapabilitiesResponse>(xml)
+        }
+        "PtSituationElement" => rewrite::<PtSituationElement>(xml),
+        "RoadSituationElement" => rewrite::<RoadSituationElement>(xml),
+        "SituationExchangeCapabilitiesResponse" => {
+            rewrite::<SituationExchangeCapabilitiesResponse>(xml)
+        }
+        "StopMonitoringCapabilitiesResponse" => rewrite::<StopMonitoringCapabilitiesResponse>(xml),
+        "StopMonitoringPermissions" => rewrite::<StopMonitoringPermissions>(xml),
+        "StopTimetableCapabilitiesResponse" => rewrite::<StopTimetableCapabilitiesResponse>(xml),
+        "VehicleMonitoringCapabilitiesResponse" => {
+            rewrite::<VehicleMonitoringCapabilitiesResponse>(xml)
+        }
+        other => {
+            return Err(format!(
+                "no document type is registered for root element <{other}>"
+            ))
+        }
+    };
+    written.map_err(|error| format!("cannot round-trip: {error}"))
 }
 
 #[test]
@@ -57,8 +82,8 @@ fn every_official_example_round_trips_without_loss() {
         let root = support::root_element(&fixture.xml);
         let written = match round_trip(&root, &fixture.xml) {
             Ok(written) => written,
-            Err(error) => {
-                failures.push(format!("{}: cannot read: {error}", fixture.name));
+            Err(complaint) => {
+                failures.push(format!("{}: {complaint}", fixture.name));
                 continue;
             }
         };
@@ -84,8 +109,8 @@ fn every_official_example_is_written_back_as_schema_valid_xml() {
         let root = support::root_element(&fixture.xml);
         let written = match round_trip(&root, &fixture.xml) {
             Ok(written) => written,
-            Err(error) => {
-                failures.push(format!("{}: cannot read: {error}", fixture.name));
+            Err(complaint) => {
+                failures.push(format!("{}: {complaint}", fixture.name));
                 continue;
             }
         };

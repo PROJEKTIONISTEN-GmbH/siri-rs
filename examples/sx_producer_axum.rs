@@ -36,9 +36,9 @@ use chrono::{DateTime, Duration, FixedOffset, Utc};
 
 use siri_rs::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
 use siri_rs::pubsub::{Outbound, Producer, ProducerConfig, SituationExchange, SituationSource};
-use siri_rs::sx::situation::{HalfOpenTimestampOutputRange, SituationSource as Source};
+use siri_rs::sx::situation::SituationSource as Source;
 use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
-use siri_rs::types::{DefaultedText, Duration as SiriDuration};
+use siri_rs::types::{DefaultedText, Duration as SiriDuration, HalfOpenTimestampOutputRange};
 use siri_rs::Siri;
 
 /// The media type SIRI travels as.

@@ -13,9 +13,9 @@ use chrono::{DateTime, Duration, FixedOffset};
 
 use siri_rs::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
 use siri_rs::pubsub::{Consumer, ConsumerEvent, Producer, ProducerConfig, SituationExchange, SituationSource};
-use siri_rs::sx::situation::{HalfOpenTimestampOutputRange, SituationSource as Source};
+use siri_rs::sx::situation::SituationSource as Source;
 use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
-use siri_rs::types::{DefaultedText, NaturalLanguageString};
+use siri_rs::types::{DefaultedText, HalfOpenTimestampOutputRange, NaturalLanguageString};
 use siri_rs::Siri;
 
 /// Whatever an application already keeps its disruptions in.

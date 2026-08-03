@@ -11,10 +11,10 @@ use crate::model::{
     RemovedServiceJourneyInterchange, RouteRef, ServiceFeatureRef, ServiceJourneyInterchange,
     VehicleFeatureRef, VersionRef,
 };
-use crate::pt::request::TimetableValidityPeriod;
 use crate::types::{
-    Duration, EndpointAddress, Extensions, MessageRef, NaturalLanguagePlaceName,
-    NaturalLanguageString, ParticipantRef, SubscriptionFilterRef, SubscriptionRef,
+    ClosedTimestampRange, Duration, EndpointAddress, Extensions, MessageRef,
+    NaturalLanguagePlaceName, NaturalLanguageString, ParticipantRef, SubscriptionFilterRef,
+    SubscriptionRef,
 };
 
 /// The planned timetable a producer is publishing.
@@ -119,7 +119,7 @@ pub struct DatedTimetableVersionFrame {
     pub version_ref: Option<VersionRef>,
     /// The period the frame covers.
     #[serde(rename = "ValidityPeriod", default, skip_serializing_if = "Option::is_none")]
-    pub validity_period: Option<TimetableValidityPeriod>,
+    pub validity_period: Option<ClosedTimestampRange>,
     /// The shortest interval at which the producer will send updates.
     #[serde(rename = "ShortestPossibleCycle", default, skip_serializing_if = "Option::is_none")]
     pub shortest_possible_cycle: Option<Duration>,

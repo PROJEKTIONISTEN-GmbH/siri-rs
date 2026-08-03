@@ -14,9 +14,9 @@ use crate::model::{
     Location, OperationalUnitRef, OperatorRef, PassengerAccessibilityNeeds, RequestedLines,
     StopPlaceComponentRef, StopPlaceRef, StopPointRef, Submode, VehicleJourneyRef, VehicleRef,
 };
-use crate::sx::situation::HalfOpenTimestampInputRange;
 use crate::types::{
-    CountryRef, Duration, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier,
+    CountryRef, Duration, Extensions, HalfOpenTimestampInputRange, MessageQualifier, ParticipantRef,
+    SubscriptionQualifier,
 };
 
 /// A request for the situations a producer holds.

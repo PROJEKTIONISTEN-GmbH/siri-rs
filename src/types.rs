@@ -7,8 +7,12 @@
 
 use std::fmt;
 
-use serde::{Deserialize, Serialize};
+use chrono::{DateTime, FixedOffset};
+use serde::de::{self, MapAccess, Visitor};
+use serde::ser::SerializeMap;
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+use crate::enumerations::{EndTimePrecision, EndTimeStatus};
 use crate::error::{Error, Result};
 
 siri_ref! {
@@ -288,6 +292,58 @@ impl std::str::FromStr for Duration {
     }
 }
 
+/// An `xsd:boolean` element the schema gives a default value.
+///
+/// Such an element may be written empty — `<Allow/>` — to mean "whatever the schema
+/// says by default", and that is a different document from one that spells the value
+/// out. The lexical form is kept so that both are written back as they were read.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct DefaultedBoolean(String);
+
+impl DefaultedBoolean {
+    /// A value the document spells out.
+    pub fn stated(value: bool) -> Self {
+        Self(value.to_string())
+    }
+
+    /// An empty element, leaving the value to the schema's default.
+    pub fn defaulted() -> Self {
+        Self(String::new())
+    }
+
+    /// The lexical form as written on the wire; empty when the element was empty.
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    /// The value the document states, or `None` when it left the element empty.
+    pub fn stated_value(&self) -> Option<bool> {
+        match self.0.as_str() {
+            "true" | "1" => Some(true),
+            "false" | "0" => Some(false),
+            _ => None,
+        }
+    }
+
+    /// The value the document states, falling back to the schema's default.
+    pub fn or(&self, default: bool) -> bool {
+        self.stated_value().unwrap_or(default)
+    }
+}
+
+impl From<bool> for DefaultedBoolean {
+    fn from(value: bool) -> Self {
+        Self::stated(value)
+    }
+}
+
+impl fmt::Display for DefaultedBoolean {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(&self.0)
+    }
+}
+
 /// An `xsd:dateTime` whose time-zone offset the schema leaves optional.
 ///
 /// SIRI timestamps normally state an offset, and this crate reads those into
@@ -356,6 +412,131 @@ impl std::str::FromStr for Timestamp {
     }
 }
 
+/// A stretch of time with a stated beginning and a stated end.
+///
+/// Unlike the half-open ranges below this one is closed: a timetable, and the window
+/// a stop or connection request asks about, always cover a period that ends.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ClosedTimestampRange {
+    /// When the period starts.
+    #[serde(rename = "StartTime")]
+    pub start_time: Timestamp,
+    /// When it ends.
+    #[serde(rename = "EndTime")]
+    pub end_time: Timestamp,
+}
+
+impl ClosedTimestampRange {
+    /// The period between the two instants.
+    pub fn between(start_time: DateTime<FixedOffset>, end_time: DateTime<FixedOffset>) -> Self {
+        Self {
+            start_time: start_time.into(),
+            end_time: end_time.into(),
+        }
+    }
+}
+
+/// A period that starts at a known instant and may not have a stated end.
+///
+/// This is the form a producer publishes: when the end is unknown, the status says
+/// whether the disruption is expected to be a short or a long one, which is what a
+/// passenger information system needs in order to word the message.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HalfOpenTimestampOutputRange {
+    /// The inclusive start of the period.
+    #[serde(rename = "StartTime")]
+    pub start_time: DateTime<FixedOffset>,
+    /// The inclusive end of the period, if it is known.
+    #[serde(rename = "EndTime", default, skip_serializing_if = "Option::is_none")]
+    pub end_time: Option<DateTime<FixedOffset>>,
+    /// How to read an absent end: as short term, long term, or simply unknown.
+    #[serde(rename = "EndTimeStatus", default, skip_serializing_if = "Option::is_none")]
+    pub end_time_status: Option<EndTimeStatus>,
+}
+
+impl HalfOpenTimestampOutputRange {
+    /// A period whose end is not yet known.
+    pub fn starting_at(start_time: DateTime<FixedOffset>) -> Self {
+        Self {
+            start_time,
+            end_time: None,
+            end_time_status: None,
+        }
+    }
+
+    /// A period between two instants, both inclusive.
+    pub fn between(start_time: DateTime<FixedOffset>, end_time: DateTime<FixedOffset>) -> Self {
+        Self {
+            start_time,
+            end_time: Some(end_time),
+            end_time_status: None,
+        }
+    }
+}
+
+/// A period that starts at a known instant and may not have a stated end.
+///
+/// This is the form a consumer sends when asking for data: the precision says how
+/// exactly the end is meant, so that a request ending "today" is not read as ending
+/// at midnight exactly.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HalfOpenTimestampInputRange {
+    /// The inclusive start of the period.
+    #[serde(rename = "StartTime")]
+    pub start_time: DateTime<FixedOffset>,
+    /// The inclusive end of the period, if it is bounded.
+    #[serde(rename = "EndTime", default, skip_serializing_if = "Option::is_none")]
+    pub end_time: Option<DateTime<FixedOffset>>,
+    /// How exactly the end is to be taken; the default is to the second.
+    #[serde(rename = "EndTimePrecision", default, skip_serializing_if = "Option::is_none")]
+    pub end_time_precision: Option<EndTimePrecision>,
+}
+
+impl HalfOpenTimestampInputRange {
+    /// A period whose end is left open.
+    pub fn starting_at(start_time: DateTime<FixedOffset>) -> Self {
+        Self {
+            start_time,
+            end_time: None,
+            end_time_precision: None,
+        }
+    }
+
+    /// A period between two instants, both inclusive.
+    pub fn between(start_time: DateTime<FixedOffset>, end_time: DateTime<FixedOffset>) -> Self {
+        Self {
+            start_time,
+            end_time: Some(end_time),
+            end_time_precision: None,
+        }
+    }
+}
+
+/// A stretch of the day, open-ended when no end time is given.
+///
+/// The times are `xsd:time` lexical forms, kept verbatim for the same reason
+/// [`Duration`] is: the schema admits several spellings of one instant and rewriting
+/// one as another would change the document.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct HalfOpenTimeRange {
+    /// When the band starts.
+    #[serde(rename = "StartTime")]
+    pub start_time: String,
+    /// When the band ends.
+    #[serde(rename = "EndTime", default, skip_serializing_if = "Option::is_none")]
+    pub end_time: Option<String>,
+}
+
+impl HalfOpenTimeRange {
+    /// A band that starts at `start_time` and runs to the end of the day.
+    pub fn starting_at(start_time: impl Into<String>) -> Self {
+        Self {
+            start_time: start_time.into(),
+            end_time: None,
+        }
+    }
+}
+
 /// An element with no content, used by SIRI where the presence of the element is
 /// itself the value — `<All/>`, `<AllOperators/>`, `<WgsDecimalDegrees/>`.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -365,6 +546,120 @@ impl Empty {
     /// The single value of this type.
     pub const fn new() -> Self {
         Self {}
+    }
+}
+
+/// An XML subtree the schema declares as `xsd:anyType`, kept as it was written.
+///
+/// SIRI leaves a few payloads to the participants: the body of a general message,
+/// for instance, may be a plain sentence or a whole document in another vocabulary.
+/// There is nothing to model, so this keeps the subtree — attributes, character data
+/// and children in order, repeated names included — and writes it back unchanged.
+///
+/// # Attribute prefixes
+///
+/// The XML reader reports an attribute by its local name, so a prefix on an
+/// attribute inside such a subtree does not survive the read. The only prefix XML
+/// binds without a declaration is `xml`, and the only attributes it can carry are
+/// `xml:lang` and `xml:space`; those two are therefore restored on the way in and
+/// kept in [`attributes`](Self::attributes) with their prefix. An attribute named
+/// `lang` or `space` in no namespace at all — which the reader cannot tell apart
+/// from those two — is written back with the prefix it did not have.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct AnyContent {
+    /// The element's attributes, without the leading `@` the wire format uses.
+    pub attributes: Vec<(String, String)>,
+    /// Character data directly inside the element.
+    pub text: String,
+    /// The child elements, each with its name, in document order.
+    pub children: Vec<(String, AnyContent)>,
+}
+
+impl AnyContent {
+    /// Content that is a single piece of text, as most messages carry.
+    pub fn text(text: impl Into<String>) -> Self {
+        Self {
+            attributes: Vec::new(),
+            text: text.into(),
+            children: Vec::new(),
+        }
+    }
+
+    /// The children named `name`, of which there may be none, one or several.
+    pub fn children_named<'a>(&'a self, name: &'a str) -> impl Iterator<Item = &'a AnyContent> {
+        self.children
+            .iter()
+            .filter_map(move |(child, content)| (child == name).then_some(content))
+    }
+
+    /// The value of the attribute named `name`, if the element carries one.
+    pub fn attribute(&self, name: &str) -> Option<&str> {
+        self.attributes
+            .iter()
+            .find(|(key, _)| key == name)
+            .map(|(_, value)| value.as_str())
+    }
+}
+
+impl Serialize for AnyContent {
+    fn serialize<S: Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
+        let entries = self.attributes.len() + usize::from(!self.text.is_empty()) + self.children.len();
+        let mut map = serializer.serialize_map(Some(entries))?;
+        // Attributes first: the writer has to emit them before it opens the element.
+        for (name, value) in &self.attributes {
+            map.serialize_entry(&format!("@{name}"), value)?;
+        }
+        if !self.text.is_empty() {
+            map.serialize_entry("$text", &self.text)?;
+        }
+        for (name, child) in &self.children {
+            map.serialize_entry(name, child)?;
+        }
+        map.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for AnyContent {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> std::result::Result<Self, D::Error> {
+        struct AnyContentVisitor;
+
+        impl<'de> Visitor<'de> for AnyContentVisitor {
+            type Value = AnyContent;
+
+            fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                f.write_str("an XML element")
+            }
+
+            /// An element with children or attributes arrives as a map whose keys are
+            /// `@name` for an attribute, `$text` for character data and the element
+            /// name for a child.
+            fn visit_map<A: MapAccess<'de>>(
+                self,
+                mut map: A,
+            ) -> std::result::Result<AnyContent, A::Error> {
+                let mut content = AnyContent::default();
+                while let Some(key) = map.next_key::<String>()? {
+                    if let Some(name) = key.strip_prefix('@') {
+                        let name = match name {
+                            "lang" | "space" => format!("xml:{name}"),
+                            _ => name.to_owned(),
+                        };
+                        content.attributes.push((name, map.next_value()?));
+                    } else if key == "$text" {
+                        content.text = map.next_value()?;
+                    } else {
+                        content.children.push((key, map.next_value()?));
+                    }
+                }
+                Ok(content)
+            }
+
+            fn visit_str<E: de::Error>(self, value: &str) -> std::result::Result<AnyContent, E> {
+                Ok(AnyContent::text(value))
+            }
+        }
+
+        deserializer.deserialize_map(AnyContentVisitor)
     }
 }
 
@@ -429,6 +724,40 @@ mod tests {
         for lexical in ["", "2001-12-17", "14:20:00", "2001-12-17 14:20:00"] {
             assert!(Timestamp::parse(lexical).is_err(), "{lexical:?} should not parse");
         }
+    }
+
+    #[test]
+    fn unmodelled_content_survives_being_read_and_written_back() {
+        let document = concat!(
+            r#"<Message><Content><Report version="2.0"><Line><Id>1</Id></Line>"#,
+            "<Line><Id>2</Id></Line></Report></Content></Message>"
+        );
+
+        #[derive(Debug, PartialEq, Serialize, Deserialize)]
+        struct Message {
+            #[serde(rename = "Content")]
+            content: AnyContent,
+        }
+
+        let message: Message = quick_xml::de::from_str(document).unwrap();
+        let report = message.content.children_named("Report").next().unwrap();
+        assert_eq!(report.attribute("version"), Some("2.0"));
+        assert_eq!(report.children_named("Line").count(), 2);
+
+        assert_eq!(
+            quick_xml::se::to_string_with_root("Message", &message).unwrap(),
+            document
+        );
+    }
+
+    #[test]
+    fn unmodelled_content_that_is_only_text_stays_only_text() {
+        let content: AnyContent = quick_xml::de::from_str("<Content>Beware the Ides</Content>").unwrap();
+        assert_eq!(content, AnyContent::text("Beware the Ides"));
+        assert_eq!(
+            quick_xml::se::to_string_with_root("Content", &content).unwrap(),
+            "<Content>Beware the Ides</Content>"
+        );
     }
 
     #[test]

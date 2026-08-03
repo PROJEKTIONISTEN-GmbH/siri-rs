@@ -19,6 +19,7 @@ use crate::enumerations::{
     VehicleModesOfTransport, VehicleStatus,
 };
 use crate::model::call::StopAssignment;
+use crate::model::facility::{FacilityChange, FacilityCondition};
 use crate::model::formation::{
     CompoundTrains, FormationAssignment, FormationCondition, PassengerCapacity, TrainElements,
     Trains, VehicleOccupancy,
@@ -177,6 +178,12 @@ pub struct EstimatedVehicleJourney {
     /// Changes to how the train is put together.
     #[serde(rename = "FormationCondition", default, skip_serializing_if = "Vec::is_empty")]
     pub formation_condition: Vec<FormationCondition>,
+    /// Facilities along the journey whose state has changed.
+    #[serde(rename = "FacilityConditionElement", default, skip_serializing_if = "Vec::is_empty")]
+    pub facility_condition_element: Vec<FacilityCondition>,
+    /// The same, in the older spelling the schema still allows.
+    #[serde(rename = "FacilityChangeElement", default, skip_serializing_if = "Option::is_none")]
+    pub facility_change_element: Option<FacilityChange>,
     /// Situations that explain the state of the journey.
     #[serde(rename = "SituationRef", default, skip_serializing_if = "Vec::is_empty")]
     pub situation_ref: Vec<SituationRef>,
@@ -367,6 +374,8 @@ impl EstimatedVehicleJourney {
             destination_aimed_arrival_time: None,
             first_or_last_journey: None,
             formation_condition: Vec::new(),
+            facility_condition_element: Vec::new(),
+            facility_change_element: None,
             situation_ref: Vec::new(),
             control_action_ref: None,
             monitored: None,
@@ -537,6 +546,12 @@ pub struct EstimatedCall {
     /// Changes to how the train is put together, taking effect here.
     #[serde(rename = "FormationCondition", default, skip_serializing_if = "Vec::is_empty")]
     pub formation_condition: Vec<FormationCondition>,
+    /// Facilities at this stop whose state has changed.
+    #[serde(rename = "FacilityConditionElement", default, skip_serializing_if = "Vec::is_empty")]
+    pub facility_condition_element: Vec<FacilityCondition>,
+    /// The same, in the older spelling the schema still allows.
+    #[serde(rename = "FacilityChangeElement", default, skip_serializing_if = "Option::is_none")]
+    pub facility_change_element: Option<FacilityChange>,
     /// Situations that explain the state of this call.
     #[serde(rename = "SituationRef", default, skip_serializing_if = "Vec::is_empty")]
     pub situation_ref: Vec<SituationRef>,
@@ -694,6 +709,8 @@ impl EstimatedCall {
             destination_display: Vec::new(),
             call_note: Vec::new(),
             formation_condition: Vec::new(),
+            facility_condition_element: Vec::new(),
+            facility_change_element: None,
             situation_ref: Vec::new(),
             control_action_ref: None,
             aimed_arrival_time: None,
@@ -808,6 +825,12 @@ pub struct RecordedCall {
     /// Changes to how the train was put together, taking effect here.
     #[serde(rename = "FormationCondition", default, skip_serializing_if = "Vec::is_empty")]
     pub formation_condition: Vec<FormationCondition>,
+    /// Facilities at this stop whose state has changed.
+    #[serde(rename = "FacilityConditionElement", default, skip_serializing_if = "Vec::is_empty")]
+    pub facility_condition_element: Vec<FacilityCondition>,
+    /// The same, in the older spelling the schema still allows.
+    #[serde(rename = "FacilityChangeElement", default, skip_serializing_if = "Option::is_none")]
+    pub facility_change_element: Option<FacilityChange>,
     /// Situations that explain the state of this call.
     #[serde(rename = "SituationRef", default, skip_serializing_if = "Vec::is_empty")]
     pub situation_ref: Vec<SituationRef>,

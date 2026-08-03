@@ -19,8 +19,17 @@ use crate::framework::subscription::{
     SubscriptionRequest, SubscriptionResponse, SubscriptionTerminatedNotification,
     TerminateSubscriptionRequest, TerminateSubscriptionResponse,
 };
+use crate::cm::{
+    ConnectionMonitoringDistributorDelivery, ConnectionMonitoringFeederDelivery,
+    ConnectionMonitoringRequest,
+};
+use crate::ct::{ConnectionTimetableDelivery, ConnectionTimetableRequest};
 use crate::et::{EstimatedTimetableDelivery, EstimatedTimetableRequest};
+use crate::fm::{FacilityMonitoringDelivery, FacilityMonitoringRequest};
+use crate::gm::{GeneralMessageDelivery, GeneralMessageRequest};
 use crate::pt::{ProductionTimetableDelivery, ProductionTimetableRequest};
+use crate::sm::{StopMonitoringDelivery, StopMonitoringMultipleRequest, StopMonitoringRequest};
+use crate::st::{StopTimetableDelivery, StopTimetableRequest};
 use crate::sx::{SituationExchangeDelivery, SituationExchangeRequest};
 use crate::vm::{VehicleMonitoringDelivery, VehicleMonitoringRequest};
 use crate::types::{
@@ -221,8 +230,22 @@ pub enum ServiceRequestPayload {
     ProductionTimetableRequest(Box<ProductionTimetableRequest>),
     /// A request for a real-time timetable.
     EstimatedTimetableRequest(Box<EstimatedTimetableRequest>),
+    /// A request for the timetable at one stop.
+    StopTimetableRequest(Box<StopTimetableRequest>),
+    /// A request for what is due at one stop.
+    StopMonitoringRequest(Box<StopMonitoringRequest>),
+    /// A request for what is due at several stops at once.
+    StopMonitoringMultipleRequest(Box<StopMonitoringMultipleRequest>),
     /// A request for vehicle positions.
     VehicleMonitoringRequest(Box<VehicleMonitoringRequest>),
+    /// A request for the connections planned over a connection link.
+    ConnectionTimetableRequest(Box<ConnectionTimetableRequest>),
+    /// A request for how the connections over a connection link are going.
+    ConnectionMonitoringRequest(Box<ConnectionMonitoringRequest>),
+    /// A request for free-form messages.
+    GeneralMessageRequest(Box<GeneralMessageRequest>),
+    /// A request for the state of passenger facilities.
+    FacilityMonitoringRequest(Box<FacilityMonitoringRequest>),
     /// A request for situations.
     SituationExchangeRequest(Box<SituationExchangeRequest>),
 }
@@ -239,9 +262,51 @@ impl From<EstimatedTimetableRequest> for ServiceRequestPayload {
     }
 }
 
+impl From<StopTimetableRequest> for ServiceRequestPayload {
+    fn from(request: StopTimetableRequest) -> Self {
+        Self::StopTimetableRequest(Box::new(request))
+    }
+}
+
+impl From<StopMonitoringRequest> for ServiceRequestPayload {
+    fn from(request: StopMonitoringRequest) -> Self {
+        Self::StopMonitoringRequest(Box::new(request))
+    }
+}
+
+impl From<StopMonitoringMultipleRequest> for ServiceRequestPayload {
+    fn from(request: StopMonitoringMultipleRequest) -> Self {
+        Self::StopMonitoringMultipleRequest(Box::new(request))
+    }
+}
+
 impl From<VehicleMonitoringRequest> for ServiceRequestPayload {
     fn from(request: VehicleMonitoringRequest) -> Self {
         Self::VehicleMonitoringRequest(Box::new(request))
+    }
+}
+
+impl From<ConnectionTimetableRequest> for ServiceRequestPayload {
+    fn from(request: ConnectionTimetableRequest) -> Self {
+        Self::ConnectionTimetableRequest(Box::new(request))
+    }
+}
+
+impl From<ConnectionMonitoringRequest> for ServiceRequestPayload {
+    fn from(request: ConnectionMonitoringRequest) -> Self {
+        Self::ConnectionMonitoringRequest(Box::new(request))
+    }
+}
+
+impl From<GeneralMessageRequest> for ServiceRequestPayload {
+    fn from(request: GeneralMessageRequest) -> Self {
+        Self::GeneralMessageRequest(Box::new(request))
+    }
+}
+
+impl From<FacilityMonitoringRequest> for ServiceRequestPayload {
+    fn from(request: FacilityMonitoringRequest) -> Self {
+        Self::FacilityMonitoringRequest(Box::new(request))
     }
 }
 
@@ -326,8 +391,22 @@ pub enum ServiceDeliveryPayload {
     ProductionTimetableDelivery(Box<ProductionTimetableDelivery>),
     /// A real-time timetable from the Estimated Timetable service.
     EstimatedTimetableDelivery(Box<EstimatedTimetableDelivery>),
+    /// A timetable at a stop from the Stop Timetable service.
+    StopTimetableDelivery(Box<StopTimetableDelivery>),
+    /// A departure board from the Stop Monitoring service.
+    StopMonitoringDelivery(Box<StopMonitoringDelivery>),
     /// Vehicle positions from the Vehicle Monitoring service.
     VehicleMonitoringDelivery(Box<VehicleMonitoringDelivery>),
+    /// Planned connections from the Connection Timetable service.
+    ConnectionTimetableDelivery(Box<ConnectionTimetableDelivery>),
+    /// Feeder arrivals from the Connection Monitoring service.
+    ConnectionMonitoringFeederDelivery(Box<ConnectionMonitoringFeederDelivery>),
+    /// Distributor decisions from the Connection Monitoring service.
+    ConnectionMonitoringDistributorDelivery(Box<ConnectionMonitoringDistributorDelivery>),
+    /// Free-form messages from the General Message service.
+    GeneralMessageDelivery(Box<GeneralMessageDelivery>),
+    /// Facility states from the Facility Monitoring service.
+    FacilityMonitoringDelivery(Box<FacilityMonitoringDelivery>),
     /// Situations from the Situation Exchange service.
     SituationExchangeDelivery(Box<SituationExchangeDelivery>),
 }
@@ -344,9 +423,51 @@ impl From<EstimatedTimetableDelivery> for ServiceDeliveryPayload {
     }
 }
 
+impl From<StopTimetableDelivery> for ServiceDeliveryPayload {
+    fn from(delivery: StopTimetableDelivery) -> Self {
+        Self::StopTimetableDelivery(Box::new(delivery))
+    }
+}
+
+impl From<StopMonitoringDelivery> for ServiceDeliveryPayload {
+    fn from(delivery: StopMonitoringDelivery) -> Self {
+        Self::StopMonitoringDelivery(Box::new(delivery))
+    }
+}
+
 impl From<VehicleMonitoringDelivery> for ServiceDeliveryPayload {
     fn from(delivery: VehicleMonitoringDelivery) -> Self {
         Self::VehicleMonitoringDelivery(Box::new(delivery))
+    }
+}
+
+impl From<ConnectionTimetableDelivery> for ServiceDeliveryPayload {
+    fn from(delivery: ConnectionTimetableDelivery) -> Self {
+        Self::ConnectionTimetableDelivery(Box::new(delivery))
+    }
+}
+
+impl From<ConnectionMonitoringFeederDelivery> for ServiceDeliveryPayload {
+    fn from(delivery: ConnectionMonitoringFeederDelivery) -> Self {
+        Self::ConnectionMonitoringFeederDelivery(Box::new(delivery))
+    }
+}
+
+impl From<ConnectionMonitoringDistributorDelivery> for ServiceDeliveryPayload {
+    fn from(delivery: ConnectionMonitoringDistributorDelivery) -> Self {
+        Self::ConnectionMonitoringDistributorDelivery(Box::new(delivery))
+    }
+}
+
+impl From<GeneralMessageDelivery> for ServiceDeliveryPayload {
+    fn from(delivery: GeneralMessageDelivery) -> Self {
+        Self::GeneralMessageDelivery(Box::new(delivery))
+    }
+}
+
+impl From<FacilityMonitoringDelivery> for ServiceDeliveryPayload {
+    fn from(delivery: FacilityMonitoringDelivery) -> Self {
+        Self::FacilityMonitoringDelivery(Box::new(delivery))
     }
 }
 

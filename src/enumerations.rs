@@ -3121,3 +3121,729 @@ siri_enum! {
         Calls = "calls",
     }
 }
+
+siri_enum! {
+    /// Generic category of a facility.
+    FacilityCategory as "FacilityCategoryEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// fixedEquipment
+        FixedEquipment = "fixedEquipment",
+        /// mobileEquipment
+        MobileEquipment = "mobileEquipment",
+        /// serviceProvidedByIndividual
+        ServiceProvidedByIndividual = "serviceProvidedByIndividual",
+        /// serviceForPersonalDevice
+        ServiceForPersonalDevice = "serviceForPersonalDevice",
+        /// reservedArea
+        ReservedArea = "reservedArea",
+        /// site
+        Site = "site",
+        /// siteComponent
+        SiteComponent = "siteComponent",
+        /// parkingBay
+        ParkingBay = "parkingBay",
+        /// vehicle
+        Vehicle = "vehicle",
+    }
+}
+
+siri_enum! {
+    /// Allowed values for TypeOfCounting.
+    CountingType as "CountingTypeEnumeration" {
+        /// availabilityCount
+        AvailabilityCount = "availabilityCount",
+        /// reservedCount
+        ReservedCount = "reservedCount",
+        /// inUseCount
+        InUseCount = "inUseCount",
+        /// outOfOrderCount
+        OutOfOrderCount = "outOfOrderCount",
+        /// presentCount
+        PresentCount = "presentCount",
+        /// chargingLevel
+        ChargingLevel = "chargingLevel",
+        /// availableRunningDistance
+        AvailableRunningDistance = "availableRunningDistance",
+        /// currentStateCount
+        CurrentStateCount = "currentStateCount",
+    }
+}
+
+siri_enum! {
+    /// Allowed values for trend of a counting.
+    CountingTrend as "CountingTrendEnumeration" {
+        /// decreasing
+        Decreasing = "decreasing",
+        /// increasing
+        Increasing = "increasing",
+        /// stable
+        Stable = "stable",
+        /// unstable
+        Unstable = "unstable",
+        /// increasingQuickly
+        IncreasingQuickly = "increasingQuickly",
+        /// increasingSlowly
+        IncreasingSlowly = "increasingSlowly",
+        /// decreasingQuickly
+        DecreasingQuickly = "decreasingQuickly",
+        /// decreasingSlowly
+        DecreasingSlowly = "decreasingSlowly",
+        /// unknown
+        Unknown = "unknown",
+    }
+}
+
+siri_enum! {
+    /// Allowed values for units of what is counted bay: parking bay for cars, bicycle, scooter, etc
+    /// otherSpaces: any other kind of spaces: lockers, standing spaces, toilets, etc. devices:
+    /// electronic devices (audio guide, headphones, etc.) and physical devices (walking stick,
+    /// wheelchair, etc.) vehicles: any type of vehicles (cycle, car, scooter, hoverboard,
+    /// motorbike, etc.) kW (kiloWatt) or kWh (kiloWatt-hour): means that an available or consumed
+    /// power is measured mAh (milliAmpere per hour): typically used for battery charging level
+    /// litres and cubicMeters: means that a volume is measured squareMeters: means that a surface
+    /// is measured meters: means that a distance is measured kg (kilogram): means that a mass is
+    /// measured A (Ampere): means that an electric current is measured C (degree Celsius): means
+    /// that a temperature is measured other: use of "other" requires the additional open ended
+    /// TypeOfCountedFeature (monitoredCountingStructure) to be filled
+    CountedFeatureUnit as "CountedFeatureUnitEnumeration" {
+        /// bays
+        Bays = "bays",
+        /// seats
+        Seats = "seats",
+        /// otherSpaces
+        OtherSpaces = "otherSpaces",
+        /// devices
+        Devices = "devices",
+        /// vehicles
+        Vehicles = "vehicles",
+        /// persons
+        Persons = "persons",
+        /// litres
+        Litres = "litres",
+        /// squareMeters
+        SquareMeters = "squareMeters",
+        /// cubicMeters
+        CubicMeters = "cubicMeters",
+        /// meters
+        Meters = "meters",
+        /// kWh
+        KWh = "kWh",
+        /// mAh
+        MAh = "mAh",
+        /// kW
+        KW = "kW",
+        /// kg
+        Kg = "kg",
+        /// A
+        A = "A",
+        /// C
+        C = "C",
+        /// other
+        Other = "other",
+    }
+}
+
+siri_enum! {
+    /// Allowed values for actions to remedy a facility change.
+    RemedyType as "RemedyTypeEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// replace
+        Replace = "replace",
+        /// repair
+        Repair = "repair",
+        /// remove
+        Remove = "remove",
+        /// otherRoute
+        OtherRoute = "otherRoute",
+        /// otherLocation
+        OtherLocation = "otherLocation",
+    }
+}
+
+siri_enum! {
+    /// Allowed values for the types of monitoring: automatic or manual - describing the hardware
+    /// transducer (video, GPS/Radio, in-road sensors, etc.) doesn't seeme useful for SIRI.
+    MonitoringType as "MonitoringTypeEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// manual
+        Manual = "manual",
+        /// automatic
+        Automatic = "automatic",
+    }
+}
+
+siri_enum! {
+    /// Subset of TPEG Pti34 - DayType
+    DaysOfWeek as "DaysOfWeekEnumerationx" {
+        /// unknown
+        Unknown = "unknown",
+        /// monday
+        Monday = "monday",
+        /// tuesday
+        Tuesday = "tuesday",
+        /// wednesday
+        Wednesday = "wednesday",
+        /// thursday
+        Thursday = "thursday",
+        /// friday
+        Friday = "friday",
+        /// saturday
+        Saturday = "saturday",
+        /// sunday
+        Sunday = "sunday",
+        /// mondayToFriday
+        MondayToFriday = "mondayToFriday",
+        /// mondayToSaturday
+        MondayToSaturday = "mondayToSaturday",
+        /// weekdays
+        Weekdays = "weekdays",
+        /// weekends
+        Weekends = "weekends",
+    }
+}
+
+siri_enum! {
+    /// Subset of TPEG Pti34 - DayType
+    HolidayType as "HolidayTypeEnumerationx" {
+        /// holiday
+        Holiday = "holiday",
+        /// publicHoliday
+        PublicHoliday = "publicHoliday",
+        /// religiousHoliday
+        ReligiousHoliday = "religiousHoliday",
+        /// federalHoliday
+        FederalHoliday = "federalHoliday",
+        /// regionalHoliday
+        RegionalHoliday = "regionalHoliday",
+        /// nationalHoliday
+        NationalHoliday = "nationalHoliday",
+        /// sundaysAndPublicHolidays
+        SundaysAndPublicHolidays = "sundaysAndPublicHolidays",
+        /// schoolDays
+        SchoolDays = "schoolDays",
+        /// everyDay
+        EveryDay = "everyDay",
+        /// undefinedDayType
+        UndefinedDayType = "undefinedDayType",
+    }
+}
+
+siri_enum! {
+    /// Availabilityload status of a EQUIPMENT.
+    EquipmentStatus as "EquipmentStatusEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// available
+        Available = "available",
+        /// notAvailable
+        NotAvailable = "notAvailable",
+    }
+}
+
+siri_enum! {
+    /// Values for Access Facility.
+    AccessFacility as "AccessFacilityEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// lift
+        Lift = "lift",
+        /// escalator
+        Escalator = "escalator",
+        /// travelator
+        Travelator = "travelator",
+        /// ramp
+        Ramp = "ramp",
+        /// stairs
+        Stairs = "stairs",
+        /// shuttle
+        Shuttle = "shuttle",
+        /// narrowEntrance
+        NarrowEntrance = "narrowEntrance",
+        /// barrier
+        Barrier = "barrier",
+        /// palletAccess_lowFloor
+        PalletAccessLowFloor = "palletAccess_lowFloor",
+        /// validator
+        Validator = "validator",
+    }
+}
+
+siri_enum! {
+    /// Values for Accomodation Facility: TPEG pti_table 23.
+    AccommodationFacility as "AccommodationFacilityEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// pti23_3
+        Pti233 = "pti23_3",
+        /// sleeper
+        Sleeper = "sleeper",
+        /// pti23_4
+        Pti234 = "pti23_4",
+        /// couchette
+        Couchette = "couchette",
+        /// pti23_5
+        Pti235 = "pti23_5",
+        /// specialSeating
+        SpecialSeating = "specialSeating",
+        /// pti23_11
+        Pti2311 = "pti23_11",
+        /// freeSeating
+        FreeSeating = "freeSeating",
+        /// pti23_12
+        Pti2312 = "pti23_12",
+        /// recliningSeats
+        RecliningSeats = "recliningSeats",
+        /// pti23_13
+        Pti2313 = "pti23_13",
+        /// babyCompartment
+        BabyCompartment = "babyCompartment",
+        /// familyCarriage
+        FamilyCarriage = "familyCarriage",
+    }
+}
+
+siri_enum! {
+    /// Values for Assistance Facility.
+    AssistanceFacility as "AssistanceFacilityEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// police
+        Police = "police",
+        /// firstAid
+        FirstAid = "firstAid",
+        /// sosPoint
+        SosPoint = "sosPoint",
+        /// specificAssistance
+        SpecificAssistance = "specificAssistance",
+        /// unaccompaniedMinorAssistance
+        UnaccompaniedMinorAssistance = "unaccompaniedMinorAssistance",
+        /// boardingAssistance
+        BoardingAssistance = "boardingAssistance",
+    }
+}
+
+siri_enum! {
+    /// Values for FareClass Facility: TPEG pti_table 23.
+    FareClassFacility as "FareClassFacilityEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// pti23_0
+        Pti230 = "pti23_0",
+        /// pti23_6
+        Pti236 = "pti23_6",
+        /// firstClass
+        FirstClass = "firstClass",
+        /// pti23_7
+        Pti237 = "pti23_7",
+        /// secondClass
+        SecondClass = "secondClass",
+        /// pti23_8
+        Pti238 = "pti23_8",
+        /// thirdClass
+        ThirdClass = "thirdClass",
+        /// pti23_9
+        Pti239 = "pti23_9",
+        /// economyClass
+        EconomyClass = "economyClass",
+        /// pti23_10
+        Pti2310 = "pti23_10",
+        /// businessClass
+        BusinessClass = "businessClass",
+    }
+}
+
+siri_enum! {
+    /// Values for Hire Facility.
+    HireFacility as "HireFacilityEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// carHire
+        CarHire = "carHire",
+        /// motorCycleHire
+        MotorCycleHire = "motorCycleHire",
+        /// cycleHire
+        CycleHire = "cycleHire",
+        /// taxi
+        Taxi = "taxi",
+        /// recreationDeviceHire
+        RecreationDeviceHire = "recreationDeviceHire",
+    }
+}
+
+siri_enum! {
+    /// Values for Luggage Facility: TPEG pti_table 23.
+    LuggageFacility as "LuggageFacilityEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// pti23_17
+        Pti2317 = "pti23_17",
+        /// bikeCarriage
+        BikeCarriage = "bikeCarriage",
+        /// baggageStorage
+        BaggageStorage = "baggageStorage",
+        /// leftLuggage
+        LeftLuggage = "leftLuggage",
+        /// porterage
+        Porterage = "porterage",
+        /// baggageTrolleys
+        BaggageTrolleys = "baggageTrolleys",
+    }
+}
+
+siri_enum! {
+    /// Values for Mobility Facility: TPEG pti_table 23.
+    MobilityFacility as "MobilityFacilityEnumeration" {
+        /// pti23_255_4
+        Pti232554 = "pti23_255_4",
+        /// unknown
+        Unknown = "unknown",
+        /// pti23_16
+        Pti2316 = "pti23_16",
+        /// suitableForWheelChairs
+        SuitableForWheelChairs = "suitableForWheelChairs",
+        /// pti23_16_1
+        Pti23161 = "pti23_16_1",
+        /// lowFloor
+        LowFloor = "lowFloor",
+        /// pti23_16_2
+        Pti23162 = "pti23_16_2",
+        /// boardingAssistance
+        BoardingAssistance = "boardingAssistance",
+        /// pti23_16_3
+        Pti23163 = "pti23_16_3",
+        /// stepFreeAccess
+        StepFreeAccess = "stepFreeAccess",
+        /// tactilePlatformEdges
+        TactilePlatformEdges = "tactilePlatformEdges",
+        /// onboardAssistance
+        OnboardAssistance = "onboardAssistance",
+        /// unaccompaniedMinorAssistance
+        UnaccompaniedMinorAssistance = "unaccompaniedMinorAssistance",
+        /// audioInformation
+        AudioInformation = "audioInformation",
+        /// visualInformation
+        VisualInformation = "visualInformation",
+        /// displaysForVisuallyImpaired
+        DisplaysForVisuallyImpaired = "displaysForVisuallyImpaired",
+        /// audioForHearingImpaired
+        AudioForHearingImpaired = "audioForHearingImpaired",
+        /// deprecated (SIRI 2.1) - use 'tactilePlatformEdges' instead
+        TactilePatformEdges = "tactilePatformEdges",
+    }
+}
+
+siri_enum! {
+    /// Values for Nuisance Facility: TPEG pti_table 23.
+    NuisanceFacility as "NuisanceFacilityEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// smoking
+        Smoking = "smoking",
+        /// noSmoking
+        NoSmoking = "noSmoking",
+        /// mobilePhoneUseZone
+        MobilePhoneUseZone = "mobilePhoneUseZone",
+        /// mobilePhoneFreeZone
+        MobilePhoneFreeZone = "mobilePhoneFreeZone",
+    }
+}
+
+siri_enum! {
+    /// Values for Access Facility.
+    ParkingFacility as "ParkingFacilityEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// carPark
+        CarPark = "carPark",
+        /// parkAndRidePark
+        ParkAndRidePark = "parkAndRidePark",
+        /// motorcyclePark
+        MotorcyclePark = "motorcyclePark",
+        /// cyclePark
+        CyclePark = "cyclePark",
+        /// rentalCarPark
+        RentalCarPark = "rentalCarPark",
+        /// coachPark
+        CoachPark = "coachPark",
+    }
+}
+
+siri_enum! {
+    /// Values for PassengerComms Facility: TPEG pti_table 23.
+    PassengerCommsFacility as "PassengerCommsFacilityEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// faccomms_1
+        Faccomms1 = "faccomms_1",
+        /// passengerWifi
+        PassengerWifi = "passengerWifi",
+        /// pti23_21
+        Pti2321 = "pti23_21",
+        /// telephone
+        Telephone = "telephone",
+        /// pti23_14
+        Pti2314 = "pti23_14",
+        /// audioServices
+        AudioServices = "audioServices",
+        /// pti23_15
+        Pti2315 = "pti23_15",
+        /// videoServices
+        VideoServices = "videoServices",
+        /// pti23_25
+        Pti2325 = "pti23_25",
+        /// businessServices
+        BusinessServices = "businessServices",
+        /// internet
+        Internet = "internet",
+        /// postoffice
+        Postoffice = "postoffice",
+        /// letterbox
+        Letterbox = "letterbox",
+    }
+}
+
+siri_enum! {
+    /// Values for Passenger Information Facility.
+    PassengerInformationFacility as "PassengerInformationFacilityEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// nextStopIndicator
+        NextStopIndicator = "nextStopIndicator",
+        /// stopAnnouncements
+        StopAnnouncements = "stopAnnouncements",
+        /// passengerInformationDisplay
+        PassengerInformationDisplay = "passengerInformationDisplay",
+        /// audioInformation
+        AudioInformation = "audioInformation",
+        /// visualInformation
+        VisualInformation = "visualInformation",
+        /// tactilePlatformEdges
+        TactilePlatformEdges = "tactilePlatformEdges",
+        /// tactileInformation
+        TactileInformation = "tactileInformation",
+        /// walkingGuidance
+        WalkingGuidance = "walkingGuidance",
+        /// journeyPlanning
+        JourneyPlanning = "journeyPlanning",
+        /// lostFound
+        LostFound = "lostFound",
+        /// informationDesk
+        InformationDesk = "informationDesk",
+        /// interactiveKiosk-Display
+        InteractiveKioskDisplay = "interactiveKiosk-Display",
+        /// printedPublicNotice
+        PrintedPublicNotice = "printedPublicNotice",
+    }
+}
+
+siri_enum! {
+    /// Values for Refreshment Facility: TPEG pti_table 23.
+    RefreshmentFacility as "RefreshmentFacilityEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// pti23_1
+        Pti231 = "pti23_1",
+        /// restaurantService
+        RestaurantService = "restaurantService",
+        /// pti23_2
+        Pti232 = "pti23_2",
+        /// snacksService
+        SnacksService = "snacksService",
+        /// pti23
+        Pti23 = "pti23",
+        /// trolley
+        Trolley = "trolley",
+        /// pti23_18
+        Pti2318 = "pti23_18",
+        /// bar
+        Bar = "bar",
+        /// pti23_19
+        Pti2319 = "pti23_19",
+        /// foodNotAvailable
+        FoodNotAvailable = "foodNotAvailable",
+        /// pti23_20
+        Pti2320 = "pti23_20",
+        /// beveragesNotAvailable
+        BeveragesNotAvailable = "beveragesNotAvailable",
+        /// pti23_26
+        Pti2326 = "pti23_26",
+        /// bistro
+        Bistro = "bistro",
+        /// foodVendingMachine
+        FoodVendingMachine = "foodVendingMachine",
+        /// beverageVendingMachine
+        BeverageVendingMachine = "beverageVendingMachine",
+    }
+}
+
+siri_enum! {
+    /// Values for Reserved Space Facility.
+    ReservedSpaceFacility as "ReservedSpaceFacilityEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// lounge
+        Lounge = "lounge",
+        /// hall
+        Hall = "hall",
+        /// meetingpoint
+        Meetingpoint = "meetingpoint",
+        /// groupPoint
+        GroupPoint = "groupPoint",
+        /// reception
+        Reception = "reception",
+        /// shelter
+        Shelter = "shelter",
+        /// seats
+        Seats = "seats",
+    }
+}
+
+siri_enum! {
+    /// Values for Retail Facility.
+    RetailFacility as "RetailFacilityEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// food
+        Food = "food",
+        /// newspaperTobacco
+        NewspaperTobacco = "newspaperTobacco",
+        /// recreationTravel
+        RecreationTravel = "recreationTravel",
+        /// hygieneHealthBeauty
+        HygieneHealthBeauty = "hygieneHealthBeauty",
+        /// fashionAccessories
+        FashionAccessories = "fashionAccessories",
+        /// bankFinanceInsurance
+        BankFinanceInsurance = "bankFinanceInsurance",
+        /// cashMachine
+        CashMachine = "cashMachine",
+        /// currencyExchange
+        CurrencyExchange = "currencyExchange",
+        /// tourismService
+        TourismService = "tourismService",
+        /// photoBooth
+        PhotoBooth = "photoBooth",
+    }
+}
+
+siri_enum! {
+    /// Values for Sanitary Facility: TPEG pti_table 23.
+    SanitaryFacility as "SanitaryFacilityEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// pti23_22
+        Pti2322 = "pti23_22",
+        /// toilet
+        Toilet = "toilet",
+        /// pti23_23
+        Pti2323 = "pti23_23",
+        /// noToilet
+        NoToilet = "noToilet",
+        /// shower
+        Shower = "shower",
+        /// wheelchairAcccessToilet
+        WheelchairAcccessToilet = "wheelchairAcccessToilet",
+        /// babyChange
+        BabyChange = "babyChange",
+    }
+}
+
+siri_enum! {
+    /// Values for Ticketing Facility.
+    TicketingFacility as "TicketingFacilityEnumeration" {
+        /// unknown
+        Unknown = "unknown",
+        /// ticketMachines
+        TicketMachines = "ticketMachines",
+        /// ticketOffice
+        TicketOffice = "ticketOffice",
+        /// ticketOnDemandMachines
+        TicketOnDemandMachines = "ticketOnDemandMachines",
+        /// ticketSales
+        TicketSales = "ticketSales",
+        /// mobileTicketing
+        MobileTicketing = "mobileTicketing",
+        /// ticketCollection
+        TicketCollection = "ticketCollection",
+        /// centralReservations
+        CentralReservations = "centralReservations",
+        /// localTickets
+        LocalTickets = "localTickets",
+        /// nationalTickets
+        NationalTickets = "nationalTickets",
+        /// internationalTickets
+        InternationalTickets = "internationalTickets",
+    }
+}
+
+siri_enum! {
+    /// Detail Levels for Stop Monitoring Request.
+    StopMonitoringDetail as "StopMonitoringDetailEnumeration" {
+        /// Return only the minimum amount of optional data for each Stop Visit to provide a
+        /// display, A time at stop, LINE name and destination name.
+        Minimum = "minimum",
+        /// Return minimum and other available basic details for each Stop Visit. Do not include
+        /// data on times at next stop or destination.
+        Basic = "basic",
+        /// Return all basic data, and also origin VIA points and destination.
+        Normal = "normal",
+        /// Return in addition to normal data, the CALL data for each Stop Visit, including PREVIOUS
+        /// and ONWARD CALLs with passing times.
+        Calls = "calls",
+        /// Return all available data for each Stop Visit, including calls.
+        Full = "full",
+    }
+}
+
+siri_enum! {
+    /// Visit Types to Return.
+    StopVisitType as "StopVisitTypeEnumeration" {
+        /// Return all Stop Visits.
+        All = "all",
+        /// Return only arrival Stop Visits.
+        Arrivals = "arrivals",
+        /// Return only departure Stop Visits.
+        Departures = "departures",
+    }
+}
+
+siri_enum! {
+    /// Classification of the service exception
+    ServiceException as "ServiceExceptionEnumeration" {
+        /// No transport services returned because currently before first journey of day.
+        BeforeFirstJourney = "beforeFirstJourney",
+        /// No transport services returned because currently after first journey of day.
+        AfterLastJourney = "afterLastJourney",
+        /// No transport services returned because no services today.
+        NoServiceToday = "noServiceToday",
+        /// No transport services returned because services currently suspended.
+        TransportTemporarilySuspended = "transportTemporarilySuspended",
+        /// No transport services returned because prolonged suspension of services.
+        TransportLongtermSuspended = "transportLongtermSuspended",
+        /// Transport services returned subject to severe disruptions.
+        TransportSeverlyDisrupted = "transportSeverlyDisrupted",
+        /// No transport services returned because real-time services not available.
+        RealtimeDataNotAvailable = "realtimeDataNotAvailable",
+        /// realtimeDataAvailable
+        RealtimeDataAvailable = "realtimeDataAvailable",
+    }
+}
+
+siri_enum! {
+    /// Detail Levels for Connection Monitoring Request.
+    ConnectionMonitoringDetail as "ConnectionMonitoringDetailEnumeration" {
+        /// Return only the minimum amount of optional data for each Stop Visit to provide a
+        /// display, A time at stop, LINE name and destination name.
+        Minimum = "minimum",
+        /// Return minimum and other available basic details for each Stop Visit. Do not include
+        /// data on times at next stop or destination.
+        Basic = "basic",
+        /// Return all basic data, and also origin VIA points and destination.
+        Normal = "normal",
+        /// Return all available data for each Stop Visit, including calls.
+        Full = "full",
+    }
+}

@@ -71,6 +71,4 @@ pub use capabilities::{
     ProductionTimetableTopicFiltering,
 };
 pub use delivery::{DatedTimetableVersionFrame, ProductionTimetableDelivery};
-pub use request::{
-    ProductionTimetableRequest, ProductionTimetableSubscriptionRequest, TimetableValidityPeriod,
-};
+pub use request::{ProductionTimetableRequest, ProductionTimetableSubscriptionRequest};

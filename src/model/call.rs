@@ -203,6 +203,19 @@ impl PlannedStopAssignment {
     }
 }
 
+/// How many calls before and after the current one a request asks for.
+///
+/// The stop and vehicle monitoring services both cap the calling pattern this way.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct MaximumNumberOfCalls {
+    /// At most this many stops already served.
+    #[serde(rename = "Previous", default, skip_serializing_if = "Option::is_none")]
+    pub previous: Option<u64>,
+    /// At most this many stops still to come.
+    #[serde(rename = "Onwards", default, skip_serializing_if = "Option::is_none")]
+    pub onwards: Option<u64>,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

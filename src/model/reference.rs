@@ -36,6 +36,23 @@ siri_ref! {
     ConnectionLinkRef;
     /// Identifies a passenger facility, e.g. a lift or a ticket machine.
     FacilityRef;
+    /// Identifies a named feature a facility, service or vehicle offers.
+    FeatureRef;
+    /// Identifies a company or authority, e.g. the owner of a facility.
+    OrganisationRef;
+    /// Identifies a site — a place passengers use that is not itself a stop.
+    SiteRef;
+    /// Identifies a piece of equipment at a stop place, in IFOPT terms.
+    EquipmentRef;
+    /// Identifies a kind of equipment, in IFOPT terms.
+    EquipmentTypeRef;
+    /// Identifies a place a producer publishes real-time stop information for.
+    ///
+    /// A monitoring point is normally a stop point, but a producer may also publish
+    /// under a coarser reference — a whole station, say — so the two are distinct.
+    MonitoringRef;
+    /// Identifies a vehicle's arrival at a stop to the on-street clear-down system.
+    ClearDownRef;
     /// Identifies a physical vehicle.
     VehicleRef;
     /// Identifies a planned journey of a vehicle along a route.

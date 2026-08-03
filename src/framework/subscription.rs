@@ -3,11 +3,17 @@
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
+use crate::cm::ConnectionMonitoringSubscriptionRequest;
+use crate::ct::ConnectionTimetableSubscriptionRequest;
 use crate::et::EstimatedTimetableSubscriptionRequest;
+use crate::fm::FacilityMonitoringSubscriptionRequest;
 use crate::framework::error_condition::{
     ApplicationError, ErrorCondition, ServiceRequestError, TerminationError,
 };
+use crate::gm::GeneralMessageSubscriptionRequest;
 use crate::pt::ProductionTimetableSubscriptionRequest;
+use crate::sm::StopMonitoringSubscriptionRequest;
+use crate::st::StopTimetableSubscriptionRequest;
 use crate::sx::SituationExchangeSubscriptionRequest;
 use crate::types::{
     Duration, Empty, EndpointAddress, Extensions, MessageQualifier, MessageRef,
@@ -91,8 +97,20 @@ pub enum SubscriptionRequestPayload {
     ProductionTimetableSubscriptionRequest(Box<ProductionTimetableSubscriptionRequest>),
     /// A subscription to a real-time timetable.
     EstimatedTimetableSubscriptionRequest(Box<EstimatedTimetableSubscriptionRequest>),
+    /// A subscription to the timetable at a stop.
+    StopTimetableSubscriptionRequest(Box<StopTimetableSubscriptionRequest>),
+    /// A subscription to what is due at a stop.
+    StopMonitoringSubscriptionRequest(Box<StopMonitoringSubscriptionRequest>),
     /// A subscription to vehicle positions.
     VehicleMonitoringSubscriptionRequest(Box<VehicleMonitoringSubscriptionRequest>),
+    /// A subscription to the connections planned over a connection link.
+    ConnectionTimetableSubscriptionRequest(Box<ConnectionTimetableSubscriptionRequest>),
+    /// A subscription to how those connections are going.
+    ConnectionMonitoringSubscriptionRequest(Box<ConnectionMonitoringSubscriptionRequest>),
+    /// A subscription to free-form messages.
+    GeneralMessageSubscriptionRequest(Box<GeneralMessageSubscriptionRequest>),
+    /// A subscription to the state of passenger facilities.
+    FacilityMonitoringSubscriptionRequest(Box<FacilityMonitoringSubscriptionRequest>),
     /// A subscription to situations.
     SituationExchangeSubscriptionRequest(Box<SituationExchangeSubscriptionRequest>),
 }
@@ -109,9 +127,45 @@ impl From<EstimatedTimetableSubscriptionRequest> for SubscriptionRequestPayload 
     }
 }
 
+impl From<StopTimetableSubscriptionRequest> for SubscriptionRequestPayload {
+    fn from(request: StopTimetableSubscriptionRequest) -> Self {
+        Self::StopTimetableSubscriptionRequest(Box::new(request))
+    }
+}
+
+impl From<StopMonitoringSubscriptionRequest> for SubscriptionRequestPayload {
+    fn from(request: StopMonitoringSubscriptionRequest) -> Self {
+        Self::StopMonitoringSubscriptionRequest(Box::new(request))
+    }
+}
+
 impl From<VehicleMonitoringSubscriptionRequest> for SubscriptionRequestPayload {
     fn from(request: VehicleMonitoringSubscriptionRequest) -> Self {
         Self::VehicleMonitoringSubscriptionRequest(Box::new(request))
+    }
+}
+
+impl From<ConnectionTimetableSubscriptionRequest> for SubscriptionRequestPayload {
+    fn from(request: ConnectionTimetableSubscriptionRequest) -> Self {
+        Self::ConnectionTimetableSubscriptionRequest(Box::new(request))
+    }
+}
+
+impl From<ConnectionMonitoringSubscriptionRequest> for SubscriptionRequestPayload {
+    fn from(request: ConnectionMonitoringSubscriptionRequest) -> Self {
+        Self::ConnectionMonitoringSubscriptionRequest(Box::new(request))
+    }
+}
+
+impl From<GeneralMessageSubscriptionRequest> for SubscriptionRequestPayload {
+    fn from(request: GeneralMessageSubscriptionRequest) -> Self {
+        Self::GeneralMessageSubscriptionRequest(Box::new(request))
+    }
+}
+
+impl From<FacilityMonitoringSubscriptionRequest> for SubscriptionRequestPayload {
+    fn from(request: FacilityMonitoringSubscriptionRequest) -> Self {
+        Self::FacilityMonitoringSubscriptionRequest(Box::new(request))
     }
 }
 

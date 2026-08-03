@@ -4,7 +4,7 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::VehicleMonitoringDetail;
-use crate::model::{DirectionRef, LineRef, VehicleRef};
+use crate::model::{DirectionRef, LineRef, MaximumNumberOfCalls, VehicleRef};
 use crate::types::{Duration, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier};
 
 use super::VehicleMonitoringRef;
@@ -119,17 +119,6 @@ impl VehicleMonitoringRequest {
             .map(MonitoredSubject::Vehicle)
             .or_else(|| self.line_ref.as_ref().map(MonitoredSubject::Line))
     }
-}
-
-/// How many calls before and after the current one a request asks for.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
-pub struct MaximumNumberOfCalls {
-    /// At most this many stops already served.
-    #[serde(rename = "Previous", default, skip_serializing_if = "Option::is_none")]
-    pub previous: Option<u64>,
-    /// At most this many stops still to come.
-    #[serde(rename = "Onwards", default, skip_serializing_if = "Option::is_none")]
-    pub onwards: Option<u64>,
 }
 
 /// A subscription to the vehicles a producer is tracking.

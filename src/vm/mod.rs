@@ -72,8 +72,7 @@ pub use capabilities::{
 };
 pub use delivery::{VehicleActivity, VehicleActivityCancellation, VehicleMonitoringDelivery};
 pub use request::{
-    MaximumNumberOfCalls, MonitoredSubject, VehicleMonitoringRequest,
-    VehicleMonitoringSubscriptionRequest,
+    MonitoredSubject, VehicleMonitoringRequest, VehicleMonitoringSubscriptionRequest,
 };
 
 siri_ref! {
