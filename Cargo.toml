@@ -2,10 +2,11 @@
 name = "siri-rs"
 version = "0.1.0"
 edition = "2021"
+authors = ["Marcel Kaufmann <kaufmann@projektionisten.de>"]
 rust-version = "1.75"
 license = "MIT OR Apache-2.0"
 description = "CEN SIRI (EN 15531) types and publish/subscribe protocol logic — Situation Exchange (SIRI-SX), transport-agnostic, schema-verified"
-repository = "https://bitbucket.org/projektionisten-developers/siri-rs"
+repository = "https://github.com/Projektionisten/siri-rs"
 documentation = "https://docs.rs/siri-rs"
 readme = "README.md"
 keywords = ["siri", "public-transport", "gtfs-realtime", "vdv", "xml"]
