@@ -417,8 +417,7 @@ research initiative, grant number **01F2271A**, July 2024 to February 2027.
 The project is coordinated by the L3S Research Center at Leibniz University Hannover,
 with PROJEKTIONISTEN GmbH, the Data Science and Intelligent Systems group at the
 University of Bonn, Wangerland Touristik GmbH and Connect-Fahrplanauskunft GmbH.
-Project pages: [motores.ai](https://motores.ai/) and
-[connect-fahrplanauskunft.de/motores](https://connect-fahrplanauskunft.de/motores/).
+Project page: [motores.ai](https://motores.ai/).
 
 Responsibility for the content of this repository lies with its authors.
 
