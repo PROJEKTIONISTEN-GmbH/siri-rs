@@ -8,7 +8,7 @@
 use std::fmt;
 
 use chrono::{DateTime, FixedOffset};
-use serde::de::{self, DeserializeOwned, MapAccess, Visitor};
+use serde::de::{self, DeserializeOwned, DeserializeSeed, MapAccess, Visitor};
 use serde::ser::SerializeMap;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -138,6 +138,11 @@ impl fmt::Display for DefaultedText {
 /// canonical form: `PT60M` and `PT1H` denote the same length but are distinct
 /// documents, and a library that re-writes one as the other loses information a
 /// conformance test would flag. Use [`Duration::to_std`] to get a measurable length.
+///
+/// [`parse`](Self::parse) checks what an application builds. A value read from a
+/// document is kept as it arrived, checked or not, so that one badly written
+/// interval does not cost the message that carries it; [`to_std`](Self::to_std)
+/// answers `None` for such a value.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Duration(String);
@@ -171,22 +176,35 @@ impl Duration {
     /// The duration as a [`std::time::Duration`].
     ///
     /// Years and months have no fixed length, so they are converted with the
-    /// nominal lengths used for scheduling intervals: 365 days and 30 days. Returns
-    /// `None` for a negative duration, which [`std::time::Duration`] cannot hold.
+    /// nominal lengths used for scheduling intervals: 365 days and 30 days.
+    ///
+    /// Returns `None` when there is no such length: for a negative duration, which
+    /// [`std::time::Duration`] cannot hold; for one too long for it to hold — a
+    /// component beyond what 64 bits count, or a total beyond what the type
+    /// measures; and for a lexical form that is not an `xsd:duration` at all, which
+    /// a value read from a document may carry.
     pub fn to_std(&self) -> Option<std::time::Duration> {
         let c = self.components().ok()?;
         if c.negative {
             return None;
         }
-        let seconds = c.years * 365 * 86_400
-            + c.months * 30 * 86_400
-            + c.days * 86_400
-            + c.hours * 3_600
-            + c.minutes * 60;
-        Some(std::time::Duration::from_secs_f64(seconds as f64 + c.seconds))
+        let whole = c
+            .years
+            .checked_mul(365 * 86_400)?
+            .checked_add(c.months.checked_mul(30 * 86_400)?)?
+            .checked_add(c.days.checked_mul(86_400)?)?
+            .checked_add(c.hours.checked_mul(3_600)?)?
+            .checked_add(c.minutes.checked_mul(60)?)?;
+        let seconds = std::time::Duration::try_from_secs_f64(c.seconds).ok()?;
+        std::time::Duration::from_secs(whole).checked_add(seconds)
     }
 
     /// Splits the lexical form into its designators, rejecting malformed input.
+    ///
+    /// The form is `-?P(nY)?(nM)?(nD)?(T(nH)?(nM)?(n(.n)?S)?)?`: each designator
+    /// at most once, in that order, at least one of them present, no `T` without
+    /// something after it, and a fraction only on the seconds and only with digits
+    /// on both sides of the point.
     fn components(&self) -> Result<DurationComponents> {
         let invalid = || Error::InvalidValue {
             datatype: "xsd:duration",
@@ -202,13 +220,9 @@ impl Duration {
         };
         rest = rest.strip_prefix('P').ok_or_else(invalid)?;
 
-        let (date_part, time_part) = match rest.split_once('T') {
-            Some((d, t)) => {
-                if t.is_empty() {
-                    return Err(invalid());
-                }
-                (d, Some(t))
-            }
+        let (mut date, time) = match rest.split_once('T') {
+            Some((_, "")) => return Err(invalid()),
+            Some((date, time)) => (date, Some(time)),
             None => (rest, None),
         };
 
@@ -217,44 +231,28 @@ impl Duration {
             ..Default::default()
         };
         let mut any = false;
-        let mut number = String::new();
-        for ch in date_part.chars() {
-            match ch {
-                '0'..='9' => number.push(ch),
-                'Y' | 'M' | 'D' if !number.is_empty() => {
-                    let value: u64 = number.parse().map_err(|_| invalid())?;
-                    number.clear();
-                    any = true;
-                    match ch {
-                        'Y' => out.years = value,
-                        'M' => out.months = value,
-                        _ => out.days = value,
-                    }
-                }
-                _ => return Err(invalid()),
+        for (designator, slot) in [('Y', &mut out.years), ('M', &mut out.months), ('D', &mut out.days)] {
+            if let Some(value) = take_component(&mut date, designator) {
+                *slot = value;
+                any = true;
             }
         }
-        if !number.is_empty() {
+        if !date.is_empty() {
             return Err(invalid());
         }
 
-        if let Some(time_part) = time_part {
-            for ch in time_part.chars() {
-                match ch {
-                    '0'..='9' | '.' => number.push(ch),
-                    'H' | 'M' | 'S' if !number.is_empty() => {
-                        any = true;
-                        match ch {
-                            'H' => out.hours = number.parse().map_err(|_| invalid())?,
-                            'M' => out.minutes = number.parse().map_err(|_| invalid())?,
-                            _ => out.seconds = number.parse().map_err(|_| invalid())?,
-                        }
-                        number.clear();
-                    }
-                    _ => return Err(invalid()),
+        if let Some(mut time) = time {
+            for (designator, slot) in [('H', &mut out.hours), ('M', &mut out.minutes)] {
+                if let Some(value) = take_component(&mut time, designator) {
+                    *slot = value;
+                    any = true;
                 }
             }
-            if !number.is_empty() {
+            if let Some(seconds) = take_seconds(&mut time) {
+                out.seconds = seconds;
+                any = true;
+            }
+            if !time.is_empty() {
                 return Err(invalid());
             }
         }
@@ -276,6 +274,49 @@ struct DurationComponents {
     hours: u64,
     minutes: u64,
     seconds: f64,
+}
+
+/// How many ASCII digits `text` begins with.
+fn leading_digits(text: &str) -> usize {
+    text.bytes().take_while(u8::is_ascii_digit).count()
+}
+
+/// Takes `<digits><designator>` off the front of `rest` when that is what comes
+/// next, and leaves `rest` alone when it is not.
+///
+/// The schema puts no bound on the number, so one too large for 64 bits is still a
+/// duration; it is kept as the largest value that fits, which no length measures.
+fn take_component(rest: &mut &str, designator: char) -> Option<u64> {
+    let digits = leading_digits(rest);
+    if digits == 0 || !rest[digits..].starts_with(designator) {
+        return None;
+    }
+    let value = rest[..digits].parse().unwrap_or(u64::MAX);
+    *rest = &rest[digits + 1..];
+    Some(value)
+}
+
+/// Takes the seconds, `<digits>S` or `<digits>.<digits>S`, off the front of `rest`
+/// when that is what comes next.
+fn take_seconds(rest: &mut &str) -> Option<f64> {
+    let whole = leading_digits(rest);
+    if whole == 0 {
+        return None;
+    }
+    let mut number = whole;
+    if rest[whole..].starts_with('.') {
+        let fraction = leading_digits(&rest[whole + 1..]);
+        if fraction == 0 {
+            return None;
+        }
+        number = whole + 1 + fraction;
+    }
+    if !rest[number..].starts_with('S') {
+        return None;
+    }
+    let value = rest[..number].parse().ok()?;
+    *rest = &rest[number + 1..];
+    Some(value)
 }
 
 impl fmt::Display for Duration {
@@ -581,6 +622,15 @@ impl Empty {
 /// [`attributes`](Self::attributes) with their prefix. An attribute named `lang` or
 /// `space` in no namespace at all — which the reader cannot tell apart from those
 /// two — is written back with the prefix it did not have.
+///
+/// # Depth
+///
+/// A subtree may nest at most [`MAX_DEPTH`](Self::MAX_DEPTH) elements below its
+/// root; a document that nests deeper is refused with an error rather than read.
+/// Reading open content is the one place the reader recurses without a bound the
+/// schema sets, and a document nested a few thousand levels deep — under 20 KB of
+/// text — would otherwise overflow the stack of the thread reading it, which ends
+/// the process rather than the request.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct AnyContent {
     /// The element's attributes, without the leading `@` the wire format uses.
@@ -592,6 +642,16 @@ pub struct AnyContent {
 }
 
 impl AnyContent {
+    /// How many elements deep a subtree may nest below its root.
+    ///
+    /// The deepest official example document nests 15 elements in all, and an
+    /// embedded DATEX II record adds a dozen or so of its own, so 64 is room for
+    /// any payload two participants are likely to agree on. It is also small
+    /// enough that reading a payload at that depth claims about 256 KB of stack in
+    /// an unoptimised build — a debug build spends roughly 4 KB per level — which
+    /// is an eighth of the 2 MiB a tokio worker thread has.
+    pub const MAX_DEPTH: usize = 64;
+
     /// Content that is a single piece of text, as most messages carry.
     pub fn text(text: impl Into<String>) -> Self {
         Self {
@@ -707,45 +767,72 @@ impl Serialize for AnyContent {
 
 impl<'de> Deserialize<'de> for AnyContent {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> std::result::Result<Self, D::Error> {
-        struct AnyContentVisitor;
+        Nested { depth: 0 }.deserialize(deserializer)
+    }
+}
 
-        impl<'de> Visitor<'de> for AnyContentVisitor {
-            type Value = AnyContent;
+/// Reads one element of open content that stands `depth` levels below the root of
+/// its subtree.
+///
+/// Open content is the one place the reader recurses without a bound the schema
+/// sets: every child element is another [`AnyContent`], and a typed structure can
+/// only nest as deep as its type. A document that nests an extension payload a few
+/// thousand levels deep therefore overflows the stack — not the reader's error, the
+/// process's abort — unless the recursion is counted, which is what this seed does.
+struct Nested {
+    depth: usize,
+}
 
-            fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                f.write_str("an XML element")
-            }
+impl<'de> DeserializeSeed<'de> for Nested {
+    type Value = AnyContent;
 
-            /// An element with children or attributes arrives as a map whose keys are
-            /// `@name` for an attribute, `$text` for character data and the element
-            /// name for a child.
-            fn visit_map<A: MapAccess<'de>>(
-                self,
-                mut map: A,
-            ) -> std::result::Result<AnyContent, A::Error> {
-                let mut content = AnyContent::default();
-                while let Some(key) = map.next_key::<String>()? {
-                    if let Some(name) = key.strip_prefix('@') {
-                        let name = match name {
-                            "lang" | "space" => format!("xml:{name}"),
-                            _ => name.to_owned(),
-                        };
-                        content.attributes.push((name, map.next_value()?));
-                    } else if key == "$text" {
-                        content.text = map.next_value()?;
-                    } else {
-                        content.children.push((key, map.next_value()?));
-                    }
-                }
-                Ok(content)
-            }
+    fn deserialize<D: Deserializer<'de>>(
+        self,
+        deserializer: D,
+    ) -> std::result::Result<AnyContent, D::Error> {
+        deserializer.deserialize_map(self)
+    }
+}
 
-            fn visit_str<E: de::Error>(self, value: &str) -> std::result::Result<AnyContent, E> {
-                Ok(AnyContent::text(value))
+impl<'de> Visitor<'de> for Nested {
+    type Value = AnyContent;
+
+    fn expecting(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("an XML element")
+    }
+
+    /// An element with children or attributes arrives as a map whose keys are
+    /// `@name` for an attribute, `$text` for character data and the element name
+    /// for a child.
+    fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> std::result::Result<AnyContent, A::Error> {
+        if self.depth > AnyContent::MAX_DEPTH {
+            return Err(de::Error::custom(format_args!(
+                "open content nests more than {} elements deep",
+                AnyContent::MAX_DEPTH
+            )));
+        }
+        let mut content = AnyContent::default();
+        while let Some(key) = map.next_key::<String>()? {
+            if let Some(name) = key.strip_prefix('@') {
+                let name = match name {
+                    "lang" | "space" => format!("xml:{name}"),
+                    _ => name.to_owned(),
+                };
+                content.attributes.push((name, map.next_value()?));
+            } else if key == "$text" {
+                content.text = map.next_value()?;
+            } else {
+                let child = map.next_value_seed(Nested {
+                    depth: self.depth + 1,
+                })?;
+                content.children.push((key, child));
             }
         }
+        Ok(content)
+    }
 
-        deserializer.deserialize_map(AnyContentVisitor)
+    fn visit_str<E: de::Error>(self, value: &str) -> std::result::Result<AnyContent, E> {
+        Ok(AnyContent::text(value))
     }
 }
 

@@ -46,7 +46,6 @@ fn nested_extensions(depth: usize) -> String {
 }
 
 #[test]
-#[ignore = "aborts the whole test process on the current reader; run with --ignored"]
 fn a_document_nested_deeper_than_any_schema_path_is_refused_not_read() {
     let xml = nested_extensions(HOSTILE_DEPTH);
     let outcome = std::thread::Builder::new()

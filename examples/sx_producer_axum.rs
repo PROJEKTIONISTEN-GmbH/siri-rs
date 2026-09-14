@@ -27,7 +27,7 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::Duration as StdDuration;
 
-use axum::extract::State;
+use axum::extract::{DefaultBodyLimit, State};
 use axum::http::{header, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::post;
@@ -43,6 +43,9 @@ use siri_rs::Siri;
 
 /// The media type SIRI travels as.
 const XML: &str = "application/xml";
+/// The largest request body the endpoint reads. The largest official request example
+/// is 3 KB; the reader bounds nesting, but only the transport can bound size.
+const REQUEST_BODY_LIMIT: usize = 1024 * 1024;
 /// How often the producer is asked for the messages that have become due.
 const POLL_INTERVAL: StdDuration = StdDuration::from_millis(500);
 /// How long the endpoint runs before it publishes a further situation, so that a
@@ -100,7 +103,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let app = Router::new()
         .route("/siri/direct", post(answer).with_state(direct))
-        .route("/siri/fetched", post(answer).with_state(fetched));
+        .route("/siri/fetched", post(answer).with_state(fetched))
+        .layer(DefaultBodyLimit::max(REQUEST_BODY_LIMIT));
 
     println!("SIRI-SX endpoint listening on http://{address}");
     println!("  POST http://{address}/siri/direct   — deliveries are pushed");

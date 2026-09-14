@@ -65,6 +65,21 @@
 //! `[profile.release]`. `benches/` measures reading, writing and one turn of the
 //! publish/subscribe cycle over the official example documents.
 //!
+//! # At an open port
+//!
+//! A document from the other side may be anything, and a reader that answers it
+//! with an `Err` has done its job; one that takes the process down has not.
+//! Entity expansion is refused by the XML layer, a text node of any length reads in
+//! linear time, and open content — an `<Extensions>` payload, a general-message
+//! body, an embedded DATEX II record — may nest at most
+//! [`types::AnyContent::MAX_DEPTH`] elements deep, which stops the one recursion the
+//! schema does not bound. What the reader cannot do is bound the *size* of what it
+//! is given, because it is given a string: the transport in front of it should.
+//! The largest official request example is 3 KB and the largest delivery
+//! example 111 KB, so a producer answering requests loses nothing by refusing a
+//! body over 1 MiB, and a consumer receiving deliveries should set its limit at
+//! the largest delivery its producer sends — the examples take 16 MiB.
+//!
 //! # How the schema is modelled
 //!
 //! The XML Schema is the authority; where idiomatic Rust and schema fidelity

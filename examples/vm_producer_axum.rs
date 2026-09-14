@@ -13,7 +13,7 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::Duration as StdDuration;
 
-use axum::extract::State;
+use axum::extract::{DefaultBodyLimit, State};
 use axum::http::{header, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::post;
@@ -28,6 +28,9 @@ use siri_rs::Siri;
 
 /// The media type SIRI travels as.
 const XML: &str = "application/xml";
+/// The largest request body the endpoint reads. The largest official request example
+/// is 3 KB; the reader bounds nesting, but only the transport can bound size.
+const REQUEST_BODY_LIMIT: usize = 1024 * 1024;
 /// How often the producer is asked for the messages that have become due.
 const POLL_INTERVAL: StdDuration = StdDuration::from_millis(500);
 /// How often the vehicle moves.
@@ -81,7 +84,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tokio::spawn(send_what_is_due(producer.clone()));
     tokio::spawn(the_vehicle_moves(producer.clone()));
 
-    let app = Router::new().route("/siri", post(answer).with_state(producer));
+    let app = Router::new()
+        .route("/siri", post(answer).with_state(producer))
+        .layer(DefaultBodyLimit::max(REQUEST_BODY_LIMIT));
     println!("SIRI-VM endpoint listening on http://{address}/siri");
     axum::serve(tokio::net::TcpListener::bind(address).await?, app).await?;
     Ok(())

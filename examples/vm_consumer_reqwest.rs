@@ -13,7 +13,7 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::Duration as StdDuration;
 
-use axum::extract::State;
+use axum::extract::{DefaultBodyLimit, State};
 use axum::http::{header, StatusCode};
 use axum::response::{IntoResponse, Response};
 use axum::routing::post;
@@ -28,6 +28,10 @@ use siri_rs::Siri;
 
 /// The media type SIRI travels as.
 const XML: &str = "application/xml";
+/// The largest delivery body the endpoint reads: sized to the largest delivery the
+/// producer is expected to send. The reader bounds nesting, but only the transport
+/// can bound size.
+const DELIVERY_BODY_LIMIT: usize = 16 * 1024 * 1024;
 /// How long to stay subscribed and print what arrives before unsubscribing.
 const LISTEN_FOR: StdDuration = StdDuration::from_secs(20);
 
@@ -56,13 +60,15 @@ async fn main() -> Result<(), Failure> {
     let client = reqwest::Client::new();
     let (sender, mut delivered) = mpsc::unbounded_channel();
 
-    let app = Router::new().route(
-        "/siri",
-        post(receive).with_state(Receiving {
-            consumer: consumer.clone(),
-            delivered: sender,
-        }),
-    );
+    let app = Router::new()
+        .route(
+            "/siri",
+            post(receive).with_state(Receiving {
+                consumer: consumer.clone(),
+                delivered: sender,
+            }),
+        )
+        .layer(DefaultBodyLimit::max(DELIVERY_BODY_LIMIT));
     let listener = tokio::net::TcpListener::bind(address).await?;
     tokio::spawn(async move {
         if let Err(complaint) = axum::serve(listener, app).await {
