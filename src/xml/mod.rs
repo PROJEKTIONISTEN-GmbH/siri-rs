@@ -53,6 +53,15 @@ pub fn from_str<T: SiriRoot>(xml: &str) -> Result<T> {
 /// `xml` is the text the caller handed over, which is what a byte offset has to
 /// count in to be of any use.
 pub(crate) fn deserialize<T: DeserializeOwned>(xml: &str, offsets_apply: bool) -> Result<T> {
+    // Tracking the path costs something on every field of every document, and what
+    // it buys is only ever spent on one that fails. So a document is read without it
+    // first, and only a failure is read a second time to find out where it was: the
+    // reader is deterministic, so the second read fails in the same place as the
+    // first. A document that parses pays nothing; one that does not is already lost.
+    let mut untracked = quick_xml::de::Deserializer::from_str(xml);
+    if let Ok(value) = T::deserialize(&mut untracked) {
+        return Ok(value);
+    }
     let mut deserializer = quick_xml::de::Deserializer::from_str(xml);
     serde_path_to_error::deserialize(&mut deserializer).map_err(|failure| Error::Deserialize {
         path: document_path(failure.path()),
