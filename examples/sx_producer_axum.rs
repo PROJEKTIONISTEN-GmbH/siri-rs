@@ -63,7 +63,7 @@ impl SituationSource for Disruptions {
         // honours the severity filter and publishes the rest.
         self.situations
             .iter()
-            .filter(|situation| match (request.severity, situation.severity) {
+            .filter(|situation| match (&request.severity, &situation.severity) {
                 (Some(wanted), Some(actual)) => actual >= wanted,
                 (Some(_), None) => false,
                 (None, _) => true,

@@ -1,11 +1,12 @@
 //! Internal macros shared by the type modules.
 
 /// Declares a SIRI enumeration: a Rust enum whose variants are the tokens of an
-/// XML Schema `simpleType` restriction, in schema order.
+/// XML Schema `simpleType` restriction, in schema order, plus one variant that
+/// keeps any token the schema release this crate transcribes does not list.
 ///
 /// Beyond the enum itself this generates `XSD_TYPE` and `ALL`, which the
 /// conformance tests use to check the transcription against the schema token by
-/// token.
+/// token. `ALL` lists the schema's tokens only.
 macro_rules! siri_enum {
     (
         $(#[$meta:meta])*
@@ -14,13 +15,21 @@ macro_rules! siri_enum {
         }
     ) => {
         $(#[$meta])*
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize)]
+        #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
         pub enum $name {
             $(
                 $(#[$variant_meta])*
-                #[serde(rename = $token)]
                 $variant,
             )*
+            /// A token the schema release this crate transcribes does not list.
+            ///
+            /// The standard and its national profiles extend these lists with every
+            /// revision, and a document from the other side may be written to a
+            /// later one. The token is kept as it was read and written back
+            /// unchanged, so that one value the crate does not know does not cost
+            /// the document that carries it; what to make of it is the
+            /// application's decision.
+            Unrecognised(String),
         }
 
         impl $name {
@@ -30,10 +39,20 @@ macro_rules! siri_enum {
             /// Every value the schema defines, in schema order.
             pub const ALL: &'static [Self] = &[$(Self::$variant,)*];
 
+            /// The value a wire token denotes: the schema's variant when it lists
+            /// the token, [`Unrecognised`](Self::Unrecognised) otherwise.
+            pub fn from_token(token: &str) -> Self {
+                match token {
+                    $($token => Self::$variant,)*
+                    other => Self::Unrecognised(other.to_owned()),
+                }
+            }
+
             /// The token this value is written as on the wire.
-            pub const fn as_str(self) -> &'static str {
+            pub fn as_str(&self) -> &str {
                 match self {
                     $(Self::$variant => $token,)*
+                    Self::Unrecognised(token) => token,
                 }
             }
         }
@@ -45,16 +64,46 @@ macro_rules! siri_enum {
         }
 
         impl ::core::str::FromStr for $name {
-            type Err = $crate::Error;
+            type Err = ::core::convert::Infallible;
 
+            /// Every token is a value, so this never fails; see
+            /// [`from_token`](Self::from_token).
             fn from_str(s: &str) -> ::core::result::Result<Self, Self::Err> {
-                match s {
-                    $($token => Ok(Self::$variant),)*
-                    other => Err($crate::Error::InvalidValue {
-                        datatype: $xsd,
-                        value: other.to_owned(),
-                    }),
+                Ok(Self::from_token(s))
+            }
+        }
+
+        impl ::serde::Serialize for $name {
+            fn serialize<S: ::serde::Serializer>(
+                &self,
+                serializer: S,
+            ) -> ::core::result::Result<S::Ok, S::Error> {
+                serializer.serialize_str(self.as_str())
+            }
+        }
+
+        impl<'de> ::serde::Deserialize<'de> for $name {
+            fn deserialize<D: ::serde::Deserializer<'de>>(
+                deserializer: D,
+            ) -> ::core::result::Result<Self, D::Error> {
+                struct Token;
+
+                impl<'de> ::serde::de::Visitor<'de> for Token {
+                    type Value = $name;
+
+                    fn expecting(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                        f.write_str(concat!("a token of ", $xsd))
+                    }
+
+                    fn visit_str<E: ::serde::de::Error>(
+                        self,
+                        token: &str,
+                    ) -> ::core::result::Result<$name, E> {
+                        Ok($name::from_token(token))
+                    }
                 }
+
+                deserializer.deserialize_str(Token)
             }
         }
     };

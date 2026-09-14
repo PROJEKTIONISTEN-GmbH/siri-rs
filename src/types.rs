@@ -725,7 +725,7 @@ impl AnyContent {
     /// ```
     pub fn parse<T: DeserializeOwned>(&self) -> Result<T> {
         let element = quick_xml::se::to_string_with_root(PAYLOAD_ELEMENT, self)?;
-        quick_xml::de::from_str(&element).map_err(Error::from)
+        crate::xml::deserialize(&element, false)
     }
 
     /// Builds a subtree out of a value of the consumer's own, the inverse of
@@ -735,7 +735,7 @@ impl AnyContent {
     /// say — is an error rather than a subtree.
     pub fn from_payload<T: Serialize + ?Sized>(payload: &T) -> Result<Self> {
         let element = quick_xml::se::to_string_with_root(PAYLOAD_ELEMENT, payload)?;
-        quick_xml::de::from_str(&element).map_err(Error::from)
+        crate::xml::deserialize(&element, false)
     }
 }
 

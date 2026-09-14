@@ -5,6 +5,12 @@
 //! description. `XSD_TYPE` names the type transcribed and `ALL` lists every value,
 //! which is what the conformance tests check the transcription against.
 //!
+//! Every type also has an `Unrecognised` variant, for a token the schema release
+//! transcribed here does not list. The standard and its national profiles extend
+//! these lists with each revision, so a document from the other side may carry a
+//! token this crate does not know; it is kept as written and written back as it
+//! was, and the document that carries it is read whole.
+//!
 //! Several of these are open code lists that mix SIRI's own vocabulary with TPEG
 //! and DATEX II identifiers; those identifiers keep their published spelling even
 //! where it is not idiomatic Rust.

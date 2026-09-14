@@ -856,7 +856,7 @@ impl SituationReason {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Reason<'a> {
     /// A TPEG alert cause, the way a current producer states a reason.
-    AlertCause(AlertCause),
+    AlertCause(&'a AlertCause),
     /// A superseded statement that the cause is not known.
     UnknownReason(&'a str),
     /// A superseded code for a cause outside the other families.
@@ -893,7 +893,7 @@ macro_rules! reason_accessors {
                 /// Which alternative of the schema's reason choice this record
                 /// carries, or `None` when none is present.
                 pub fn reason(&self) -> Option<Reason<'_>> {
-                    if let Some(alert_cause) = self.alert_cause {
+                    if let Some(alert_cause) = &self.alert_cause {
                         return Some(Reason::AlertCause(alert_cause));
                     }
                     if let Some(value) = self.unknown_reason.as_deref() {
@@ -1078,7 +1078,7 @@ mod tests {
         let situation = situation();
         assert_eq!(
             situation.reason(),
-            Some(Reason::AlertCause(AlertCause::ConstructionWork))
+            Some(Reason::AlertCause(&AlertCause::ConstructionWork))
         );
         assert_eq!(situation.sub_reason(), None);
         assert_eq!(SituationReason::default().reason(), None);
@@ -1099,7 +1099,7 @@ mod tests {
         reason.alert_cause = Some(AlertCause::LiftFailure);
         assert_eq!(
             reason.reason(),
-            Some(Reason::AlertCause(AlertCause::LiftFailure))
+            Some(Reason::AlertCause(&AlertCause::LiftFailure))
         );
     }
 

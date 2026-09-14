@@ -13,7 +13,7 @@ use crate::enumerations::{
 };
 
 /// The submode a structure carries, if any.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Submode {
     /// A kind of air service.
     Air(AirSubmodesOfTransport),
@@ -35,7 +35,7 @@ pub enum Submode {
 
 impl Submode {
     /// The token this submode is written as on the wire.
-    pub const fn as_str(self) -> &'static str {
+    pub fn as_str(&self) -> &str {
         match self {
             Submode::Air(value) => value.as_str(),
             Submode::Bus(value) => value.as_str(),

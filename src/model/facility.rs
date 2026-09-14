@@ -117,7 +117,7 @@ impl FacilityFeature {
 /// The sixteen families of facility feature, of which a [`FacilityFeature`] names one.
 ///
 /// The variant is written as the element name.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum FacilityFeatureKind {
     /// How passengers get to or through the place: lifts, ramps, stairs.
     AccessFacility(AccessFacility),

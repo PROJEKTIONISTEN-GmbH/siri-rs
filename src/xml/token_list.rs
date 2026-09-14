@@ -3,8 +3,9 @@
 //! Deserialising `Vec<T>` for an enumerated `T` does not work directly: the
 //! deserialiser offers the *element name* as the enum's variant, so a sequence of
 //! `<Scope>line</Scope>` is reported as the unknown variant `Scope`. Reading the
-//! tokens as strings and parsing each one keeps the wire format unchanged and
-//! still rejects a token the schema does not define.
+//! tokens as strings and parsing each one keeps the wire format unchanged, and
+//! keeps a token the schema does not define the way a single element does — as
+//! the enumeration's unrecognised variant.
 //!
 //! Only repeated enumerated elements need this; a single one deserialises as
 //! itself.

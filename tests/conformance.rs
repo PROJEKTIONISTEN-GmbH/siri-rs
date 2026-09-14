@@ -26,8 +26,18 @@ use siri_rs::Siri;
 use support::{compare, parse, validate, validator_available, Fixture, VALIDATOR_MISSING};
 
 /// Reads a document into `T` and writes it straight back out.
-fn rewrite<T: siri_rs::SiriRoot>(xml: &str) -> siri_rs::Result<String> {
-    siri_rs::to_string_pretty(&siri_rs::from_str::<T>(xml)?)
+///
+/// A token the crate does not recognise is kept and written back as it was, so a
+/// field transcribed against the wrong enumeration would round-trip without a
+/// trace; what is read is therefore checked for one before it is written.
+fn rewrite<T: siri_rs::SiriRoot + std::fmt::Debug>(xml: &str) -> Result<String, String> {
+    let document = siri_rs::from_str::<T>(xml).map_err(|error| error.to_string())?;
+    let read = format!("{document:?}");
+    if let Some(at) = read.find("Unrecognised(") {
+        let end = read[at..].find(')').map_or(read.len(), |close| at + close + 1);
+        return Err(format!("read a token the crate does not recognise: {}", &read[at..end]));
+    }
+    siri_rs::to_string_pretty(&document).map_err(|error| error.to_string())
 }
 
 /// Reads a document into the type its root element names, then writes it back out.

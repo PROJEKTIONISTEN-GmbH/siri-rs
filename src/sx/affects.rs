@@ -321,7 +321,7 @@ pub struct AffectedOperator {
 /// The schema lets a producer refine a vehicle mode with exactly one submode drawn
 /// from the family that matches it — a bus submode for a bus, a rail submode for a
 /// train — so the alternatives are mutually exclusive.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PtSubmode {
     /// A refinement of air transport, e.g. a domestic scheduled flight.
     Air(AirSubmodesOfTransport),
@@ -344,23 +344,17 @@ pub enum PtSubmode {
 /// Selects the single submode present among the eight alternatives.
 macro_rules! pt_submode {
     ($self:expr) => {
-        if let Some(value) = $self.air_submode {
-            Some(PtSubmode::Air(value))
-        } else if let Some(value) = $self.bus_submode {
-            Some(PtSubmode::Bus(value))
-        } else if let Some(value) = $self.coach_submode {
-            Some(PtSubmode::Coach(value))
-        } else if let Some(value) = $self.metro_submode {
-            Some(PtSubmode::Metro(value))
-        } else if let Some(value) = $self.rail_submode {
-            Some(PtSubmode::Rail(value))
-        } else if let Some(value) = $self.tram_submode {
-            Some(PtSubmode::Tram(value))
-        } else if let Some(value) = $self.water_submode {
-            Some(PtSubmode::Water(value))
-        } else {
-            $self.telecabin_submode.map(PtSubmode::Telecabin)
-        }
+        $self
+            .air_submode
+            .clone()
+            .map(PtSubmode::Air)
+            .or_else(|| $self.bus_submode.clone().map(PtSubmode::Bus))
+            .or_else(|| $self.coach_submode.clone().map(PtSubmode::Coach))
+            .or_else(|| $self.metro_submode.clone().map(PtSubmode::Metro))
+            .or_else(|| $self.rail_submode.clone().map(PtSubmode::Rail))
+            .or_else(|| $self.tram_submode.clone().map(PtSubmode::Tram))
+            .or_else(|| $self.water_submode.clone().map(PtSubmode::Water))
+            .or_else(|| $self.telecabin_submode.clone().map(PtSubmode::Telecabin))
     };
 }
 
@@ -370,7 +364,7 @@ macro_rules! pt_submode {
 /// situation's general context would otherwise supply. The eight submode fields are
 /// the alternatives of one schema choice: at most one is present, and
 /// [`AffectedMode::pt_submode`] reports which.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AffectedMode {
     /// The broad mode of transport, e.g. bus, rail or ferry.
     #[serde(rename = "VehicleMode", default, skip_serializing_if = "Option::is_none")]

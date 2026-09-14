@@ -22,6 +22,9 @@ bench = false
 chrono = { version = "0.4.38", default-features = false, features = ["std", "serde", "alloc"] }
 quick-xml = { version = "0.37", features = ["serialize"] }
 serde = { version = "1", features = ["derive"] }
+# Names the field a document fails at. A reader of a delivery twenty thousand
+# records long is owed more than "missing field"; this is what carries the path.
+serde_path_to_error = "0.1"
 
 [dev-dependencies]
 # The transport the examples and the HTTP endpoint test use. The library builds and

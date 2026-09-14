@@ -43,7 +43,65 @@ pub trait SiriRoot: Serialize + DeserializeOwned {
 pub fn from_str<T: SiriRoot>(xml: &str) -> Result<T> {
     let normalised = namespace::normalise(xml)?;
     check_root::<T>(&normalised)?;
-    quick_xml::de::from_str(&normalised).map_err(Error::from)
+    let rewritten = matches!(normalised, std::borrow::Cow::Owned(_));
+    deserialize(&normalised, !rewritten)
+}
+
+/// Reads a value out of `xml`, reporting where in the document a failure was.
+///
+/// The path is tracked as the deserialiser descends; `offsets_apply` says whether
+/// `xml` is the text the caller handed over, which is what a byte offset has to
+/// count in to be of any use.
+pub(crate) fn deserialize<T: DeserializeOwned>(xml: &str, offsets_apply: bool) -> Result<T> {
+    let mut deserializer = quick_xml::de::Deserializer::from_str(xml);
+    serde_path_to_error::deserialize(&mut deserializer).map_err(|failure| Error::Deserialize {
+        path: document_path(failure.path()),
+        offset: offsets_apply.then(|| deserializer.get_ref().get_ref().buffer_position()),
+        source: failure.into_inner(),
+    })
+}
+
+/// Spells a path the deserialiser tracked in the document's own terms.
+///
+/// The tracked path names serde's view: a field renamed `$value` for the element a
+/// choice carries, `$text` for character data, and an index for the position in a
+/// repeated field. A reader of the document knows none of those, so the `$`-names
+/// are dropped and an index that belonged to one is carried onto the element it
+/// selected — `$value[0].StopMonitoringDelivery` becomes
+/// `StopMonitoringDelivery[0]`.
+fn document_path(path: &serde_path_to_error::Path) -> String {
+    use serde_path_to_error::Segment;
+
+    let mut spelled = String::new();
+    let mut after_dropped_name = false;
+    let mut carried_index = None;
+    for segment in path {
+        match segment {
+            Segment::Map { key } | Segment::Enum { variant: key } if key.starts_with('$') => {
+                after_dropped_name = true;
+            }
+            Segment::Map { key } | Segment::Enum { variant: key } => {
+                if !spelled.is_empty() {
+                    spelled.push('.');
+                }
+                spelled.push_str(key);
+                if let Some(index) = carried_index.take() {
+                    spelled.push_str(&format!("[{index}]"));
+                }
+                after_dropped_name = false;
+            }
+            Segment::Seq { index } if after_dropped_name => carried_index = Some(*index),
+            Segment::Seq { index } => spelled.push_str(&format!("[{index}]")),
+            Segment::Unknown => {
+                if !spelled.is_empty() {
+                    spelled.push('.');
+                }
+                spelled.push('?');
+                after_dropped_name = false;
+            }
+        }
+    }
+    spelled
 }
 
 /// Writes a SIRI document as a single line of XML, prefixed by an XML declaration.

@@ -841,13 +841,21 @@ mod tests {
     }
 
     #[test]
-    fn a_fare_class_the_schema_does_not_define_is_rejected() {
-        let error = quick_xml::de::from_str::<TrainElement>(
-            "<TrainElement><TrainElementCode>TE1</TrainElementCode>\
-             <FareClasses>firstClass sleeperClass</FareClasses></TrainElement>",
-        )
-        .unwrap_err();
-        assert!(error.to_string().contains("sleeperClass"), "{error}");
+    fn a_fare_class_the_schema_does_not_define_is_kept_as_it_was_written() {
+        let document = "<TrainElement><TrainElementCode>TE1</TrainElementCode>\
+                        <FareClasses>firstClass sleeperClass</FareClasses></TrainElement>";
+        let element: TrainElement = quick_xml::de::from_str(document).unwrap();
+        assert_eq!(
+            element.fare_classes,
+            vec![
+                FareClass::FirstClass,
+                FareClass::Unrecognised("sleeperClass".to_owned())
+            ]
+        );
+        assert_eq!(
+            quick_xml::se::to_string_with_root("TrainElement", &element).unwrap(),
+            document
+        );
     }
 
     #[test]

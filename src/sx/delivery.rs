@@ -208,13 +208,14 @@ impl Network {
     /// The submode this network is narrowed to, if any.
     pub fn submode(&self) -> Option<Submode> {
         self.air_submode
+            .clone()
             .map(Submode::Air)
-            .or(self.bus_submode.map(Submode::Bus))
-            .or(self.coach_submode.map(Submode::Coach))
-            .or(self.metro_submode.map(Submode::Metro))
-            .or(self.rail_submode.map(Submode::Rail))
-            .or(self.tram_submode.map(Submode::Tram))
-            .or(self.water_submode.map(Submode::Water))
-            .or(self.telecabin_submode.map(Submode::Telecabin))
+            .or_else(|| self.bus_submode.clone().map(Submode::Bus))
+            .or_else(|| self.coach_submode.clone().map(Submode::Coach))
+            .or_else(|| self.metro_submode.clone().map(Submode::Metro))
+            .or_else(|| self.rail_submode.clone().map(Submode::Rail))
+            .or_else(|| self.tram_submode.clone().map(Submode::Tram))
+            .or_else(|| self.water_submode.clone().map(Submode::Water))
+            .or_else(|| self.telecabin_submode.clone().map(Submode::Telecabin))
     }
 }

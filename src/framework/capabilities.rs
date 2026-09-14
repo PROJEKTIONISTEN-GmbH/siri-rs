@@ -476,7 +476,7 @@ pub struct DeliveryCapability {
 }
 
 /// How SIRI messages are carried between the two endpoints.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct TransportDescription {
     /// The protocol and encoding messages are exchanged with.
     #[serde(rename = "CommunicationsTransportMethod")]

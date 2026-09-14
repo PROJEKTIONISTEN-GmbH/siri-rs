@@ -34,7 +34,7 @@ impl SituationSource for Disruptions {
     fn situations(&self, request: &SituationExchangeRequest) -> Vec<PtSituationElement> {
         self.0
             .iter()
-            .filter(|situation| match (request.severity, situation.severity) {
+            .filter(|situation| match (&request.severity, &situation.severity) {
                 (Some(wanted), Some(actual)) => actual >= wanted,
                 (Some(_), None) => false,
                 (None, _) => true,

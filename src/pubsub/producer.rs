@@ -484,7 +484,8 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
         let mut outbound = Vec::with_capacity(due.len());
         for index in due {
             let message = match self.config.delivery_method {
-                DeliveryMethod::Direct => {
+                // A method the crate does not know is answered the default way.
+                DeliveryMethod::Direct | DeliveryMethod::Unrecognised(_) => {
                     let delivery = self.subscription_delivery(&self.subscriptions[index], now);
                     self.subscriptions[index].state = SubscriptionState::Idle;
                     envelope(ServiceDelivery::new(
