@@ -307,11 +307,14 @@ seam is concrete.
 
 Conformance is not a claim here, it is the test suite.
 
-Every official SIRI v2.2 example document shipped with the standard is read into
-these types, written back out, compared with the original element by element, and
-validated against the official schemas. A document that loses content, invents
-content, reorders content or fails validation fails the build. The same applies to
-the German **VDV 736** profile messages.
+Every official SIRI v2.2 example document shipped with the standard — all but one —
+is read into these types, written back out, compared with the original element by
+element, and validated against the official schemas. A document that loses content,
+invents content, reorders content or fails validation fails the build. The same
+applies to the German **VDV 736** profile messages. The one document left out is the
+capabilities response for all eleven services at once, which needs a capability
+structure for Situation Exchange Discovery that the crate does not model;
+`tests/fixtures/README.md` says so.
 
 Every enumeration is checked token by token against the `xsd:simpleType` it
 transcribes, so a mistyped wire value is a test failure rather than a rejected
@@ -390,6 +393,41 @@ panic = "abort"    # only if the program has no use for unwinding
 `lto` is what lets a consumer's optimiser see through the calls into this crate; it
 is also what this crate builds its own benchmarks and examples with, so the numbers
 `cargo bench` prints are the numbers such a consumer gets.
+
+## What it costs, and what it does not do
+
+Some of what a reader of the source finds is a limit rather than a bug, and is
+better read here than discovered:
+
+- **Two subscription settings are recorded and not acted on.** `IncrementalUpdates`
+  on a subscription and `UpdateInterval` on a vehicle-monitoring request are read
+  and kept; the producer delivers what its source answers, every time it is asked.
+  A source that wants to send only changes has to remember what it sent.
+- **The types are large.** They transcribe the schema, optional fields included, so
+  a `MonitoredStopVisit` is 4 304 bytes and an `EstimatedCall` 1 664 — a journey with
+  thirty calls costs about 50 KB before any text is stored. Since 2.0 every
+  enumeration field is 24 bytes rather than one, the price of keeping an
+  unrecognised token. Boxing the largest substructures is a candidate for a later
+  release; the numbers are measured, not estimated.
+- **An unknown element is dropped in one place and fatal in another.** A struct
+  skips a child element it has no field for, so a document from a later schema
+  release reads and is written back without it. An element whose *choice* the crate
+  models as an enum — the functional-service deliveries under `ServiceDelivery`, an
+  error code — fails the document when it names an alternative the crate does not
+  know. Both follow from how `serde` treats the two shapes.
+- **Estimated Timetable cannot deliver nothing.** The schema makes a version frame
+  mandatory in the delivery and a journey mandatory in the frame, so a producer of
+  that service whose source matches no journey builds a document the schema
+  rejects. A test records this rather than hides it; the other nine services can
+  say "nothing" validly.
+- **The schema has no form for a subscription request that mixes services**, though
+  the reader accepts one; the producer answers it entry by entry.
+- **It takes a while to compile, and the library is large.** Building the library
+  alone from clean takes about 20 s unoptimised and about 37 s with the release
+  profile above (fat LTO, one codegen unit) on a 64-core machine; the rlib is 71 MB
+  unoptimised and 60 MB optimised. That is some 35 000 lines of types with derived
+  serialisers, and it is paid once per build, not per document. Feature flags per
+  service would let a consumer of one service pay for one; there are none yet.
 
 ## Roadmap
 

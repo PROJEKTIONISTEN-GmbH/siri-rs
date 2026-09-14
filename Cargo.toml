@@ -9,7 +9,7 @@ description = "CEN SIRI (EN 15531) in Rust: every functional service, the publis
 repository = "https://github.com/PROJEKTIONISTEN-GmbH/siri-rs"
 documentation = "https://docs.rs/siri-rs"
 readme = "README.md"
-keywords = ["siri", "public-transport", "gtfs-realtime", "vdv", "xml"]
+keywords = ["siri", "public-transport", "real-time", "vdv", "xml"]
 categories = ["parser-implementations", "encoding", "api-bindings"]
 
 # The measurements live in `benches/`, so the library itself is not a benchmark

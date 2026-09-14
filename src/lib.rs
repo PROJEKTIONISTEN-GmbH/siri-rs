@@ -118,8 +118,10 @@
 //! schemas and example documents: each example is parsed, written back out,
 //! compared to the original element by element, and validated against the schema.
 //! `tests/fixtures/README.md` lists the documents covered, including the German
-//! VDV 736 profile. [`ca`] is the one service with no example documents to check
-//! against, and its own documentation says what is checked instead.
+//! VDV 736 profile, and the one official document left out — the capabilities
+//! response for all eleven services at once, which needs a discovery structure
+//! the crate does not model. [`ca`] is the one service with no example documents
+//! to check against, and its own documentation says what is checked instead.
 
 #![deny(missing_docs)]
 #![forbid(unsafe_code)]
