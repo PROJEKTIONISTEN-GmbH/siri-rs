@@ -46,6 +46,14 @@ fn nothing_internal_is_shipped() {
                     line.trim()
                 ));
             }
+            if let Some(reference) = tooling_reference(line) {
+                findings.push(format!(
+                    "{}:{}: {reference} — {}",
+                    display(&path),
+                    number + 1,
+                    line.trim()
+                ));
+            }
         }
     }
 
@@ -54,6 +62,18 @@ fn nothing_internal_is_shipped() {
         "the crate refers to how it was developed:\n{}",
         findings.join("\n")
     );
+}
+
+/// Finds a reference to an assistant that may have helped write the crate. What
+/// wrote a line is not something its readers need from it, and naming one dates the
+/// text faster than anything else in it.
+fn tooling_reference(line: &str) -> Option<String> {
+    const NAMES: &[&str] = &["claude", "anthropic", "copilot", "chatgpt", "co-authored-by"];
+    let lower = line.to_lowercase();
+    NAMES
+        .iter()
+        .find(|name| lower.contains(*name))
+        .map(|name| (*name).to_string())
 }
 
 /// Finds a reference to a numbered unit of development work, e.g. `sprint 42`.
