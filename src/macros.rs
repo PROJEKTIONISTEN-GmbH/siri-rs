@@ -16,6 +16,7 @@ macro_rules! siri_enum {
     ) => {
         $(#[$meta])*
         #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        #[non_exhaustive]
         pub enum $name {
             $(
                 $(#[$variant_meta])*

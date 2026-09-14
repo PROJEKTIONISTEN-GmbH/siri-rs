@@ -36,6 +36,7 @@ pub struct Location {
 
 /// Which of the two ways of stating a position a [`Location`] uses.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub enum Position<'a> {
     /// WGS 84 degrees, with an optional altitude in metres.
     Wgs84 {
@@ -161,6 +162,7 @@ pub struct FlexibleArea {
 
 /// Which of the three ways of drawing a [`FlexibleArea`] is used.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub enum FlexibleShape<'a> {
     /// A rectangle spanned by two opposite corners.
     BoundingBox(&'a BoundingBox),

@@ -4,6 +4,7 @@ use std::fmt;
 
 /// Errors raised while reading or writing SIRI XML.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum Error {
     /// The document is not well-formed XML.
     Xml(quick_xml::Error),

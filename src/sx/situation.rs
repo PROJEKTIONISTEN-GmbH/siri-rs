@@ -854,6 +854,7 @@ impl SituationReason {
 
 /// Which alternative of the schema's reason choice a record carries.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Reason<'a> {
     /// A TPEG alert cause, the way a current producer states a reason.
     AlertCause(&'a AlertCause),
@@ -873,6 +874,7 @@ pub enum Reason<'a> {
 
 /// Which alternative of the schema's superseded sub-reason choice a record carries.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum SubReason<'a> {
     /// A refinement of a miscellaneous reason.
     MiscellaneousSubReason(&'a str),
@@ -972,6 +974,7 @@ pub struct Image {
 
 /// Which of the two ways of carrying a picture an [`Image`] uses.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ImageSource<'a> {
     /// A location the picture is fetched from.
     ImageRef(&'a str),

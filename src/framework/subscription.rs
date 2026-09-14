@@ -398,6 +398,7 @@ pub struct TerminateSubscriptionRequest {
 
 /// Which subscriptions a [`TerminateSubscriptionRequest`] closes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum TerminationScope<'a> {
     /// Every subscription the subscriber holds.
     All,

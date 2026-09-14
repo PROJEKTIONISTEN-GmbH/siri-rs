@@ -107,6 +107,7 @@ impl ControlActionRequest {
 
 /// How a [`ControlActionRequest`] names the lines it is interested in.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub enum LineScope<'a> {
     /// Whole lines.
     Lines(&'a [LineRef]),

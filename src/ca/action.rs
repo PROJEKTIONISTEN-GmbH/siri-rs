@@ -206,6 +206,7 @@ impl ControlAction {
 
 /// Which alternative of the schema's choice of action a [`ControlAction`] carries.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub enum ControlActionKind<'a> {
     /// A journey added to today's plan.
     JourneyCreation(&'a JourneyCreation),
@@ -366,6 +367,7 @@ impl PointInJourneyPatternRef {
 
 /// How a point in a journey pattern is named.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub enum Place<'a> {
     /// A stop point.
     StopPoint(&'a StopPointRef),

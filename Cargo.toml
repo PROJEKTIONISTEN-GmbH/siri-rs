@@ -1,6 +1,6 @@
 [package]
 name = "siri-rs"
-version = "1.0.0"
+version = "2.0.0"
 edition = "2021"
 authors = ["Marcel Kaufmann <kaufmann@projektionisten.de>"]
 rust-version = "1.75"

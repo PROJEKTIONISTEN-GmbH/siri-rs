@@ -649,6 +649,7 @@ pub struct AnyContent {
 /// comes back is `Hello<b>world</b>again`; the words, the element and their order
 /// are kept, the spaces between them are not.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Node {
     /// A run of character data.
     Text(String),

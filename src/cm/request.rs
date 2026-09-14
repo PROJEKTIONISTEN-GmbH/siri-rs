@@ -57,6 +57,7 @@ pub struct ConnectionMonitoringRequest {
 
 /// Which connections a [`ConnectionMonitoringRequest`] is narrowed to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ConnectionScope<'a> {
     /// One line's feeders, arriving within a window.
     Time(&'a ConnectingTimeFilter),

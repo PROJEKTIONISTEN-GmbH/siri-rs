@@ -117,6 +117,7 @@ impl StopPointsRequest {
 
 /// Which way a [`StopPointsRequest`] narrows the area it asks about.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub enum StopPointsScope<'a> {
     /// Stops inside a rectangle.
     BoundingBox(&'a BoundingBox),
@@ -272,6 +273,7 @@ impl LinesRequest {
 
 /// Which way a [`LinesRequest`] narrows the lines it asks about.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub enum LinesScope<'a> {
     /// Lines calling at stops inside a rectangle.
     BoundingBox(&'a BoundingBox),
@@ -689,6 +691,7 @@ pub struct StopPointFeatures {
 
 /// One feature of a stop.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum StopPointFeature {
     /// The feature spelled out, with its code, names and icon.
     ServiceFeature(ServiceFeature),
@@ -706,6 +709,7 @@ pub struct StopPointLines {
 
 /// One line calling at a stop.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum StopPointLine {
     /// The line as a whole, in both directions.
     LineRef(LineRef),

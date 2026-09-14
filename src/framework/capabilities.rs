@@ -561,6 +561,7 @@ pub struct SituationExchangeRequestPolicy {
 
 /// How a service writes the positions it returns.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum CoordinateFormat {
     /// Positions come as a coordinate list in the named GML projection.
     GmlCoordinateFormat(String),
@@ -665,6 +666,7 @@ impl SituationExchangePermission {
 
 /// Who a permission entry applies to.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum PermissionScope {
     /// The entry is the default, applying to any participant that has no entry
     /// naming it specifically.
@@ -716,6 +718,7 @@ impl OperatorPermissions {
 
 /// One entry of an [`OperatorPermissions`] list.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum OperatorPermissionItem {
     /// Whether every operator known to the service is covered.
     AllowAll(bool),
@@ -766,6 +769,7 @@ impl LinePermissions {
 
 /// One entry of a [`LinePermissions`] list.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum LinePermissionItem {
     /// Whether every line known to the service is covered.
     AllowAll(bool),
@@ -902,6 +906,7 @@ impl ConnectionLinkPermissions {
 
 /// One entry of a [`ConnectionLinkPermissions`] list.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum ConnectionLinkPermissionItem {
     /// Whether every connection link known to the service is covered.
     AllowAll(bool),
@@ -970,6 +975,7 @@ impl StopMonitorPermissions {
 
 /// One entry of a [`StopMonitorPermissions`] list.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum StopMonitorPermissionItem {
     /// Whether every monitoring point known to the service is covered.
     AllowAll(bool),

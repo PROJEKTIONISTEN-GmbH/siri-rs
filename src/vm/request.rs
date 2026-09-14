@@ -61,6 +61,7 @@ pub struct VehicleMonitoringRequest {
 
 /// Which vehicles a [`VehicleMonitoringRequest`] is narrowed to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum MonitoredSubject<'a> {
     /// One named vehicle.
     Vehicle(&'a VehicleRef),

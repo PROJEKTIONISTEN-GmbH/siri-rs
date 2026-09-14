@@ -118,6 +118,7 @@ impl FacilityFeature {
 ///
 /// The variant is written as the element name.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum FacilityFeatureKind {
     /// How passengers get to or through the place: lifts, ramps, stairs.
     AccessFacility(AccessFacility),
@@ -364,6 +365,7 @@ impl MonitoredCounting {
 
 /// How large a [`MonitoredCounting`] is, stated one of the two ways the schema allows.
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum CountedAmount {
     /// A number of whatever is being counted.
     Count(i64),
@@ -499,6 +501,7 @@ pub struct FacilityCondition {
 /// Which alternative of the schema's choice a [`FacilityCondition`] names its
 /// facility with.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum FacilitySubject<'a> {
     /// The facility, described in the condition itself.
     Facility(&'a Facility),

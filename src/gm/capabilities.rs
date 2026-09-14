@@ -200,6 +200,7 @@ impl InfoChannelPermissions {
 
 /// One entry of an [`InfoChannelPermissions`] list.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum InfoChannelPermissionItem {
     /// Whether every channel the producer publishes is covered.
     AllowAll(bool),

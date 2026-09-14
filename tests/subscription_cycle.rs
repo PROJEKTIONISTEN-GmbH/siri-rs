@@ -388,8 +388,8 @@ fn a_fetch_settles_only_the_subscriptions_of_the_consumer_that_asked() {
         .iter()
         .map(|held| {
             (
-                held.subscription_ref.as_str(),
-                matches!(held.state, SubscriptionState::AwaitingFetch(_)),
+                held.subscription_ref().as_str(),
+                matches!(held.state(), SubscriptionState::AwaitingFetch(_)),
             )
         })
         .collect();
@@ -412,7 +412,7 @@ fn two_subscribers_may_choose_the_same_subscription_identifier() {
     let held: Vec<(&str, &str)> = producer
         .subscriptions()
         .iter()
-        .map(|held| (held.subscriber_ref.as_str(), held.subscription_ref.as_str()))
+        .map(|held| (held.subscriber_ref().as_str(), held.subscription_ref().as_str()))
         .collect();
     assert_eq!(
         held,
@@ -435,7 +435,7 @@ fn two_subscribers_may_choose_the_same_subscription_identifier() {
     let held: Vec<(&str, &str)> = producer
         .subscriptions()
         .iter()
-        .map(|held| (held.subscriber_ref.as_str(), held.subscription_ref.as_str()))
+        .map(|held| (held.subscriber_ref().as_str(), held.subscription_ref().as_str()))
         .collect();
     assert_eq!(held, [("DEPARTURE-BOARD", "lifts"), ("DEPARTURE-BOARD", "escalators")]);
 }
@@ -539,7 +539,7 @@ fn a_request_that_mixes_services_is_answered_entry_by_entry() {
     let held: Vec<(&str, &str)> = producer
         .subscriptions()
         .iter()
-        .map(|held| (held.subscriber_ref.as_str(), held.subscription_ref.as_str()))
+        .map(|held| (held.subscriber_ref().as_str(), held.subscription_ref().as_str()))
         .collect();
     assert_eq!(
         held,
@@ -592,9 +592,9 @@ fn a_fetch_that_finds_nothing_waiting_is_answered_with_a_document_the_schema_acc
         .iter()
         .map(|held| {
             (
-                held.subscriber_ref.as_str(),
-                held.subscription_ref.as_str(),
-                matches!(held.state, SubscriptionState::AwaitingFetch(_)),
+                held.subscriber_ref().as_str(),
+                held.subscription_ref().as_str(),
+                matches!(held.state(), SubscriptionState::AwaitingFetch(_)),
             )
         })
         .collect();

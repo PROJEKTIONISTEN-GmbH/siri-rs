@@ -17,22 +17,21 @@ use crate::types::{Duration, EndpointAddress, MessageQualifier, ParticipantRef, 
 use crate::{Error, Result};
 
 /// How a producer identifies itself and answers.
+///
+/// Built with [`new`](Self::new) and the `with_…` methods; what was set can be read
+/// back but not changed underneath a running producer.
 #[derive(Debug, Clone)]
 pub struct ProducerConfig {
-    /// Who this producer is, quoted in every message it sends.
-    pub producer_ref: ParticipantRef,
-    /// Whether deliveries are pushed, or announced for the consumer to fetch.
-    pub delivery_method: DeliveryMethod,
-    /// How often to send a heartbeat, if at all.
-    pub heartbeat_interval: Option<Duration>,
-    /// The shortest interval at which this producer will accept requests.
-    pub shortest_possible_cycle: Option<Duration>,
-    /// Prefix for the message identifiers this producer mints.
-    pub message_id_prefix: String,
+    producer_ref: ParticipantRef,
+    delivery_method: DeliveryMethod,
+    heartbeat_interval: Option<Duration>,
+    shortest_possible_cycle: Option<Duration>,
+    message_id_prefix: String,
 }
 
 impl ProducerConfig {
-    /// A producer that pushes deliveries and sends no heartbeat.
+    /// A producer that pushes deliveries and sends no heartbeat, minting message
+    /// identifiers prefixed with its own name.
     pub fn new(producer_ref: impl Into<ParticipantRef>) -> Self {
         let producer_ref = producer_ref.into();
         Self {
@@ -55,29 +54,102 @@ impl ProducerConfig {
         self.heartbeat_interval = Some(interval);
         self
     }
+
+    /// The same producer, telling consumers the shortest interval at which it
+    /// accepts requests.
+    pub fn with_shortest_possible_cycle(mut self, cycle: Duration) -> Self {
+        self.shortest_possible_cycle = Some(cycle);
+        self
+    }
+
+    /// The same producer, minting message identifiers with the given prefix.
+    pub fn with_message_id_prefix(mut self, prefix: impl Into<String>) -> Self {
+        self.message_id_prefix = prefix.into();
+        self
+    }
+
+    /// Who this producer is, quoted in every message it sends.
+    pub fn producer_ref(&self) -> &ParticipantRef {
+        &self.producer_ref
+    }
+
+    /// Whether deliveries are pushed, or announced for the consumer to fetch.
+    pub fn delivery_method(&self) -> &DeliveryMethod {
+        &self.delivery_method
+    }
+
+    /// How often a heartbeat is sent, if at all.
+    pub fn heartbeat_interval(&self) -> Option<&Duration> {
+        self.heartbeat_interval.as_ref()
+    }
+
+    /// The shortest interval at which this producer accepts requests, if stated.
+    pub fn shortest_possible_cycle(&self) -> Option<&Duration> {
+        self.shortest_possible_cycle.as_ref()
+    }
+
+    /// The prefix of the message identifiers this producer mints.
+    pub fn message_id_prefix(&self) -> &str {
+        &self.message_id_prefix
+    }
 }
 
 /// A subscription a producer holds on a consumer's behalf.
+///
+/// The producer keeps it up to date; an application reads it.
 #[derive(Debug, Clone)]
 pub struct Subscription<S: Service> {
+    subscriber_ref: ParticipantRef,
+    subscription_ref: SubscriptionRef,
+    consumer_address: Option<EndpointAddress>,
+    initial_termination_time: DateTime<FixedOffset>,
+    request: S::Request,
+    incremental_updates: bool,
+    state: SubscriptionState,
+}
+
+impl<S: Service> Subscription<S> {
     /// Who subscribed.
-    pub subscriber_ref: ParticipantRef,
-    /// The producer's handle on this subscription.
-    pub subscription_ref: SubscriptionRef,
-    /// Where deliveries for it should be sent.
-    pub consumer_address: Option<EndpointAddress>,
+    pub fn subscriber_ref(&self) -> &ParticipantRef {
+        &self.subscriber_ref
+    }
+
+    /// The producer's handle on this subscription, scoped to the subscriber.
+    pub fn subscription_ref(&self) -> &SubscriptionRef {
+        &self.subscription_ref
+    }
+
+    /// Where deliveries for it are sent, when the consumer named an address.
+    pub fn consumer_address(&self) -> Option<&EndpointAddress> {
+        self.consumer_address.as_ref()
+    }
+
     /// When it lapses unless renewed.
-    pub initial_termination_time: DateTime<FixedOffset>,
+    pub fn initial_termination_time(&self) -> DateTime<FixedOffset> {
+        self.initial_termination_time
+    }
+
     /// What was subscribed to.
-    pub request: S::Request,
+    pub fn request(&self) -> &S::Request {
+        &self.request
+    }
+
     /// Whether the consumer asked for changes only.
-    pub incremental_updates: bool,
+    ///
+    /// Recorded, not acted on: the producer delivers what its source answers.
+    pub fn incremental_updates(&self) -> bool {
+        self.incremental_updates
+    }
+
     /// Where the subscription is in its lifecycle.
-    pub state: SubscriptionState,
+    pub fn state(&self) -> &SubscriptionState {
+        &self.state
+    }
 }
 
 /// Where a [`Subscription`] is in its lifecycle.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum SubscriptionState {
     /// Nothing is owed to the consumer.
     Idle,

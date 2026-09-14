@@ -76,6 +76,7 @@ macro_rules! siri_payload {
         /// The variants are the global elements the schema allows directly under
         /// `<Siri>`; the variant name is the element name.
         #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+        #[non_exhaustive]
         pub enum SiriPayload {
             $($(#[$meta])* $variant($ty),)*
         }

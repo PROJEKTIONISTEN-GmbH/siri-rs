@@ -106,6 +106,7 @@ impl UserNeed {
 ///
 /// The variant is written as the element name, in the `acsb` namespace.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum UserNeedKind {
     /// A need arising from how the passenger moves, e.g. using a wheelchair.
     #[serde(rename = "acsb:MobilityNeed", alias = "MobilityNeed")]

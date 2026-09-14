@@ -289,6 +289,7 @@ impl MonitoringPermissions {
 
 /// One entry of a [`MonitoringPermissions`] list.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum MonitoringPermissionItem {
     /// Whether every monitoring service the producer publishes is covered.
     AllowAll(bool),

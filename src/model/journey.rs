@@ -299,6 +299,7 @@ pub struct JourneyRelation {
 
 /// Which alternative of a journey relation's choice is present.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum JourneyRelationScope<'a> {
     /// The relation takes effect at one call.
     Call(&'a RelatedCall),

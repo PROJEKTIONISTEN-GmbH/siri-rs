@@ -107,6 +107,7 @@ pub struct AffectsOperators {
 
 /// Which of the two ways of naming affected operators an [`AffectsOperators`] uses.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub enum OperatorScope<'a> {
     /// Every operator is affected.
     AllOperators,
@@ -322,6 +323,7 @@ pub struct AffectedOperator {
 /// from the family that matches it — a bus submode for a bus, a rail submode for a
 /// train — so the alternatives are mutually exclusive.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum PtSubmode {
     /// A refinement of air transport, e.g. a domestic scheduled flight.
     Air(AirSubmodesOfTransport),
@@ -422,6 +424,7 @@ pub struct AffectedModes {
 
 /// Which of the two ways of naming affected modes an [`AffectedModes`] uses.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ModeScope<'a> {
     /// Every mode served at the stop is affected.
     AllModes,
@@ -587,6 +590,7 @@ pub struct AffectedNetwork {
 /// Which of the four ways of naming an affected part of a network an
 /// [`AffectedNetwork`] uses.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub enum NetworkScope<'a> {
     /// Every line in the network is affected.
     AllLines,
@@ -786,6 +790,7 @@ pub struct AffectedSection {
 #[allow(clippy::large_enum_variant)]
 /// The two ways of naming an affected section.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum SectionReference {
     /// The section's own identifier.
     SectionRef(SectionRef),
@@ -825,6 +830,7 @@ pub struct IndirectSectionRef {
 
 /// A point the section must pass through, at whichever level of detail is known.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum IntermediateSectionPoint {
     /// A scheduled stop point the section must include.
     IntermediateStopPointRef(StopPointRef),
@@ -836,6 +842,7 @@ pub enum IntermediateSectionPoint {
 
 /// How one end of an indirectly named section is identified.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum SectionBoundary<'a> {
     /// A named scheduled stop point.
     StopPoint(&'a StopPointRef),
@@ -912,6 +919,7 @@ pub struct AffectedRouteStopPoints {
 #[allow(clippy::large_enum_variant)]
 /// An entry in a route's ordered list of stop points and connecting geometry.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum AffectedRouteStopPoint {
     /// A stop point of the route.
     AffectedStopPoint(AffectedStopPoint),
@@ -1070,6 +1078,7 @@ pub struct AffectedConnectionLink {
 /// Which of the two ways of scoping a connection link an
 /// [`AffectedConnectionLink`] uses.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub enum ConnectionLinkScope<'a> {
     /// Every line reachable over the link is affected.
     AllLines,
@@ -1269,6 +1278,7 @@ pub struct AffectedVehicleJourney {
 
 /// Which of the two ways of identifying a journey an [`AffectedVehicleJourney`] uses.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum AffectedJourney<'a> {
     /// The journey is framed by the operating day it runs on.
     Framed(&'a FramedVehicleJourneyRef),
@@ -1544,6 +1554,7 @@ pub struct AffectedCall {
 /// The schema lets a producer give an actual time or an expected one, never both:
 /// once the vehicle has been, the prediction is replaced by the observation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ObservedTime {
     /// The event has happened, at this time.
     Actual(DateTime<FixedOffset>),

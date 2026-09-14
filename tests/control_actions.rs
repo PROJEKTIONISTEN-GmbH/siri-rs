@@ -402,6 +402,7 @@ fn kind_name(kind: ControlActionKind<'_>) -> &'static str {
         ControlActionKind::InterchangeCancellation(_) => "InterchangeCancellation",
         ControlActionKind::InterchangeModification(_) => "InterchangeModification",
         ControlActionKind::VehicleWorkAssignment(_) => "VehicleWorkAssignment",
+        other => panic!("a control action this test does not build: {other:?}"),
     }
 }
 

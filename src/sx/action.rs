@@ -91,6 +91,7 @@ pub struct Actions {
 /// enum is the view that puts them back together. Its variants are named for the
 /// elements they stand for.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub enum Action<'a> {
     /// Publish on a web site.
     PublishToWebAction(&'a PublishToWebAction),

@@ -142,6 +142,7 @@ pub struct FormationCondition {
 
 /// Which alternative of a [`FormationCondition`]'s choice is present.
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
 pub enum FormationConditionStatus<'a> {
     /// The formation as a whole changed.
     Formation(&'a FormationStatus),
@@ -594,6 +595,7 @@ pub struct TrainComponents {
 
 /// One entry of a [`TrainComponents`] list.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum TrainComponentItem {
     /// A position stated elsewhere.
     TrainComponentRef(TrainComponentRef),
@@ -672,6 +674,7 @@ pub struct TrainsInCompoundTrain {
 
 /// One entry of a [`TrainsInCompoundTrain`] list.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum TrainInCompoundTrainItem {
     /// A train stated elsewhere.
     TrainInCompoundTrainRef(TrainInCompoundTrainRef),
@@ -775,6 +778,7 @@ pub struct TrainElements {
 
 /// One entry of a [`TrainElements`] list.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum TrainElementItem {
     /// An element stated elsewhere.
     TrainElementRef(TrainElementRef),
@@ -792,6 +796,7 @@ pub struct Trains {
 
 /// One entry of a [`Trains`] list.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum TrainItem {
     /// A train stated elsewhere.
     TrainRef(TrainRef),
@@ -809,6 +814,7 @@ pub struct CompoundTrains {
 
 /// One entry of a [`CompoundTrains`] list.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[non_exhaustive]
 pub enum CompoundTrainItem {
     /// A compound train stated elsewhere.
     CompoundTrainRef(CompoundTrainRef),

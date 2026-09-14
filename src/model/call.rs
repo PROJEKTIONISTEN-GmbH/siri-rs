@@ -97,6 +97,7 @@ pub struct StopAssignment {
 
 /// Which of the two ways of naming a standing place an assignment uses.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum StandingPlace {
     /// The assignment names quays.
     Quay,

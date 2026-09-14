@@ -144,6 +144,9 @@ fn describe(journey: &EstimatedVehicleJourney) -> String {
     match journey.alteration() {
         Some(JourneyAlteration::Cancelled) => format!("line {line}: cancelled"),
         Some(JourneyAlteration::Extra) => format!("line {line}: an extra journey"),
+        // A later schema may add a kind of alteration; the crate will add the
+        // variant without a major release, so the arm is expected here.
+        Some(other) => format!("line {line}: {other:?}"),
         None => {
             let late = journey.estimated_calls().iter().find_map(|call| {
                 let aimed = call.aimed_departure_time?;

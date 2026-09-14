@@ -77,6 +77,7 @@ fn published_files() -> Vec<PathBuf> {
     let mut out = vec![
         root.join("Cargo.toml"),
         root.join("README.md"),
+        root.join("CHANGELOG.md"),
         root.join("LICENSE-MIT"),
         root.join("LICENSE-APACHE"),
     ];

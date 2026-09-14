@@ -120,7 +120,7 @@ use crate::vm::{
 ///     }
 /// }
 /// ```
-pub trait Service: Sized + Copy + fmt::Debug + Eq {
+pub trait Service: sealed::Sealed + Sized + Copy + fmt::Debug + Eq {
     /// What a consumer asks for.
     type Request: Clone + fmt::Debug + PartialEq;
     /// What a producer answers with.
@@ -164,6 +164,22 @@ pub trait Service: Sized + Copy + fmt::Debug + Eq {
     /// What a `ServiceDelivery` element says about itself, when it is this
     /// service's.
     fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome>;
+}
+
+/// The seal on [`Service`]: implementable only where this module can see.
+mod sealed {
+    pub trait Sealed {}
+
+    impl Sealed for super::SituationExchange {}
+    impl Sealed for super::EstimatedTimetable {}
+    impl Sealed for super::ProductionTimetable {}
+    impl Sealed for super::VehicleMonitoring {}
+    impl Sealed for super::StopTimetable {}
+    impl Sealed for super::StopMonitoring {}
+    impl Sealed for super::ConnectionTimetable {}
+    impl Sealed for super::ConnectionMonitoringFeeder {}
+    impl Sealed for super::GeneralMessage {}
+    impl Sealed for super::FacilityMonitoring {}
 }
 
 /// What one functional-service delivery said about itself, beyond the records it

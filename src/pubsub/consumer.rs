@@ -28,6 +28,7 @@ pub struct Subscribed {
 
 /// What an incoming message meant.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub enum ConsumerEvent<S: Service> {
     /// The producer answered a subscription request.
     Subscribed {

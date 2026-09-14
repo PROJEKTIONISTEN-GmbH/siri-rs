@@ -326,6 +326,24 @@ services have. Example messages would make it the same guarantee.
 
 `tests/fixtures/README.md` lists the documents covered and where they come from.
 
+## Versioning
+
+The public surface is cut so that the next schema revision is a minor release:
+
+- **Every public enum is non-exhaustive.** A `match` on one needs a wildcard arm.
+  The schema enumerations also keep a token they do not know as `Unrecognised`, so a
+  document from a later release reads whole; a later crate release names the token.
+- **Structs are exhaustive**, with public fields, so that `..Type::new(…)` and plain
+  struct literals keep working. The cost is stated rather than hidden: a schema
+  revision that adds a field to a struct is a major release of this crate. That
+  cost lands once a revision; a non-exhaustive struct would land on every
+  construction site every day.
+- **`Service` is sealed.** The set of services is the standard's; a further one is
+  added here.
+
+`CHANGELOG.md` says what each release broke, what it added, and what to do about
+it.
+
 ## Running the tests
 
 ```sh

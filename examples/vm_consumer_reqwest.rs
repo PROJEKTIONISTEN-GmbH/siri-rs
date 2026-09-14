@@ -148,6 +148,9 @@ fn describe(activity: &VehicleActivity) -> String {
             activity.recorded_at_time.to_rfc3339()
         ),
         Some(Position::Coordinates(coordinates)) => format!("{vehicle} at {coordinates}"),
+        // A later schema may add a way of stating a position; the crate will add
+        // the variant without a major release, so the arm is expected here.
+        Some(other) => format!("{vehicle} at {other:?}"),
         None => format!("{vehicle}, position unknown"),
     }
 }

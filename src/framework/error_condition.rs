@@ -143,6 +143,7 @@ macro_rules! error_code_enum {
     ($(#[$meta:meta])* $name:ident { $($(#[$vmeta:meta])* $variant:ident($ty:ty)),* $(,)? }) => {
         $(#[$meta])*
         #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+        #[non_exhaustive]
         pub enum $name {
             $($(#[$vmeta])* $variant($ty),)*
         }

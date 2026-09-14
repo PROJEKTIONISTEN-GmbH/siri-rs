@@ -14,6 +14,7 @@ use crate::enumerations::{
 
 /// The submode a structure carries, if any.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum Submode {
     /// A kind of air service.
     Air(AirSubmodesOfTransport),

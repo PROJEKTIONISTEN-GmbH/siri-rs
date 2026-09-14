@@ -307,6 +307,7 @@ pub struct EstimatedVehicleJourney {
 
 /// How an [`EstimatedVehicleJourney`] names the journey it is about.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum JourneyIdentity<'a> {
     /// A timetabled journey on a stated operational day.
     Framed(&'a FramedVehicleJourneyRef),
@@ -318,6 +319,7 @@ pub enum JourneyIdentity<'a> {
 
 /// Whether an [`EstimatedVehicleJourney`] adds a run or takes one away.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum JourneyAlteration {
     /// The journey is being run in addition to the timetable.
     Extra,
@@ -682,6 +684,7 @@ pub struct EstimatedCall {
 
 /// Whether a call is being added or skipped.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum CallAlteration {
     /// The call is being made in addition to the timetable.
     Extra,
