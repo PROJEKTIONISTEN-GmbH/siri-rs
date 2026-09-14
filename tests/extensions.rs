@@ -273,3 +273,22 @@ fn a_prefix_on_an_attribute_inside_a_payload_is_not_carried_back() {
 
     assert!(written.contains(r#"<Record type="Accident"/>"#), "{written}");
 }
+
+/// The schema makes `<Extensions>` one of the alternatives directly under `<Siri>`,
+/// not a trailer after a message: a document carrying only extensions is valid, and
+/// one carrying a message *and* extensions is not.
+#[test]
+fn a_document_that_carries_only_extensions_is_read() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    let document = concat!(
+        r#"<Siri xmlns="http://www.siri.org.uk/siri" version="2.0">"#,
+        r#"<Extensions><Diagnostics level="verbose"><Counter>17</Counter></Diagnostics></Extensions>"#,
+        "</Siri>"
+    );
+    validate(document).expect("the schema admits a document of extensions alone");
+
+    let message: Siri = siri_rs::from_str(document).expect("the document reads");
+    let written = siri_rs::to_string(&message).expect("the message writes");
+    validate(&written).expect("what is written back is still valid");
+    assert!(written.contains("<Counter>17</Counter>"), "{written}");
+}

@@ -10,13 +10,20 @@ mod support;
 use chrono::{DateTime, Duration, FixedOffset};
 
 use siri_rs::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
-use siri_rs::framework::ServiceDeliveryPayload;
+use siri_rs::et::{EstimatedTimetableRequest, EstimatedTimetableSubscriptionRequest};
+use siri_rs::framework::{
+    DataReadyNotification, DeliveryError, ErrorCodeDetail, ErrorCondition, ServiceDelivery,
+    ServiceDeliveryPayload, SubscriptionRequest, TerminateSubscriptionRequest, TerminationError,
+};
 use siri_rs::pubsub::{
-    Consumer, ConsumerEvent, Producer, ProducerConfig, SituationExchange, SituationSource,
-    SubscriptionState,
+    Consumer, ConsumerEvent, Outbound, Producer, ProducerConfig, SituationExchange,
+    SituationSource, SubscriptionState,
 };
 use siri_rs::sx::situation::SituationSource as Source;
-use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
+use siri_rs::sx::{
+    PtSituationElement, SituationExchangeDelivery, SituationExchangeRequest,
+    SituationExchangeSubscriptionRequest,
+};
 use siri_rs::types::{DefaultedText, Duration as SiriDuration, HalfOpenTimestampOutputRange};
 use siri_rs::Siri;
 use support::{validate, validator_available, VALIDATOR_MISSING};
@@ -220,9 +227,14 @@ fn a_fetched_delivery_subscription_announces_before_it_delivers() {
     assert!(producer.poll(now).is_empty());
 }
 
-/// Opens the three subscriptions the two tests below start from: two held by a
-/// departure board that named an address for its deliveries, one by a passenger app
-/// that named none. Returns the consumers, board first.
+/// Opens the three subscriptions the tests below start from: two held by a departure
+/// board that named an address for its deliveries, one by a passenger app that named
+/// none. Returns the consumers, board first.
+///
+/// Both consumers call their subscription `lifts`: SIRI scopes a subscription
+/// identifier to its subscriber, so two subscribers choosing the same one is the
+/// ordinary case, not a collision, and a producer that keys by identifier alone
+/// loses one of them.
 fn subscribe_two_consumers(
     producer: &mut Producer<Disruptions, SituationExchange>,
     now: DateTime<FixedOffset>,
@@ -234,11 +246,7 @@ fn subscribe_two_consumers(
         Consumer::<SituationExchange>::new("DEPARTURE-BOARD").at_address("board"),
         Consumer::<SituationExchange>::new("PASSENGER-APP"),
     ];
-    for (consumer, identifier) in [
-        (BOARD, "board-lifts"),
-        (BOARD, "board-escalators"),
-        (APP, "app-lifts"),
-    ] {
+    for (consumer, identifier) in [(BOARD, "lifts"), (BOARD, "escalators"), (APP, "lifts")] {
         let subscribe = consumers[consumer].subscribe(
             identifier,
             now + Duration::hours(12),
@@ -298,9 +306,9 @@ fn every_subscription_is_delivered_to_the_subscriber_that_opened_it() {
     assert_eq!(
         addressed,
         [
-            ("DEPARTURE-BOARD", Some("board"), "board-lifts"),
-            ("DEPARTURE-BOARD", Some("board"), "board-escalators"),
-            ("PASSENGER-APP", None, "app-lifts"),
+            ("DEPARTURE-BOARD", Some("board"), "lifts"),
+            ("DEPARTURE-BOARD", Some("board"), "escalators"),
+            ("PASSENGER-APP", None, "lifts"),
         ],
         "each subscription is delivered once, to its own subscriber, at the address it named"
     );
@@ -386,12 +394,322 @@ fn a_fetch_settles_only_the_subscriptions_of_the_consumer_that_asked() {
         .collect();
     assert_eq!(
         waiting,
-        [
-            ("board-lifts", false),
-            ("board-escalators", false),
-            ("app-lifts", true),
-        ],
+        [("lifts", false), ("escalators", false), ("lifts", true)],
         "the other consumer's announcement is still outstanding"
+    );
+}
+
+#[test]
+fn two_subscribers_may_choose_the_same_subscription_identifier() {
+    let now = now();
+    let mut producer = Producer::new(
+        ProducerConfig::new("MY-AGENCY"),
+        Disruptions(vec![situation(now, "2026-0041", Severity::Normal)]),
+    );
+    let [_board, mut app] = subscribe_two_consumers(&mut producer, now);
+
+    let held: Vec<(&str, &str)> = producer
+        .subscriptions()
+        .iter()
+        .map(|held| (held.subscriber_ref.as_str(), held.subscription_ref.as_str()))
+        .collect();
+    assert_eq!(
+        held,
+        [
+            ("DEPARTURE-BOARD", "lifts"),
+            ("DEPARTURE-BOARD", "escalators"),
+            ("PASSENGER-APP", "lifts"),
+        ],
+        "a subscription is keyed by subscriber and identifier, so the app's `lifts` \
+         does not displace the board's"
+    );
+
+    // Closing the app's `lifts` leaves the board's alone.
+    let terminate = app.terminate_all(now);
+    let confirmation = producer
+        .handle(&terminate, now)
+        .expect("the producer answers")
+        .expect("a termination request is answered");
+    exchanged("TerminateSubscriptionResponse", &confirmation);
+    let held: Vec<(&str, &str)> = producer
+        .subscriptions()
+        .iter()
+        .map(|held| (held.subscriber_ref.as_str(), held.subscription_ref.as_str()))
+        .collect();
+    assert_eq!(held, [("DEPARTURE-BOARD", "lifts"), ("DEPARTURE-BOARD", "escalators")]);
+}
+
+#[test]
+fn a_heartbeat_reaches_every_subscriber() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    let now = now();
+    let mut producer = Producer::new(
+        ProducerConfig::new("MY-AGENCY")
+            .with_heartbeat(SiriDuration::parse("PT5M").expect("valid duration")),
+        Disruptions(Vec::new()),
+    );
+    let [mut board, mut app] = subscribe_two_consumers(&mut producer, now);
+
+    let heartbeats: Vec<Outbound> = producer
+        .poll(now)
+        .into_iter()
+        .filter(|out| out.message.payload.as_heartbeat_notification().is_some())
+        .collect();
+    let sent: Vec<(&str, Option<&str>)> = heartbeats
+        .iter()
+        .map(|out| (out.recipient.as_str(), out.address.as_ref().map(|a| a.as_str())))
+        .collect();
+    assert_eq!(
+        sent,
+        [("DEPARTURE-BOARD", Some("board")), ("PASSENGER-APP", None)],
+        "one heartbeat per subscriber, not one per subscription and not one in all"
+    );
+    for (consumer, heartbeat) in [(&mut board, &heartbeats[0]), (&mut app, &heartbeats[1])] {
+        exchanged("HeartbeatNotification", &heartbeat.message);
+        assert!(matches!(
+            consumer.handle(&heartbeat.message, now).expect("the consumer reads it"),
+            ConsumerEvent::Alive { .. }
+        ));
+    }
+}
+
+#[test]
+fn a_request_that_mixes_services_is_answered_entry_by_entry() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    let now = now();
+    let mut producer = Producer::new(
+        ProducerConfig::new("MY-AGENCY"),
+        Disruptions(vec![situation(now, "2026-0041", Severity::Normal)]),
+    );
+    let mut app = Consumer::<SituationExchange>::new("PASSENGER-APP");
+    let subscribe = app.subscribe("lifts", now + Duration::hours(12), SituationExchangeRequest::new(now), now);
+    let response = producer
+        .handle(&subscribe, now)
+        .expect("the producer answers")
+        .expect("a subscription request is answered");
+    app.handle(&response, now).expect("the app reads it");
+
+    // The board asks for situations, which this producer serves, and for estimated
+    // journeys, which it does not, in one request.
+    let mixed = Siri::new(
+        siri_rs::pubsub::PROTOCOL_VERSION,
+        SubscriptionRequest::new(
+            now,
+            "DEPARTURE-BOARD",
+            vec![
+                SituationExchangeSubscriptionRequest::new(
+                    "lifts",
+                    now + Duration::hours(12),
+                    SituationExchangeRequest::new(now),
+                )
+                .into(),
+                EstimatedTimetableSubscriptionRequest::new(
+                    "journeys",
+                    now + Duration::hours(12),
+                    EstimatedTimetableRequest::new(now),
+                )
+                .into(),
+            ],
+        ),
+    );
+    exchanged("SubscriptionRequest", &mixed);
+
+    let response = producer
+        .handle(&mixed, now)
+        .expect("an entry the producer cannot serve is refused, not a failure of the request")
+        .expect("a subscription request is answered");
+    exchanged("SubscriptionResponse", &response);
+    let outcomes: Vec<(&str, bool)> = response
+        .payload
+        .as_subscription_response()
+        .expect("the answer is a subscription response")
+        .response_status
+        .iter()
+        .map(|status| (status.subscription_ref.as_str(), status.is_accepted()))
+        .collect();
+    assert_eq!(
+        outcomes,
+        [("lifts", true), ("journeys", false)],
+        "each entry is answered on its own"
+    );
+
+    let held: Vec<(&str, &str)> = producer
+        .subscriptions()
+        .iter()
+        .map(|held| (held.subscriber_ref.as_str(), held.subscription_ref.as_str()))
+        .collect();
+    assert_eq!(
+        held,
+        [("PASSENGER-APP", "lifts"), ("DEPARTURE-BOARD", "lifts")],
+        "the entry that was accepted is held, the refused one is not, and the app's is untouched"
+    );
+    assert_eq!(producer.poll(now).len(), 2, "both held subscriptions are owed a delivery");
+}
+
+#[test]
+fn a_fetch_that_finds_nothing_waiting_is_answered_with_a_document_the_schema_accepts() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    let now = now();
+    let mut producer = Producer::new(
+        ProducerConfig::new("MY-AGENCY").with_fetched_delivery(),
+        Disruptions(vec![situation(now, "2026-0041", Severity::Normal)]),
+    );
+    let [mut board, _app] = subscribe_two_consumers(&mut producer, now);
+
+    let announcements = producer.poll(now);
+    let ConsumerEvent::DataReady { fetch, .. } = board
+        .handle(&announcements[0].message, now)
+        .expect("the board reads the announcement")
+    else {
+        panic!("a data-ready notification asks the consumer to fetch");
+    };
+    let first = producer
+        .handle(&fetch, now)
+        .expect("the producer answers")
+        .expect("a data supply request is answered");
+    exchanged("ServiceDelivery", &first);
+
+    // The same fetch again — a retry after a lost response, say — finds the board's
+    // subscriptions settled. Whatever the answer is, it has to be SIRI.
+    let again = producer
+        .handle(&fetch, now)
+        .expect("the producer answers")
+        .expect("a data supply request is answered");
+    exchanged("ServiceDelivery with nothing to supply", &again);
+    let ConsumerEvent::Delivered { items, .. } = board
+        .handle(&again, now)
+        .expect("the board reads the answer")
+    else {
+        panic!("a data supply request is answered with a delivery");
+    };
+    assert!(items.is_empty(), "there was nothing to supply");
+
+    let waiting: Vec<(&str, &str, bool)> = producer
+        .subscriptions()
+        .iter()
+        .map(|held| {
+            (
+                held.subscriber_ref.as_str(),
+                held.subscription_ref.as_str(),
+                matches!(held.state, SubscriptionState::AwaitingFetch(_)),
+            )
+        })
+        .collect();
+    assert_eq!(
+        waiting,
+        [
+            ("DEPARTURE-BOARD", "lifts", false),
+            ("DEPARTURE-BOARD", "escalators", false),
+            ("PASSENGER-APP", "lifts", true),
+        ],
+        "the app's announcement is still outstanding"
+    );
+}
+
+#[test]
+fn terminating_a_subscription_the_subscriber_does_not_hold_is_reported_as_unknown() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    let now = now();
+    let mut producer = Producer::new(ProducerConfig::new("MY-AGENCY"), Disruptions(Vec::new()));
+    let [_board, mut app] = subscribe_two_consumers(&mut producer, now);
+
+    // The board holds `escalators`; the app does not, and asks to close it.
+    let terminate = Siri::new(
+        siri_rs::pubsub::PROTOCOL_VERSION,
+        TerminateSubscriptionRequest::subscriptions(now, "PASSENGER-APP", vec!["escalators".into()]),
+    );
+    exchanged("TerminateSubscriptionRequest", &terminate);
+    let confirmation = producer
+        .handle(&terminate, now)
+        .expect("the producer answers")
+        .expect("a termination request is answered");
+    exchanged("TerminateSubscriptionResponse", &confirmation);
+
+    let statuses = &confirmation
+        .payload
+        .as_terminate_subscription_response()
+        .expect("the answer is a termination response")
+        .termination_response_status;
+    assert_eq!(statuses.len(), 1);
+    assert_eq!(statuses[0].subscription_ref.as_str(), "escalators");
+    assert_eq!(statuses[0].status, Some(false), "nothing was closed");
+    assert!(
+        matches!(
+            statuses[0].error_condition.as_ref().map(|condition| &condition.code),
+            Some(TerminationError::UnknownSubscriptionError(_))
+        ),
+        "the schema names the reason: {:?}",
+        statuses[0].error_condition
+    );
+
+    let ConsumerEvent::Terminated { subscription_refs } = app
+        .handle(&confirmation, now)
+        .expect("the app reads the answer")
+    else {
+        panic!("a termination response confirms terminations");
+    };
+    assert!(subscription_refs.is_empty(), "the app was told nothing was closed");
+    assert_eq!(
+        producer.subscriptions().len(),
+        3,
+        "the board's `escalators` is not the app's to close"
+    );
+}
+
+#[test]
+fn a_fetch_after_an_announcement_without_an_identifier_names_no_notification() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    let now = now();
+    let mut consumer = Consumer::<SituationExchange>::new("PASSENGER-APP");
+    let unnamed = Siri::new(
+        siri_rs::pubsub::PROTOCOL_VERSION,
+        DataReadyNotification::new(now, "MY-AGENCY"),
+    );
+    exchanged("DataReadyNotification without MessageIdentifier", &unnamed);
+
+    let ConsumerEvent::DataReady { fetch, .. } = consumer
+        .handle(&unnamed, now)
+        .expect("the consumer reads the announcement")
+    else {
+        panic!("a data-ready notification asks the consumer to fetch");
+    };
+    exchanged("DataSupplyRequest", &fetch);
+    let request = fetch
+        .payload
+        .as_data_supply_request()
+        .expect("the fetch is a data supply request");
+    assert_eq!(
+        request.notification_ref, None,
+        "there is no notification to refer to, so the element is left out rather than written empty"
+    );
+}
+
+#[test]
+fn a_delivery_that_reports_a_failure_is_not_read_as_a_delivery_of_nothing() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    let now = now();
+    let mut consumer = Consumer::<SituationExchange>::new("PASSENGER-APP");
+
+    let mut failed = ServiceDelivery::new(
+        now,
+        "MY-AGENCY",
+        vec![SituationExchangeDelivery::new(now, Vec::new()).into()],
+    );
+    failed.status = Some(false);
+    failed.error_condition = Some(ErrorCondition::with_description(
+        DeliveryError::OtherError(ErrorCodeDetail::default()),
+        "the situation store is being rebuilt",
+    ));
+    let message = Siri::new(siri_rs::pubsub::PROTOCOL_VERSION, failed);
+    exchanged("ServiceDelivery reporting a failure", &message);
+
+    let event = consumer
+        .handle(&message, now)
+        .expect("the consumer reads the delivery");
+    let reported = format!("{event:?}");
+    assert!(
+        reported.contains("the situation store is being rebuilt"),
+        "the failure and its reason reach the application: {reported}"
     );
 }
 

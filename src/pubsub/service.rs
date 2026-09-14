@@ -67,6 +67,53 @@ use crate::vm::{
 /// [`StopTimetable`], [`StopMonitoring`], [`VehicleMonitoring`],
 /// [`ConnectionTimetable`], [`ConnectionMonitoringFeeder`], [`GeneralMessage`] and
 /// [`FacilityMonitoring`] are the implementations.
+///
+/// The trait is sealed: the set of services is the standard's, and a further one is
+/// added here without that being a breaking change for anyone. An implementation
+/// outside the crate does not compile, however complete it is:
+///
+/// ```compile_fail,E0277
+/// use chrono::{DateTime, FixedOffset};
+/// use siri_rs::framework::{
+///     ServiceDeliveryPayload, ServiceRequestPayload, SubscriptionRequestPayload,
+/// };
+/// use siri_rs::pubsub::{Service, SubscriptionParts};
+/// use siri_rs::types::{ParticipantRef, SubscriptionRef};
+///
+/// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// struct Bespoke;
+///
+/// impl Service for Bespoke {
+///     type Request = ();
+///     type Delivery = ();
+///     type Item = ();
+///
+///     fn service_request(_: ()) -> ServiceRequestPayload {
+///         unimplemented!()
+///     }
+///     fn request_of(_: &ServiceRequestPayload) -> Option<&()> {
+///         unimplemented!()
+///     }
+///     fn subscription_request(_: SubscriptionParts<Self>) -> SubscriptionRequestPayload {
+///         unimplemented!()
+///     }
+///     fn subscription_of(_: &SubscriptionRequestPayload) -> Option<SubscriptionParts<Self>> {
+///         unimplemented!()
+///     }
+///     fn delivery(_: DateTime<FixedOffset>, _: Vec<()>) {
+///         unimplemented!()
+///     }
+///     fn attribute(_: &mut (), _: ParticipantRef, _: SubscriptionRef) {
+///         unimplemented!()
+///     }
+///     fn service_delivery(_: ()) -> ServiceDeliveryPayload {
+///         unimplemented!()
+///     }
+///     fn items_of(_: &ServiceDeliveryPayload) -> Option<Vec<()>> {
+///         unimplemented!()
+///     }
+/// }
+/// ```
 pub trait Service: Sized + Copy + fmt::Debug + Eq {
     /// What a consumer asks for.
     type Request: Clone + fmt::Debug + PartialEq;

@@ -886,12 +886,57 @@ mod tests {
 
     #[test]
     fn duration_rejects_forms_the_schema_does_not_allow() {
-        for lexical in ["", "P", "5M", "PT", "PT5X", "P1YT", "PTM", "1Y"] {
+        for lexical in [
+            "", "P", "5M", "PT", "PT5X", "P1YT", "PTM", "1Y",
+            // The designators come in one order, and each at most once.
+            "P3D1Y", "P1Y1Y", "PT1M1H", "PT5S5S",
+            // Only the seconds may carry a fraction, and a fraction has digits on
+            // both sides of the point.
+            "PT1.5H", "PT1.S", "PT.5S",
+        ] {
             assert!(
                 Duration::parse(lexical).is_err(),
                 "{lexical:?} should not parse"
             );
         }
+    }
+
+    #[test]
+    fn a_duration_too_long_to_measure_converts_to_none_rather_than_panicking() {
+        // Both arrive from the other side of a subscription — as a heartbeat
+        // interval, a shortest possible cycle — so neither may take the process
+        // down. The first overflows a float, the second a multiplication.
+        let too_many_seconds = format!("PT1{}S", "0".repeat(400));
+        assert_eq!(Duration::parse(&too_many_seconds).unwrap().to_std(), None);
+        assert_eq!(Duration::parse("P99999999999999999Y").unwrap().to_std(), None);
+        assert_eq!(Duration::parse("PT18446744073709551615S").unwrap().to_std(), None);
+        assert_eq!(
+            Duration::parse("PT1.5S").unwrap().to_std(),
+            Some(std::time::Duration::from_millis(1_500))
+        );
+    }
+
+    #[test]
+    fn mixed_content_keeps_every_run_of_text_in_its_place() {
+        // A general message may be XHTML: text, an element, more text. The first
+        // run must not be lost to the last, and the order must be the document's.
+        let document = "<Message><Content>Hello <b>world</b> again</Content></Message>";
+
+        #[derive(Debug, PartialEq, Serialize, Deserialize)]
+        struct Message {
+            #[serde(rename = "Content")]
+            content: AnyContent,
+        }
+
+        let message: Message = quick_xml::de::from_str(document).unwrap();
+        let written = quick_xml::se::to_string_with_root("Message", &message).unwrap();
+        let hello = written.find("Hello").expect("the first run of text survives");
+        let bold = written.find("<b>").expect("the element survives");
+        let again = written.find("again").expect("the last run of text survives");
+        assert!(
+            hello < bold && bold < again,
+            "text and elements come back in document order: {written}"
+        );
     }
 
     #[test]
