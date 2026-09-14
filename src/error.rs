@@ -29,6 +29,28 @@ pub enum Error {
         /// The offending lexical form.
         value: String,
     },
+    /// The message is valid SIRI, but not one this side of the exchange can act on.
+    ///
+    /// A producer handed a `SubscriptionResponse`, or a `ServiceRequest` for a
+    /// service other than the one it serves, has nothing to answer with. The
+    /// document was read correctly; it is the conversation that is wrong.
+    UnexpectedMessage {
+        /// What this side can act on.
+        expected: &'static str,
+        /// The message, or the element inside it, that arrived instead.
+        found: &'static str,
+    },
+    /// The message is valid SIRI, but lacks an element the recipient needs.
+    ///
+    /// The schema leaves `ConsumerRef` optional on a `DataSupplyRequest`, yet a
+    /// producer cannot tell whose subscriptions to supply without it. The message is
+    /// well-formed, and still unanswerable.
+    MissingElement {
+        /// The message that lacks the element.
+        message: &'static str,
+        /// The element it lacks.
+        element: &'static str,
+    },
 }
 
 impl fmt::Display for Error {
@@ -43,6 +65,12 @@ impl fmt::Display for Error {
             Error::InvalidValue { datatype, value } => {
                 write!(f, "{value:?} is not a valid {datatype}")
             }
+            Error::UnexpectedMessage { expected, found } => {
+                write!(f, "expected {expected}, found <{found}>")
+            }
+            Error::MissingElement { message, element } => {
+                write!(f, "<{message}> carries no <{element}>")
+            }
         }
     }
 }
@@ -53,7 +81,10 @@ impl std::error::Error for Error {
             Error::Xml(e) => Some(e),
             Error::Deserialize(e) => Some(e),
             Error::Serialize(e) => Some(e),
-            Error::UnexpectedRoot { .. } | Error::InvalidValue { .. } => None,
+            Error::UnexpectedRoot { .. }
+            | Error::InvalidValue { .. }
+            | Error::UnexpectedMessage { .. }
+            | Error::MissingElement { .. } => None,
         }
     }
 }
