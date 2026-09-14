@@ -138,11 +138,13 @@ pub struct DataSupplyRequest {
 }
 
 impl DataSupplyRequest {
-    /// A fetch for the data announced by the notification `notification_ref`.
+    /// A fetch by `consumer_ref` of whatever the producer holds for it.
+    ///
+    /// A fetch that answers one particular announcement names it in
+    /// `notification_ref`; one that does not leaves the element out.
     pub fn new(
         request_timestamp: DateTime<FixedOffset>,
         consumer_ref: impl Into<ParticipantRef>,
-        notification_ref: impl Into<MessageRef>,
     ) -> Self {
         Self {
             request_timestamp,
@@ -153,7 +155,7 @@ impl DataSupplyRequest {
             message_identifier: None,
             delegator_address: None,
             delegator_ref: None,
-            notification_ref: Some(notification_ref.into()),
+            notification_ref: None,
             all_data: None,
         }
     }

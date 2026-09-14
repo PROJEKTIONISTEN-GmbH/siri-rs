@@ -83,15 +83,15 @@ mod consumer;
 mod producer;
 mod service;
 
-pub use consumer::{Consumer, ConsumerEvent, Subscribed};
+pub use consumer::{Consumer, ConsumerEvent, DeliveryOutcome, Subscribed};
 pub use producer::{Outbound, Producer, ProducerConfig, Subscription, SubscriptionState};
 pub use service::{
     ConnectionMonitoringFeeder, ConnectionMonitoringFeederSource, ConnectionTimetable,
     ConnectionTimetableSource, EstimatedTimetable, EstimatedTimetableSource, FacilityMonitoring,
-    FacilityMonitoringSource, GeneralMessage, GeneralMessageSource, ProductionTimetable,
-    ProductionTimetableSource, Service, SituationExchange, SituationSource, Source, StopMonitoring,
-    StopMonitoringSource, StopTimetable, StopTimetableSource, SubscriptionParts,
-    VehicleMonitoring, VehicleMonitoringSource,
+    FacilityMonitoringSource, FunctionalDeliveryOutcome, GeneralMessage, GeneralMessageSource,
+    ProductionTimetable, ProductionTimetableSource, Service, SituationExchange, SituationSource,
+    Source, StopMonitoring, StopMonitoringSource, StopTimetable, StopTimetableSource,
+    SubscriptionParts, VehicleMonitoring, VehicleMonitoringSource,
 };
 
 use crate::framework::Siri;

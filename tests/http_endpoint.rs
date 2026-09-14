@@ -130,7 +130,7 @@ async fn a_direct_delivery_producer_pushes_and_then_beats_over_http() {
 
     // This producer pushes: the delivery arrives at the consumer's address without
     // being asked for, and the consumer answers it with an acknowledgement.
-    let ConsumerEvent::Delivered { items: situations, reply } = consumer.next_event().await else {
+    let ConsumerEvent::Delivered { items: situations, reply, .. } = consumer.next_event().await else {
         panic!("a direct-delivery producer pushes its situations");
     };
     assert_eq!(numbers(&situations), ["2026-0041", "2026-0042"]);

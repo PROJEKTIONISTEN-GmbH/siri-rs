@@ -115,9 +115,10 @@ document default, or bound to a prefix.
 a profile the standard does not describe — VDV, DATEX, an operator's own settings.
 The same is true of a general-message body and of the DATEX II records SIRI-SX embeds
 in a road situation. All of them arrive as an `AnyContent`, which holds the subtree as
-it was written — attributes, character data and children in order, namespaces
-included — and writes it back unchanged, so a producer relaying a feed relays the
-payload with it.
+it was written — attributes, then runs of character data and child elements in
+document order, namespaces included — and writes it back, so a producer relaying a
+feed relays the payload with it. Mixed content keeps its order: `Hello <b>world</b>
+again` comes back as text, element, text.
 
 Where the profile *is* known, the payload reads into a type of your own. The crate
 knows nothing about that type; it only offers the seam:
@@ -158,9 +159,11 @@ fn settings(message: &Siri) -> siri_rs::Result<Option<OperatorSettings>> {
 `AnyContent::from_payload` goes the other way, for a producer that has such a value
 and wants it on the wire.
 
-The one thing that does not come back is a prefix on an attribute *inside* such a
-payload: the reader reports attributes by local name, so `xsi:type="…"` returns as
-`type="…"`. `AnyContent`'s documentation says so, and a test pins it.
+Two things do not come back. A prefix on an attribute *inside* such a payload: the
+reader reports attributes by local name, so `xsi:type="…"` returns as `type="…"`. And
+the space at either end of a run of text that borders an element: the reader drops
+it, so `Hello <b>world</b> again` is written back as `Hello<b>world</b>again`.
+`AnyContent`'s documentation says so, and tests pin both.
 
 ## Running an endpoint
 

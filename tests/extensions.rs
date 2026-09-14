@@ -10,8 +10,8 @@ mod support;
 
 use serde::{Deserialize, Serialize};
 use siri_rs::sx::RoadSituationElement;
-use siri_rs::types::Extensions;
-use siri_rs::{CheckStatusRequest, Siri};
+use siri_rs::types::{Extensions, Node};
+use siri_rs::{CheckStatusRequest, Siri, SiriPayload};
 use support::{compare, parse, validate, validator_available, VALIDATOR_MISSING};
 
 /// The derived fixture whose `<Extensions>` element carries a payload.
@@ -49,7 +49,8 @@ fn an_extension_payload_reaches_the_reader_whole() {
         extensions
             .children_named("ProfileVersion")
             .next()
-            .map(|version| version.text.as_str()),
+            .map(Extensions::character_data)
+            .as_deref(),
         Some("1.4")
     );
 
@@ -58,16 +59,19 @@ fn an_extension_payload_reaches_the_reader_whole() {
         .next()
         .expect("the payload carries the operator settings");
     assert_eq!(settings.attribute("scope"), Some("regional"));
-    let values: Vec<(&str, &str)> = settings
+    let values: Vec<(&str, String)> = settings
         .children_named("Setting")
         .map(|setting| {
             (
                 setting.attribute("name").expect("a setting is named"),
-                setting.text.as_str(),
+                setting.character_data(),
             )
         })
         .collect();
-    assert_eq!(values, [("MaximumAge", "15"), ("Language", "EN")]);
+    assert_eq!(
+        values,
+        [("MaximumAge", "15".to_owned()), ("Language", "EN".to_owned())]
+    );
 }
 
 #[test]
@@ -101,7 +105,8 @@ fn a_qualified_extension_payload_keeps_its_namespace() {
         diagnostics
             .children_named("Counter")
             .next()
-            .map(|counter| counter.text.as_str()),
+            .map(Extensions::character_data)
+            .as_deref(),
         Some("17")
     );
 
@@ -147,9 +152,9 @@ fn an_embedded_datex_record_reaches_the_reader_whole() {
         None,
         "a descendant in the same namespace inherits the declaration above it"
     );
-    let identifiers: Vec<&str> = primary
+    let identifiers: Vec<String> = primary
         .children_named("roadsideReferencePointIdentifier")
-        .map(|id| id.text.as_str())
+        .map(Extensions::character_data)
         .collect();
     assert_eq!(identifiers, ["A255-KM-3"]);
 }
@@ -234,10 +239,11 @@ fn a_payload_built_from_a_consumers_type_is_written_into_the_document() {
         "EREWHON",
     );
     let mut extensions = Extensions::default();
-    extensions.children.push((
-        "OperatorSettings".to_owned(),
-        Extensions::from_payload(&operator_settings()).expect("the settings write into a subtree"),
-    ));
+    extensions.content.push(Node::Element {
+        name: "OperatorSettings".to_owned(),
+        content: Extensions::from_payload(&operator_settings())
+            .expect("the settings write into a subtree"),
+    });
     request.extensions = Some(extensions);
 
     let written = siri_rs::to_string(&Siri::new("2.0", request)).expect("the message writes");
@@ -291,4 +297,24 @@ fn a_document_that_carries_only_extensions_is_read() {
     let written = siri_rs::to_string(&message).expect("the message writes");
     validate(&written).expect("what is written back is still valid");
     assert!(written.contains("<Counter>17</Counter>"), "{written}");
+}
+
+/// The other way round: a document built to carry only extensions is written as
+/// one, and is valid.
+#[test]
+fn a_document_built_to_carry_only_extensions_is_written_as_one() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    let mut extensions = Extensions::default();
+    extensions.content.push(Node::Element {
+        name: "OperatorSettings".to_owned(),
+        content: Extensions::from_payload(&operator_settings())
+            .expect("the settings write into a subtree"),
+    });
+    let message = Siri::new("2.1", extensions);
+
+    let written = siri_rs::to_string(&message).expect("the message writes");
+    validate(&written).expect("a document of extensions alone is valid");
+    let read: Siri = siri_rs::from_str(&written).expect("and reads back");
+    assert!(matches!(read.payload, SiriPayload::Extensions(_)));
+    assert_eq!(read, message);
 }

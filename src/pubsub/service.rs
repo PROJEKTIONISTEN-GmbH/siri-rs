@@ -33,7 +33,10 @@ use crate::et::{
 use crate::fm::{
     FacilityMonitoringDelivery, FacilityMonitoringRequest, FacilityMonitoringSubscriptionRequest,
 };
-use crate::framework::{ServiceDeliveryPayload, ServiceRequestPayload, SubscriptionRequestPayload};
+use crate::framework::{
+    ErrorCondition, ServiceDeliveryPayload, ServiceRequestError, ServiceRequestPayload,
+    SubscriptionRequestPayload,
+};
 use crate::gm::{
     GeneralMessageDelivery, GeneralMessageRequest, GeneralMessageSubscriptionRequest, InfoMessage,
 };
@@ -77,7 +80,7 @@ use crate::vm::{
 /// use siri_rs::framework::{
 ///     ServiceDeliveryPayload, ServiceRequestPayload, SubscriptionRequestPayload,
 /// };
-/// use siri_rs::pubsub::{Service, SubscriptionParts};
+/// use siri_rs::pubsub::{FunctionalDeliveryOutcome, Service, SubscriptionParts};
 /// use siri_rs::types::{ParticipantRef, SubscriptionRef};
 ///
 /// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -110,6 +113,9 @@ use crate::vm::{
 ///         unimplemented!()
 ///     }
 ///     fn items_of(_: &ServiceDeliveryPayload) -> Option<Vec<()>> {
+///         unimplemented!()
+///     }
+///     fn outcome_of(_: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
 ///         unimplemented!()
 ///     }
 /// }
@@ -154,6 +160,37 @@ pub trait Service: Sized + Copy + fmt::Debug + Eq {
 
     /// The records inside a `ServiceDelivery` element, when it is this service's.
     fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>>;
+
+    /// What a `ServiceDelivery` element says about itself, when it is this
+    /// service's.
+    fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome>;
+}
+
+/// What one functional-service delivery said about itself, beyond the records it
+/// carried.
+///
+/// Every service's delivery element carries these; they are what tells a
+/// delivery of no records from a delivery that failed.
+#[derive(Debug, Clone, PartialEq)]
+pub struct FunctionalDeliveryOutcome {
+    /// The subscription the delivery satisfies, when it satisfies one.
+    pub subscription_ref: Option<SubscriptionRef>,
+    /// Whether the producer reported the delivery as a success. `Status` is
+    /// optional in the schema and defaults to true.
+    pub status: bool,
+    /// Why not, when it did not.
+    pub error_condition: Option<ErrorCondition<ServiceRequestError>>,
+}
+
+/// Reads the [`FunctionalDeliveryOutcome`] off a delivery, whichever service's.
+macro_rules! outcome_of {
+    ($delivery:expr) => {
+        FunctionalDeliveryOutcome {
+            subscription_ref: $delivery.subscription_ref.clone(),
+            status: $delivery.status.unwrap_or(true),
+            error_condition: $delivery.error_condition.clone(),
+        }
+    };
 }
 
 /// The parts of a subscription request the hub works with.
@@ -433,6 +470,13 @@ impl Service for SituationExchange {
             _ => None,
         }
     }
+
+    fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
+        match payload {
+            ServiceDeliveryPayload::SituationExchangeDelivery(delivery) => Some(outcome_of!(delivery)),
+            _ => None,
+        }
+    }
 }
 
 impl Service for EstimatedTimetable {
@@ -512,6 +556,13 @@ impl Service for EstimatedTimetable {
             _ => None,
         }
     }
+
+    fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
+        match payload {
+            ServiceDeliveryPayload::EstimatedTimetableDelivery(delivery) => Some(outcome_of!(delivery)),
+            _ => None,
+        }
+    }
 }
 
 impl Service for ProductionTimetable {
@@ -585,6 +636,13 @@ impl Service for ProductionTimetable {
             ServiceDeliveryPayload::ProductionTimetableDelivery(delivery) => {
                 Some(delivery.dated_timetable_version_frame.clone())
             }
+            _ => None,
+        }
+    }
+
+    fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
+        match payload {
+            ServiceDeliveryPayload::ProductionTimetableDelivery(delivery) => Some(outcome_of!(delivery)),
             _ => None,
         }
     }
@@ -664,6 +722,13 @@ impl Service for VehicleMonitoring {
             _ => None,
         }
     }
+
+    fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
+        match payload {
+            ServiceDeliveryPayload::VehicleMonitoringDelivery(delivery) => Some(outcome_of!(delivery)),
+            _ => None,
+        }
+    }
 }
 
 impl Service for StopTimetable {
@@ -737,6 +802,13 @@ impl Service for StopTimetable {
             ServiceDeliveryPayload::StopTimetableDelivery(delivery) => {
                 Some(delivery.timetabled_stop_visit.clone())
             }
+            _ => None,
+        }
+    }
+
+    fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
+        match payload {
+            ServiceDeliveryPayload::StopTimetableDelivery(delivery) => Some(outcome_of!(delivery)),
             _ => None,
         }
     }
@@ -819,6 +891,13 @@ impl Service for StopMonitoring {
             _ => None,
         }
     }
+
+    fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
+        match payload {
+            ServiceDeliveryPayload::StopMonitoringDelivery(delivery) => Some(outcome_of!(delivery)),
+            _ => None,
+        }
+    }
 }
 
 impl Service for ConnectionTimetable {
@@ -893,6 +972,13 @@ impl Service for ConnectionTimetable {
             ServiceDeliveryPayload::ConnectionTimetableDelivery(delivery) => {
                 Some(delivery.timetabled_feeder_arrival.clone())
             }
+            _ => None,
+        }
+    }
+
+    fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
+        match payload {
+            ServiceDeliveryPayload::ConnectionTimetableDelivery(delivery) => Some(outcome_of!(delivery)),
             _ => None,
         }
     }
@@ -976,6 +1062,13 @@ impl Service for ConnectionMonitoringFeeder {
             _ => None,
         }
     }
+
+    fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
+        match payload {
+            ServiceDeliveryPayload::ConnectionMonitoringFeederDelivery(delivery) => Some(outcome_of!(delivery)),
+            _ => None,
+        }
+    }
 }
 
 impl Service for GeneralMessage {
@@ -1053,6 +1146,13 @@ impl Service for GeneralMessage {
             _ => None,
         }
     }
+
+    fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
+        match payload {
+            ServiceDeliveryPayload::GeneralMessageDelivery(delivery) => Some(outcome_of!(delivery)),
+            _ => None,
+        }
+    }
 }
 
 impl Service for FacilityMonitoring {
@@ -1126,6 +1226,13 @@ impl Service for FacilityMonitoring {
             ServiceDeliveryPayload::FacilityMonitoringDelivery(delivery) => {
                 Some(delivery.facility_condition.clone())
             }
+            _ => None,
+        }
+    }
+
+    fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
+        match payload {
+            ServiceDeliveryPayload::FacilityMonitoringDelivery(delivery) => Some(outcome_of!(delivery)),
             _ => None,
         }
     }

@@ -192,7 +192,7 @@ async fn receive(State(state): State<Receiving>, body: String) -> Response {
             tokio::spawn(fetch_the_data(state.clone(), *fetch));
             answer_with(&reply)
         }
-        ConsumerEvent::Delivered { items, reply } => {
+        ConsumerEvent::Delivered { items, reply, .. } => {
             let _ = state.delivered.send(items);
             match reply {
                 Some(reply) => answer_with(&reply),
@@ -221,7 +221,7 @@ async fn fetch_the_data(state: Receiving, fetch: Siri) {
         }
     };
     match interpret(&state.consumer, &delivery) {
-        Ok(ConsumerEvent::Delivered { items, reply }) => {
+        Ok(ConsumerEvent::Delivered { items, reply, .. }) => {
             let _ = state.delivered.send(items);
             // A producer that asked for confirmation gets it as a fresh request, since
             // this delivery arrived as an answer rather than as a push.

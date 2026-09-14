@@ -122,7 +122,7 @@ async fn a_stop_monitoring_subscription_is_pushed_and_updated_over_http() {
     };
     assert!(outcomes[0].accepted);
 
-    let ConsumerEvent::Delivered { items, reply } = consumer.next_event().await else {
+    let ConsumerEvent::Delivered { items, reply, .. } = consumer.next_event().await else {
         panic!("a direct-delivery producer pushes the board it holds");
     };
     assert!(reply.is_some(), "this consumer confirms what it receives");

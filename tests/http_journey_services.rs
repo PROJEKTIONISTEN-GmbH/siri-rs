@@ -124,7 +124,7 @@ async fn a_vehicle_monitoring_subscription_is_pushed_and_updated_over_http() {
     consumer.interpret(&response);
 
     // Direct delivery: the vehicle arrives at the consumer's address unasked.
-    let ConsumerEvent::Delivered { items, reply } = consumer.next_event().await else {
+    let ConsumerEvent::Delivered { items, reply, .. } = consumer.next_event().await else {
         panic!("a direct-delivery producer pushes what it holds");
     };
     assert!(reply.is_some(), "this consumer confirms what it receives");

@@ -100,6 +100,17 @@
 //!   profiles outside SIRI, so they are held as the subtree they are and written
 //!   back unchanged — and read into a consumer's own type where it has one. See
 //!   [`types::AnyContent`].
+//! * **A timestamp names an instant.** `xsd:dateTime` lets the time-zone offset
+//!   be left out, and a document that leaves it out is schema-valid; but a
+//!   wall-clock time without an offset names no instant — XML Schema itself
+//!   ranks it as incomparable with a zoned one — and the hub compares instants:
+//!   an `InitialTerminationTime` against now, a `ValidUntil` against the next
+//!   poll. Every timestamp is therefore a [`chrono::DateTime<FixedOffset>`], and
+//!   a document that leaves the offset out is refused with an error naming the
+//!   field. The one place the official examples do leave it out — the validity
+//!   period of a Production Timetable, which is a period in the timetable's own
+//!   zone — is a [`types::Timestamp`], which keeps the lexical form and offers the
+//!   instant only when the document gave one.
 //!
 //! # Conformance
 //!

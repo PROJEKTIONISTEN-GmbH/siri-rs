@@ -5,11 +5,12 @@ use std::marker::PhantomData;
 use chrono::{DateTime, FixedOffset};
 
 use crate::framework::{
-    DataReadyAcknowledgement, DataReceivedAcknowledgement, DataSupplyRequest, Siri, SiriPayload,
-    SubscriptionContext, SubscriptionRequest, TerminateSubscriptionRequest,
+    DataReadyAcknowledgement, DataReceivedAcknowledgement, DataSupplyRequest, DeliveryError,
+    ErrorCondition, Siri, SiriPayload, SubscriptionContext, SubscriptionRequest,
+    TerminateSubscriptionRequest,
 };
 use crate::pubsub::envelope;
-use crate::pubsub::service::{Service, SubscriptionParts};
+use crate::pubsub::service::{FunctionalDeliveryOutcome, Service, SubscriptionParts};
 use crate::types::{
     Duration, EndpointAddress, MessageQualifier, ParticipantRef, SubscriptionQualifier,
     SubscriptionRef,
@@ -40,10 +41,16 @@ pub enum ConsumerEvent<S: Service> {
         /// The request that collects the data.
         fetch: Box<Siri>,
     },
-    /// The producer delivered data.
+    /// The producer delivered data, or reported that it could not.
     Delivered {
-        /// The records, flattened across the deliveries in the message.
+        /// The records, flattened across the deliveries of this service in the
+        /// message.
         items: Vec<S::Item>,
+        /// What the message said about itself: whether it succeeded, why not,
+        /// whether more follows, and which subscriptions its deliveries satisfy.
+        /// A delivery of no records and a delivery that failed both arrive with
+        /// `items` empty; this is what tells them apart.
+        outcome: DeliveryOutcome,
         /// Acknowledgement to send back, when the producer asked for confirmation.
         reply: Option<Box<Siri>>,
     },
@@ -64,6 +71,29 @@ pub enum ConsumerEvent<S: Service> {
     },
     /// The message needed no action.
     Ignored,
+}
+
+/// What a `ServiceDelivery` said about itself, beyond the records it carried.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DeliveryOutcome {
+    /// Whether the producer reported the message as a success. `Status` is
+    /// optional in the schema and defaults to true.
+    pub status: bool,
+    /// Why not, when it did not.
+    pub error_condition: Option<ErrorCondition<DeliveryError>>,
+    /// Whether a further message with more of the same delivery follows.
+    pub more_data: bool,
+    /// What each delivery of this service in the message said about itself, in
+    /// the message's order.
+    pub deliveries: Vec<FunctionalDeliveryOutcome>,
+}
+
+impl DeliveryOutcome {
+    /// Whether the message and every delivery of this service in it reported
+    /// success.
+    pub fn succeeded(&self) -> bool {
+        self.status && self.deliveries.iter().all(|delivery| delivery.status)
+    }
 }
 
 /// The consumer half of a SIRI exchange.
@@ -206,13 +236,12 @@ impl<S: Service> Consumer<S> {
                     request_message_ref: notification_ref.clone(),
                     ..DataReadyAcknowledgement::accepted(now, self.requestor_ref.clone())
                 });
-                let mut fetch = DataSupplyRequest::new(
-                    now,
-                    self.requestor_ref.clone(),
-                    notification_ref.unwrap_or_else(|| "".into()),
-                );
-                fetch.message_identifier = Some(self.mint_message_id());
-                fetch.address = self.consumer_address.clone();
+                let fetch = DataSupplyRequest {
+                    message_identifier: Some(self.mint_message_id()),
+                    address: self.consumer_address.clone(),
+                    notification_ref,
+                    ..DataSupplyRequest::new(now, self.requestor_ref.clone())
+                };
                 Ok(ConsumerEvent::DataReady {
                     reply: Box::new(reply),
                     fetch: Box::new(envelope(fetch)),
@@ -225,6 +254,12 @@ impl<S: Service> Consumer<S> {
                     .filter_map(S::items_of)
                     .flatten()
                     .collect();
+                let outcome = DeliveryOutcome {
+                    status: delivery.status.unwrap_or(true),
+                    error_condition: delivery.error_condition.clone(),
+                    more_data: delivery.more_data.unwrap_or(false),
+                    deliveries: delivery.deliveries.iter().filter_map(S::outcome_of).collect(),
+                };
                 let reply = self.confirm_delivery.then(|| {
                     Box::new(envelope(DataReceivedAcknowledgement {
                         request_message_ref: delivery
@@ -234,7 +269,11 @@ impl<S: Service> Consumer<S> {
                         ..DataReceivedAcknowledgement::accepted(now, self.requestor_ref.clone())
                     }))
                 });
-                Ok(ConsumerEvent::Delivered { items, reply })
+                Ok(ConsumerEvent::Delivered {
+                    items,
+                    outcome,
+                    reply,
+                })
             }
             SiriPayload::HeartbeatNotification(heartbeat) => Ok(ConsumerEvent::Alive {
                 service_started_time: heartbeat.service_started_time,

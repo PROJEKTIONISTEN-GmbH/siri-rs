@@ -40,7 +40,10 @@ use crate::xml::SiriRoot;
 
 /// The document element every SIRI exchange is wrapped in.
 ///
-/// A SIRI document carries exactly one message; which one is the [`SiriPayload`].
+/// A SIRI document carries exactly one thing; which one is the [`SiriPayload`].
+/// The schema makes it a choice of a request, a response or an `<Extensions>`
+/// element, so a document is one of the three and never a message with
+/// extensions after it.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Siri {
     /// Version of SIRI the document conforms to, e.g. `2.1`.
@@ -49,9 +52,6 @@ pub struct Siri {
     /// The message this document carries.
     #[serde(rename = "$value")]
     pub payload: SiriPayload,
-    /// Implementation-defined content.
-    #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
-    pub extensions: Option<Extensions>,
 }
 
 impl Siri {
@@ -60,7 +60,6 @@ impl Siri {
         Self {
             version: Some(version.into()),
             payload: payload.into(),
-            extensions: None,
         }
     }
 }
@@ -72,7 +71,7 @@ impl SiriRoot for Siri {
 /// Declares the payload enum together with a `From` impl and an accessor per variant.
 macro_rules! siri_payload {
     ($($(#[$meta:meta])* $variant:ident($ty:ty) => $accessor:ident),* $(,)?) => {
-        /// The message a [`Siri`] document carries.
+        /// What a [`Siri`] document carries.
         ///
         /// The variants are the global elements the schema allows directly under
         /// `<Siri>`; the variant name is the element name.
@@ -156,6 +155,9 @@ siri_payload! {
     VehicleFeaturesDelivery(VehicleFeaturesDelivery) => as_vehicle_features_delivery,
     /// The product categories a producer uses.
     ProductCategoriesDelivery(ProductCategoriesDelivery) => as_product_categories_delivery,
+    /// Implementation-defined content in place of a message, the schema's third
+    /// alternative under `<Siri>`.
+    Extensions(Extensions) => as_extensions,
 }
 
 /// A direct request for data, answered by a [`ServiceDelivery`].

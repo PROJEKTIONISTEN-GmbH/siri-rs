@@ -685,5 +685,6 @@ fn payload_name(payload: &SiriPayload) -> &'static str {
         SiriPayload::ServiceFeaturesDelivery(_) => "ServiceFeaturesDelivery",
         SiriPayload::VehicleFeaturesDelivery(_) => "VehicleFeaturesDelivery",
         SiriPayload::ProductCategoriesDelivery(_) => "ProductCategoriesDelivery",
+        SiriPayload::Extensions(_) => "Extensions",
     }
 }

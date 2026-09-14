@@ -13,7 +13,8 @@ use siri_rs::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowS
 use siri_rs::et::{EstimatedTimetableRequest, EstimatedTimetableSubscriptionRequest};
 use siri_rs::framework::{
     DataReadyNotification, DeliveryError, ErrorCodeDetail, ErrorCondition, ServiceDelivery,
-    ServiceDeliveryPayload, SubscriptionRequest, TerminateSubscriptionRequest, TerminationError,
+    ServiceDeliveryPayload, ServiceRequestError, SubscriptionRequest, TerminateSubscriptionRequest,
+    TerminationError,
 };
 use siri_rs::pubsub::{
     Consumer, ConsumerEvent, Outbound, Producer, ProducerConfig, SituationExchange,
@@ -121,7 +122,7 @@ fn a_direct_delivery_subscription_runs_its_full_cycle() {
     );
     exchanged("ServiceDelivery", &outbound[0].message);
 
-    let ConsumerEvent::Delivered { items: situations, reply } = consumer
+    let ConsumerEvent::Delivered { items: situations, reply, .. } = consumer
         .handle(&outbound[0].message, now)
         .expect("the consumer reads the delivery")
     else {
@@ -214,7 +215,7 @@ fn a_fetched_delivery_subscription_announces_before_it_delivers() {
         .expect("a data supply request is answered");
     exchanged("ServiceDelivery", &delivery);
 
-    let ConsumerEvent::Delivered { items: situations, reply } = consumer
+    let ConsumerEvent::Delivered { items: situations, reply, .. } = consumer
         .handle(&delivery, now)
         .expect("the consumer reads the delivery")
     else {
@@ -713,6 +714,61 @@ fn a_delivery_that_reports_a_failure_is_not_read_as_a_delivery_of_nothing() {
         reported.contains("the situation store is being rebuilt"),
         "the failure and its reason reach the application: {reported}"
     );
+    let ConsumerEvent::Delivered { items, outcome, .. } = event else {
+        panic!("a service delivery is reported as a delivery");
+    };
+    assert!(items.is_empty());
+    assert!(!outcome.status, "the producer said the message failed");
+    assert!(!outcome.succeeded());
+    assert!(!outcome.more_data);
+    assert_eq!(
+        outcome
+            .error_condition
+            .as_ref()
+            .and_then(|condition| condition.description.as_deref()),
+        Some("the situation store is being rebuilt")
+    );
+    assert_eq!(outcome.deliveries.len(), 1, "one situation exchange delivery in the message");
+    assert!(outcome.deliveries[0].status, "the delivery itself claimed nothing");
+}
+
+#[test]
+fn a_delivery_whose_part_failed_names_the_subscription_and_the_reason() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    let now = now();
+    let mut consumer = Consumer::<SituationExchange>::new("PASSENGER-APP");
+
+    // The message as a whole is fine; the one delivery in it reports that the
+    // subscription it satisfies asked for a topic the producer has nothing on.
+    let mut part = SituationExchangeDelivery::new(now, Vec::new());
+    part.subscription_ref = Some("lifts".into());
+    part.status = Some(false);
+    part.error_condition = Some(ErrorCondition::with_description(
+        ServiceRequestError::NoInfoForTopicError(ErrorCodeDetail::default()),
+        "no situations are held for that operator",
+    ));
+    let message = Siri::new(
+        siri_rs::pubsub::PROTOCOL_VERSION,
+        ServiceDelivery::new(now, "MY-AGENCY", vec![part.into()]),
+    );
+    exchanged("ServiceDelivery whose delivery failed", &message);
+
+    let ConsumerEvent::Delivered { items, outcome, .. } = consumer
+        .handle(&message, now)
+        .expect("the consumer reads the delivery")
+    else {
+        panic!("a service delivery is reported as a delivery");
+    };
+    assert!(items.is_empty());
+    assert!(outcome.status, "the message itself succeeded");
+    assert!(!outcome.succeeded(), "but not every delivery in it did");
+    let part = &outcome.deliveries[0];
+    assert_eq!(part.subscription_ref.as_ref().map(|r| r.as_str()), Some("lifts"));
+    assert!(!part.status);
+    assert!(matches!(
+        part.error_condition.as_ref().map(|condition| &condition.code),
+        Some(ServiceRequestError::NoInfoForTopicError(_))
+    ));
 }
 
 #[test]

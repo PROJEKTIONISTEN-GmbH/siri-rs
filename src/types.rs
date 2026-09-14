@@ -635,10 +635,30 @@ impl Empty {
 pub struct AnyContent {
     /// The element's attributes, without the leading `@` the wire format uses.
     pub attributes: Vec<(String, String)>,
-    /// Character data directly inside the element.
-    pub text: String,
-    /// The child elements, each with its name, in document order.
-    pub children: Vec<(String, AnyContent)>,
+    /// What the element holds — runs of character data and child elements — in
+    /// document order.
+    pub content: Vec<Node>,
+}
+
+/// One piece of what an element holds: a run of character data, or a child
+/// element.
+///
+/// Mixed content — `Hello <b>world</b> again` — is text, an element and text
+/// again, in that order, and the order is the content. The reader drops the
+/// whitespace at either end of a run of text that borders an element, so what
+/// comes back is `Hello<b>world</b>again`; the words, the element and their order
+/// are kept, the spaces between them are not.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Node {
+    /// A run of character data.
+    Text(String),
+    /// A child element, with its name.
+    Element {
+        /// The element's local name.
+        name: String,
+        /// What the element carries.
+        content: AnyContent,
+    },
 }
 
 impl AnyContent {
@@ -657,15 +677,34 @@ impl AnyContent {
     pub fn text(text: impl Into<String>) -> Self {
         Self {
             attributes: Vec::new(),
-            text: text.into(),
-            children: Vec::new(),
+            content: vec![Node::Text(text.into())],
         }
+    }
+
+    /// The element's character data with any child elements left out: the whole
+    /// text of an element that holds only text, the runs of text around the
+    /// elements of mixed content joined.
+    pub fn character_data(&self) -> String {
+        self.content
+            .iter()
+            .filter_map(|node| match node {
+                Node::Text(text) => Some(text.as_str()),
+                Node::Element { .. } => None,
+            })
+            .collect()
+    }
+
+    /// The child elements, each with its name, in document order.
+    pub fn children(&self) -> impl Iterator<Item = (&str, &AnyContent)> {
+        self.content.iter().filter_map(|node| match node {
+            Node::Element { name, content } => Some((name.as_str(), content)),
+            Node::Text(_) => None,
+        })
     }
 
     /// The children named `name`, of which there may be none, one or several.
     pub fn children_named<'a>(&'a self, name: &'a str) -> impl Iterator<Item = &'a AnyContent> {
-        self.children
-            .iter()
+        self.children()
             .filter_map(move |(child, content)| (child == name).then_some(content))
     }
 
@@ -750,17 +789,16 @@ const PAYLOAD_ELEMENT: &str = "Payload";
 
 impl Serialize for AnyContent {
     fn serialize<S: Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
-        let entries = self.attributes.len() + usize::from(!self.text.is_empty()) + self.children.len();
-        let mut map = serializer.serialize_map(Some(entries))?;
+        let mut map = serializer.serialize_map(Some(self.attributes.len() + self.content.len()))?;
         // Attributes first: the writer has to emit them before it opens the element.
         for (name, value) in &self.attributes {
             map.serialize_entry(&format!("@{name}"), value)?;
         }
-        if !self.text.is_empty() {
-            map.serialize_entry("$text", &self.text)?;
-        }
-        for (name, child) in &self.children {
-            map.serialize_entry(name, child)?;
+        for node in &self.content {
+            match node {
+                Node::Text(text) => map.serialize_entry("$text", text)?,
+                Node::Element { name, content } => map.serialize_entry(name, content)?,
+            }
         }
         map.end()
     }
@@ -803,8 +841,8 @@ impl<'de> Visitor<'de> for Nested {
     }
 
     /// An element with children or attributes arrives as a map whose keys are
-    /// `@name` for an attribute, `$text` for character data and the element name
-    /// for a child.
+    /// `@name` for an attribute, `$text` for a run of character data and the
+    /// element name for a child, in document order.
     fn visit_map<A: MapAccess<'de>>(self, mut map: A) -> std::result::Result<AnyContent, A::Error> {
         if self.depth > AnyContent::MAX_DEPTH {
             return Err(de::Error::custom(format_args!(
@@ -812,24 +850,24 @@ impl<'de> Visitor<'de> for Nested {
                 AnyContent::MAX_DEPTH
             )));
         }
-        let mut content = AnyContent::default();
+        let mut element = AnyContent::default();
         while let Some(key) = map.next_key::<String>()? {
             if let Some(name) = key.strip_prefix('@') {
                 let name = match name {
                     "lang" | "space" => format!("xml:{name}"),
                     _ => name.to_owned(),
                 };
-                content.attributes.push((name, map.next_value()?));
+                element.attributes.push((name, map.next_value()?));
             } else if key == "$text" {
-                content.text = map.next_value()?;
+                element.content.push(Node::Text(map.next_value()?));
             } else {
-                let child = map.next_value_seed(Nested {
+                let content = map.next_value_seed(Nested {
                     depth: self.depth + 1,
                 })?;
-                content.children.push((key, child));
+                element.content.push(Node::Element { name: key, content });
             }
         }
-        Ok(content)
+        Ok(element)
     }
 
     fn visit_str<E: de::Error>(self, value: &str) -> std::result::Result<AnyContent, E> {
@@ -1017,13 +1055,24 @@ mod tests {
         }
 
         let message: Message = quick_xml::de::from_str(document).unwrap();
-        let written = quick_xml::se::to_string_with_root("Message", &message).unwrap();
-        let hello = written.find("Hello").expect("the first run of text survives");
-        let bold = written.find("<b>").expect("the element survives");
-        let again = written.find("again").expect("the last run of text survives");
-        assert!(
-            hello < bold && bold < again,
-            "text and elements come back in document order: {written}"
+        assert_eq!(
+            message.content.content,
+            [
+                Node::Text("Hello".to_owned()),
+                Node::Element {
+                    name: "b".to_owned(),
+                    content: AnyContent::text("world"),
+                },
+                Node::Text("again".to_owned()),
+            ]
+        );
+        assert_eq!(message.content.character_data(), "Helloagain");
+
+        // The reader drops the space at either end of a run of text that borders
+        // an element; the words and their order come back, the spaces do not.
+        assert_eq!(
+            quick_xml::se::to_string_with_root("Message", &message).unwrap(),
+            "<Message><Content>Hello<b>world</b>again</Content></Message>"
         );
     }
 
