@@ -4,8 +4,10 @@ Everything in this directory is a verbatim copy of published CEN SIRI material.
 Nothing here has been edited; the point of the harness is that the crate has to
 match these documents, not the other way round.
 
-- **Source**: the SIRI XML Schema repository, <https://github.com/SIRI-CEN/SIRI>
-- **Version**: v2.2
+- **Source**: the SIRI XML Schema repository,
+  <https://github.com/TransmodelEcosystem/SIRI> (formerly `SIRI-CEN/SIRI`, which
+  still redirects)
+- **Version**: release `v2.2`, 30 October 2025
 - **Copyright**: © 2006–2026 NeTEx, CEN, Crown Copyright
 
 ## `xsd/`

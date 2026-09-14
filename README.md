@@ -382,6 +382,46 @@ to work through. What remains open is narrower:
 - Control Actions proved by round trip rather than by the schemas alone, once
   example messages for it exist.
 
+## Acknowledgements
+
+### The standard and the artefacts it publishes
+
+This crate is a transcription. It exists because the standard publishes its schemas and
+its example messages openly, and because both can be checked against:
+
+- **[TransmodelEcosystem/SIRI](https://github.com/TransmodelEcosystem/SIRI)** — the SIRI
+  XML Schema repository, release `v2.2` (30 October 2025). Every type here derives from
+  those schemas; the conformance harness validates against them unaltered, and the
+  official example documents under `tests/fixtures/xml/` are copied from the same
+  release. © 2006–2026 NeTEx, CEN, Crown Copyright. The repository was formerly at
+  `SIRI-CEN/SIRI`, an address that still redirects.
+- **VDV 736**, the German SIRI-SX profile, exercised through the four example messages
+  that repository ships under `examples/siri_exm_SX/VDV736_exm` — one incident from
+  first report through two updates to its closure.
+- The normative text the schemas encode — **EN 15531** parts 1 to 3 and **CEN/TS 15531**
+  parts 4 and 5 — is published by CEN and is not open access. Where the schemas and the
+  text could be read two ways, this crate follows the schemas, because those are what a
+  message is validated against.
+
+`tests/fixtures/README.md` records file by file what was copied and what was left out.
+
+### Funding
+
+siri-rs was written at [PROJEKTIONISTEN GmbH](https://www.projektionisten.de/) in the
+research project **MoToRes** — *Mobilität und Tourismus für individuelle Nutzerbedürfnisse
+und regionale Spezifika* — funded by the German Federal Ministry of Transport (BMV; the
+Federal Ministry for Digital and Transport, BMDV, when the grant was made) under the
+[mFUND](https://www.bmv.de/DE/Themen/Mobilitaet/mFund/Ueberblick/ueberblick.html)
+research initiative, grant number **01F2271A**, July 2024 to February 2027.
+
+The project is coordinated by the L3S Research Center at Leibniz University Hannover,
+with PROJEKTIONISTEN GmbH, the Data Science and Intelligent Systems group at the
+University of Bonn, Wangerland Touristik GmbH and Connect-Fahrplanauskunft GmbH.
+Project pages: [motores.ai](https://motores.ai/) and
+[connect-fahrplanauskunft.de/motores](https://connect-fahrplanauskunft.de/motores/).
+
+Responsibility for the content of this repository lies with its authors.
+
 ## Licence
 
 Licensed under either of
