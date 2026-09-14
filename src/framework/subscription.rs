@@ -118,6 +118,25 @@ pub enum SubscriptionRequestPayload {
     SituationExchangeSubscriptionRequest(Box<SituationExchangeSubscriptionRequest>),
 }
 
+impl SubscriptionRequestPayload {
+    /// The subscriber's name for the subscription, whichever service it is to.
+    pub fn subscription_identifier(&self) -> &SubscriptionQualifier {
+        match self {
+            Self::ProductionTimetableSubscriptionRequest(r) => &r.subscription_identifier,
+            Self::EstimatedTimetableSubscriptionRequest(r) => &r.subscription_identifier,
+            Self::StopTimetableSubscriptionRequest(r) => &r.subscription_identifier,
+            Self::StopMonitoringSubscriptionRequest(r) => &r.subscription_identifier,
+            Self::VehicleMonitoringSubscriptionRequest(r) => &r.subscription_identifier,
+            Self::ConnectionTimetableSubscriptionRequest(r) => &r.subscription_identifier,
+            Self::ConnectionMonitoringSubscriptionRequest(r) => &r.subscription_identifier,
+            Self::GeneralMessageSubscriptionRequest(r) => &r.subscription_identifier,
+            Self::FacilityMonitoringSubscriptionRequest(r) => &r.subscription_identifier,
+            Self::ControlActionSubscriptionRequest(r) => &r.subscription_identifier,
+            Self::SituationExchangeSubscriptionRequest(r) => &r.subscription_identifier,
+        }
+    }
+}
+
 impl From<ProductionTimetableSubscriptionRequest> for SubscriptionRequestPayload {
     fn from(request: ProductionTimetableSubscriptionRequest) -> Self {
         Self::ProductionTimetableSubscriptionRequest(Box::new(request))
@@ -519,6 +538,19 @@ impl TerminationResponseStatus {
             subscription_ref: subscription_ref.into(),
             status: Some(true),
             error_condition: None,
+        }
+    }
+
+    /// A status saying the subscription could not be closed, with the reason.
+    pub fn refused(
+        response_timestamp: DateTime<FixedOffset>,
+        subscription_ref: impl Into<SubscriptionRef>,
+        error_condition: ErrorCondition<TerminationError>,
+    ) -> Self {
+        Self {
+            status: Some(false),
+            error_condition: Some(error_condition),
+            ..Self::terminated(response_timestamp, subscription_ref)
         }
     }
 }

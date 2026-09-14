@@ -490,7 +490,10 @@ fn a_request_that_mixes_services_is_answered_entry_by_entry() {
     app.handle(&response, now).expect("the app reads it");
 
     // The board asks for situations, which this producer serves, and for estimated
-    // journeys, which it does not, in one request.
+    // journeys, which it does not, in one request. The explicit schema, `siri.xsd`,
+    // admits only one service per request, so this document is not validated here:
+    // the reader accepts it all the same, and what is pinned is that the producer
+    // answers it entry by entry rather than holding the first and failing the rest.
     let mixed = Siri::new(
         siri_rs::pubsub::PROTOCOL_VERSION,
         SubscriptionRequest::new(
@@ -512,7 +515,6 @@ fn a_request_that_mixes_services_is_answered_entry_by_entry() {
             ],
         ),
     );
-    exchanged("SubscriptionRequest", &mixed);
 
     let response = producer
         .handle(&mixed, now)

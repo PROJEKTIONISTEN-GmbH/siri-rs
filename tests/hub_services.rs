@@ -23,11 +23,14 @@ use siri_rs::model::{
     FacilityCondition, FacilityStatus, InterchangeJourney, MonitoredVehicleJourney,
     TargetedVehicleJourney,
 };
+use siri_rs::framework::ServiceDelivery;
 use siri_rs::pubsub::{
     ConnectionMonitoringFeeder, ConnectionMonitoringFeederSource, ConnectionTimetable,
-    ConnectionTimetableSource, Consumer, ConsumerEvent, FacilityMonitoring,
+    ConnectionTimetableSource, Consumer, ConsumerEvent, EstimatedTimetable, FacilityMonitoring,
     FacilityMonitoringSource, GeneralMessage, GeneralMessageSource, Producer, ProducerConfig,
-    Service, Source, StopMonitoring, StopMonitoringSource, StopTimetable, StopTimetableSource,
+    ProductionTimetable, Service, SituationExchange, Source, StopMonitoring,
+    StopMonitoringSource, StopTimetable, StopTimetableSource, VehicleMonitoring,
+    PROTOCOL_VERSION,
 };
 use siri_rs::sm::{MonitoredStopVisit, StopMonitoringRequest};
 use siri_rs::st::{StopTimetableRequest, TimetabledStopVisit};
@@ -135,6 +138,65 @@ fn the_hub_carries_a_facility_monitoring_subscription() {
 
     assert_eq!(conditions.len(), 1);
     assert_eq!(conditions[0].facility_status.status, Availability::NotAvailable);
+}
+
+/// A fetch that finds nothing waiting is answered with a delivery of the service
+/// carrying no records, because that is the form the schema provides for "nothing":
+/// a `ServiceDelivery` must carry at least one functional-service delivery. So that
+/// form has to be a valid document for every service the hub speaks — every one
+/// but Estimated Timetable, which the test after this one is about.
+#[test]
+fn a_delivery_carrying_no_records_is_valid_for_every_service_that_can_say_so() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    let empty = [
+        ("ProductionTimetable", ProductionTimetable::service_delivery(ProductionTimetable::delivery(now(), Vec::new()))),
+        ("StopTimetable", StopTimetable::service_delivery(StopTimetable::delivery(now(), Vec::new()))),
+        ("StopMonitoring", StopMonitoring::service_delivery(StopMonitoring::delivery(now(), Vec::new()))),
+        ("VehicleMonitoring", VehicleMonitoring::service_delivery(VehicleMonitoring::delivery(now(), Vec::new()))),
+        ("ConnectionTimetable", ConnectionTimetable::service_delivery(ConnectionTimetable::delivery(now(), Vec::new()))),
+        ("ConnectionMonitoringFeeder", ConnectionMonitoringFeeder::service_delivery(ConnectionMonitoringFeeder::delivery(now(), Vec::new()))),
+        ("GeneralMessage", GeneralMessage::service_delivery(GeneralMessage::delivery(now(), Vec::new()))),
+        ("FacilityMonitoring", FacilityMonitoring::service_delivery(FacilityMonitoring::delivery(now(), Vec::new()))),
+        ("SituationExchange", SituationExchange::service_delivery(SituationExchange::delivery(now(), Vec::new()))),
+    ];
+    for (service, payload) in empty {
+        let message = Siri::new(
+            PROTOCOL_VERSION,
+            ServiceDelivery::new(now(), "MY-AGENCY", vec![payload]),
+        );
+        let xml = siri_rs::to_string(&message).expect("a message is writable");
+        if let Err(complaint) = validate(&xml) {
+            panic!("an empty {service} delivery is not valid SIRI:\n{xml}\n{complaint}");
+        }
+    }
+}
+
+/// Estimated Timetable has no valid way of delivering nothing: the schema requires
+/// at least one `EstimatedJourneyVersionFrame` in the delivery and at least one
+/// `EstimatedVehicleJourney` in the frame. A producer of that service whose source
+/// matches no journey therefore builds a document the schema rejects, whatever the
+/// crate does about it; the front page says so. This pins the limitation to the
+/// schema release the fixtures carry, so that a release which lifts it is noticed.
+#[test]
+fn an_estimated_timetable_delivery_cannot_carry_no_journeys() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    let message = Siri::new(
+        PROTOCOL_VERSION,
+        ServiceDelivery::new(
+            now(),
+            "MY-AGENCY",
+            vec![EstimatedTimetable::service_delivery(EstimatedTimetable::delivery(
+                now(),
+                Vec::new(),
+            ))],
+        ),
+    );
+    let xml = siri_rs::to_string(&message).expect("a message is writable");
+    let complaint = validate(&xml).expect_err("the schema has no form for an empty frame");
+    assert!(
+        complaint.contains("EstimatedJourneyVersionFrame") && complaint.contains("Missing child"),
+        "{complaint}"
+    );
 }
 
 /// Opens a subscription, lets the producer answer it, and returns what was delivered.

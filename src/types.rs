@@ -647,9 +647,10 @@ impl AnyContent {
     /// The deepest official example document nests 15 elements in all, and an
     /// embedded DATEX II record adds a dozen or so of its own, so 64 is room for
     /// any payload two participants are likely to agree on. It is also small
-    /// enough that reading a payload at that depth claims about 256 KB of stack in
-    /// an unoptimised build — a debug build spends roughly 4 KB per level — which
-    /// is an eighth of the 2 MiB a tokio worker thread has.
+    /// enough to read on any thread: an unoptimised build spends about 4 KB of
+    /// stack per level, so a payload at this depth needs some 320 KB in all, a
+    /// sixth of the 2 MiB a tokio worker thread has; an optimised build needs a
+    /// fifth of that.
     pub const MAX_DEPTH: usize = 64;
 
     /// Content that is a single piece of text, as most messages carry.

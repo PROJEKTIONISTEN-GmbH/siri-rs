@@ -46,19 +46,39 @@ fn a_producer_refuses_a_subscription_meant_for_another_service() {
         now(),
     );
 
-    let refusal = producer
+    // The request is well-formed SIRI and is answered as such: with a status per
+    // subscription, saying no.
+    let response = producer
         .handle(&subscribe, now())
-        .expect_err("a producer that does not serve the service says so");
-    assert!(
-        matches!(&refusal, Error::UnexpectedRoot { expected, found }
-            if expected.contains("service this producer serves")
-                && found == "SituationExchangeSubscriptionRequest"),
-        "{refusal}"
-    );
+        .expect("a subscription request is always answerable")
+        .expect("a subscription request is answered");
+    let statuses = &response
+        .payload
+        .as_subscription_response()
+        .expect("the answer is a subscription response")
+        .response_status;
+    assert_eq!(statuses.len(), 1);
+    assert_eq!(statuses[0].subscription_ref.as_str(), "disruptions");
+    assert!(!statuses[0].is_accepted(), "a producer that does not serve the service says so");
+    let reason = statuses[0]
+        .error_condition
+        .as_ref()
+        .and_then(|condition| condition.description.as_deref())
+        .expect("the refusal says why");
+    assert!(reason.contains("SituationExchangeSubscriptionRequest"), "{reason}");
     assert!(
         producer.subscriptions().is_empty(),
         "a refused subscription is not held"
     );
+
+    let ConsumerEvent::Subscribed { outcomes } = elsewhere
+        .handle(&response, now())
+        .expect("the consumer reads the answer")
+    else {
+        panic!("a subscription response is a subscription outcome");
+    };
+    assert!(!outcomes[0].accepted);
+    assert!(elsewhere.subscriptions().is_empty());
 }
 
 #[test]
@@ -67,12 +87,16 @@ fn a_producer_refuses_a_request_meant_for_another_service() {
     let mut elsewhere = Consumer::<VehicleMonitoring>::new("MAP");
     let request = elsewhere.request(VehicleMonitoringRequest::new(now()), now());
 
+    // A delivery is typed by its service, so there is no document in which an
+    // estimated-timetable producer could answer a vehicle-monitoring request; the
+    // request is refused as a message, not as a document.
     let refusal = producer
         .handle(&request, now())
         .expect_err("a producer that does not serve the service says so");
     assert!(
-        matches!(&refusal, Error::UnexpectedRoot { found, .. }
-            if found == "VehicleMonitoringRequest"),
+        matches!(&refusal, Error::UnexpectedMessage { expected, found }
+            if expected.contains("service this producer serves")
+                && *found == "VehicleMonitoringRequest"),
         "{refusal}"
     );
 }
