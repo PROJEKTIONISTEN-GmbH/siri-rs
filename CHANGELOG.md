@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.0 — unreleased
+## 2.0.0 — 2026-09-14
 
 A review of 1.0.0 read the whole crate against the schemas and against what a
 producer meets at an open port. Everything it found is fixed here, and the fixes

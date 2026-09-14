@@ -370,6 +370,30 @@ hundred kilobytes:
 cargo bench
 ```
 
+Orders of magnitude, so that a number of your own has something to sit next to: a
+document of a few kilobytes is read in tens of microseconds and written in half
+that; a hundred-kilobyte situation exchange takes a few hundred microseconds each
+way. Reading runs at roughly a hundred megabytes a second, writing at roughly twice
+that — the asymmetry is the reader's, which has to recognise every element it meets.
+One turn of the publish/subscribe cycle with nothing due costs tens of nanoseconds
+per subscription; a turn that has a delivery to make costs a couple of microseconds.
+
+One run, so the shape is concrete rather than asserted:
+
+```text
+read/framework/exa_checkStatus_request.xml        137 MiB/s
+read/vm/exv_vehicleMonitoring_response.xml        114 MiB/s
+read/sm/exs_stopMonitoring_response_complex.xml   103 MiB/s
+read/sx/exx_situationExchange_response.xml        124 MiB/s
+write/sm/exs_stopMonitoring_response_complex.xml  199 MiB/s
+write/sx/exx_situationExchange_response.xml       161 MiB/s
+```
+
+Those came off an AMD EPYC 7502P with rustc 1.96, on a server that was busy with
+other work at the time — they are a floor rather than a record, and a current
+laptop core will beat them. What they are good for is the ratio between the rows,
+and for telling a change of a few per cent from a change of a factor.
+
 Two things follow from the measurements and are worth knowing when reading the code:
 
 - **Reading borrows.** A document written without namespace prefixes — how most feeds
