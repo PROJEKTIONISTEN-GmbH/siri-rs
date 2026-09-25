@@ -1,5 +1,52 @@
 # Changelog
 
+## 2.1.0 — 2026-09-25
+
+### Added
+
+- An element the schema gives a default value reads as that value when it is
+  written empty. XML Schema declares a default for 279 elements — booleans,
+  enumerations, language tags, durations and a few numbers — and an element so
+  declared that is written with no content is valid and means the declared
+  value: `<Monitored/>` is `true`, `<Severity/>` is `normal`, `<Language/>` is
+  `en`. Such an element failed the whole document with
+  `invalid type: string "", expected a boolean`; it now reads as the declared
+  value, in either empty spelling. The declarations are read out of the bundled
+  schemas by the test suite and kept as a table the crate reads through, every
+  field that transcribes one is checked against the table, and every value the
+  crate can read is read out of an empty element in a real document. The value
+  is written back in full, `<Monitored>true</Monitored>`, which the schema holds
+  equal to the empty element; whether the document spelled the value out is not
+  kept. `Allow` alone keeps its wording, through `DefaultedBoolean`, as before.
+  Where an element is declared with a default in one place and without one in
+  another, every field of that name reads the default: an empty element where
+  none is declared is not valid, so no valid document reads differently.
+- Eighteen derived example documents under `tests/fixtures/derived/`, carrying the
+  declared elements the official examples do not; three of them are Control
+  Actions messages, of which the standard publishes no example.
+
+### Fixed
+
+- A text of whitespace alone — `<Summary>   </Summary>`, which the schema
+  accepts — was read as an empty text and written back as `<Summary/>`, which
+  it refuses. It is read as the whitespace it is and written back the same, in
+  every text and in open content. The whitespace that indents one element
+  inside another is not text and is not read as any. A document holding such an
+  element is rewritten once before it is read, like one that binds the SIRI
+  namespace to a prefix; every other document is still handed to the reader
+  borrowed.
+
+### Known limitations
+
+- An empty space-separated list — `<MonitoringError/>`, `<FareClasses/>` — is
+  read as an empty list and left out when written. A `Vec` cannot tell an
+  absent element from an empty one, and telling them apart changes the field's
+  type, which waits for a major release. The meaning is the same either way.
+- `HasDriverMessages` and `HasVehicleDetectings` of the Control Actions
+  capabilities are transcribed in the response features, where the schema
+  declares them in the request policy; a document carrying them there does not
+  validate. Moving them changes a public struct and waits for a major release.
+
 ## 2.0.1 — 2026-09-25
 
 ### Fixed
