@@ -1,4 +1,5 @@
-//! Elements a producer leaves empty, and what the reader makes of them.
+//! Elements a producer leaves empty, or fills with nothing but whitespace, and what
+//! the reader makes of them.
 //!
 //! An empty position list is valid GML — `gml:posList` is a list type, and a list
 //! may hold nothing. An empty free text is not valid SIRI — the text types require
@@ -6,12 +7,18 @@
 //! reason to lose the document around it: each is read as an empty `value`, and
 //! written back exactly as it stands.
 //!
+//! A text of whitespace alone is a different case: it is valid SIRI, being at least
+//! one character long, and it is read as the whitespace it is and written back the
+//! same. The whitespace that indents one element inside another is not text and is
+//! not read as any.
+//!
 //! Every case below is one of the official example documents with a single element
-//! emptied, so that "the rest of the document is read" can be checked against the
+//! changed, so that "the rest of the document is read" can be checked against the
 //! whole of it rather than against the field next door.
 
 mod support;
 
+use siri_rs::enumerations::Severity;
 use siri_rs::framework::ServiceDeliveryPayload;
 use siri_rs::model::PosList;
 use siri_rs::types::DefaultedText;
@@ -194,15 +201,95 @@ fn an_empty_text_is_written_as_it_stands_even_though_the_schema_refuses_it() {
 }
 
 #[test]
-fn text_of_whitespace_alone_reads_like_an_empty_element() {
-    // The XML reader drops character data that is nothing but whitespace, so there
-    // is no text left to read: the element is as good as empty.
+fn text_of_whitespace_alone_is_read_and_written_as_that_whitespace() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+
+    for blank in ["   ", "\t", " \n\t "] {
+        let element = format!("<Summary>{blank}</Summary>");
+        let xml = fixture_with("sx/exx_situationExchange_response.xml", SUMMARY, &element);
+        validate(&xml).unwrap_or_else(|e| panic!("{element:?}: whitespace is a text: {e}"));
+
+        let document = read_whole(&xml);
+        assert_eq!(summaries(&document)[0].value, blank, "{element:?}");
+
+        let written = siri_rs::to_string(&document).expect("the document writes");
+        assert!(written.contains(&element), "{element:?} is written back as it was: {written}");
+        validate(&written).unwrap_or_else(|e| panic!("{element:?}: what was valid stays valid: {e}"));
+    }
+}
+
+#[test]
+fn whitespace_alone_in_a_line_name_is_kept_too() {
+    let xml = fixture_with(
+        "vm/exv_vehicleMonitoring_response_simple.xml",
+        PUBLISHED_LINE_NAME,
+        r#"<PublishedLineName xml:lang="EN">  </PublishedLineName>"#,
+    );
+    let document = read_whole(&xml);
+    let names = published_line_names(&document);
+    assert_eq!(names[0].value, "  ");
+    assert_eq!(names[0].lang.as_deref(), Some("EN"));
+}
+
+#[test]
+fn whitespace_alone_in_an_enumeration_is_kept_as_the_token_it_is_not() {
+    // The schema refuses it, and a token the schema does not list is kept as it was
+    // read rather than mistaken for the value an empty element would mean.
     let xml = fixture_with(
         "sx/exx_situationExchange_response.xml",
-        SUMMARY,
-        "<Summary>   </Summary>",
+        "<Severity>severe</Severity>",
+        "<Severity>  </Severity>",
     );
-    assert_eq!(summaries(&read_whole(&xml))[0].value, "");
+    let document = read_whole(&xml);
+    let Some(ServiceDeliveryPayload::SituationExchangeDelivery(delivery)) = deliveries(&document).first()
+    else {
+        panic!("the delivery is a situation exchange delivery");
+    };
+    let situation = delivery.pt_situations().first().expect("the delivery carries a situation");
+    assert_eq!(situation.severity, Some(Severity::Unrecognised("  ".to_owned())));
+}
+
+/// A check-status request carrying the given extension payload.
+fn check_status_request_with(extensions: &str) -> String {
+    format!(
+        r#"<Siri xmlns="http://www.siri.org.uk/siri" version="2.0"><CheckStatusRequest>\
+        <RequestTimestamp>2004-12-17T09:30:47-05:00</RequestTimestamp><RequestorRef>NADER</RequestorRef>\
+        {extensions}</CheckStatusRequest></Siri>"#
+    )
+}
+
+/// The child of the request's extension payload with the given name.
+fn extension_child<'a>(document: &'a Siri, name: &'a str) -> &'a siri_rs::types::AnyContent {
+    document
+        .payload
+        .as_check_status_request()
+        .and_then(|request| request.extensions.as_ref())
+        .and_then(|extensions| extensions.children_named(name).next())
+        .expect("the payload is read")
+}
+
+#[test]
+fn indentation_is_not_text() {
+    // The official examples are indented, and every one of them round-trips through
+    // the conformance suite; this pins the same for open content, where a run of
+    // whitespace would otherwise be kept as a text node.
+    let xml = check_status_request_with(
+        "<Extensions>\n\t\t\t<Settings>\n\t\t\t\t<Setting>1</Setting>\n\t\t\t</Settings>\n\t\t</Extensions>",
+    );
+    let document: Siri = siri_rs::from_str(&xml).expect("the document reads");
+    let settings = extension_child(&document, "Settings");
+    assert_eq!(settings.children().count(), 1);
+    assert_eq!(settings.character_data(), "");
+}
+
+#[test]
+fn whitespace_alone_in_open_content_is_kept_as_written() {
+    let payload = "<Extensions><Note>   </Note></Extensions>";
+    let xml = check_status_request_with(payload);
+    let document = read_whole(&xml);
+    assert_eq!(extension_child(&document, "Note").character_data(), "   ");
+    let written = siri_rs::to_string(&document).expect("the document writes");
+    assert!(written.contains(payload), "{written}");
 }
 
 #[test]
