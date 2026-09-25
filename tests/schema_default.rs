@@ -896,12 +896,20 @@ fn empty_out(fixture: &Fixture, exercises: &[Exercise]) -> (String, String, BTre
 /// Every `<Element>text</Element>` in a document — the element written without
 /// attributes and with text alone inside it — as its start tag, its text and its
 /// end tag, allowing for a namespace prefix.
+///
+/// An occurrence inside open content is left out: a general-message body or an
+/// extension payload is carried as it was written, so an element in it that
+/// happens to share a name with a declared one means nothing to the schema.
 fn leaf_occurrences(xml: &str, element: &str) -> Vec<(String, String, String)> {
+    let opaque = open_content(xml);
     let mut out = Vec::new();
     let mut from = 0;
     while let Some(at) = xml[from..].find(&format!("{element}>")) {
         let name_at = from + at;
         from = name_at + element.len();
+        if opaque.iter().any(|range| range.contains(&name_at)) {
+            continue;
+        }
         let tag_at = xml[..name_at]
             .rfind('<')
             .filter(|&lt| xml[lt + 1..name_at].chars().all(|c| c.is_ascii_alphanumeric() || c == ':'));
@@ -932,6 +940,24 @@ fn leaf_occurrences(xml: &str, element: &str) -> Vec<(String, String, String)> {
 /// public struct, which is left to a major release; until then they read their
 /// value but cannot be read out of a document.
 const NOT_EXERCISABLE: &[&str] = &["HasDriverMessages", "HasVehicleDetectings"];
+
+/// The byte ranges of the elements whose content SIRI leaves to the participants:
+/// a general message's `Content` and every `Extensions`.
+fn open_content(xml: &str) -> Vec<std::ops::Range<usize>> {
+    let mut ranges = Vec::new();
+    for name in ["Content", "Extensions"] {
+        let mut from = 0;
+        while let Some(at) = xml[from..].find(&format!("<{name}>")) {
+            let start = from + at;
+            let Some(len) = xml[start..].find(&format!("</{name}>")) else {
+                break;
+            };
+            ranges.push(start..start + len);
+            from = start + len;
+        }
+    }
+    ranges
+}
 
 #[test]
 fn every_declared_value_the_crate_reads_is_read_out_of_an_empty_element() {
@@ -1145,7 +1171,7 @@ fn the_function_names_are_spelled_from_the_values() {
 
 #[test]
 fn leaf_occurrences_find_the_element_and_only_the_element() {
-    let xml = r#"<Siri><Status>true</Status><VehicleStatus>x</VehicleStatus><siri:Status>false</siri:Status><Status><A/></Status></Siri>"#;
+    let xml = r#"<Siri><Status>true</Status><VehicleStatus>x</VehicleStatus><siri:Status>false</siri:Status><Status><A/></Status><Content><Status>true</Status></Content></Siri>"#;
     assert_eq!(
         leaf_occurrences(xml, "Status"),
         [
