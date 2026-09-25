@@ -418,6 +418,9 @@ pub struct TrainElement {
     #[serde(rename = "VehicleNumber", default, skip_serializing_if = "Option::is_none")]
     pub vehicle_number: Option<String>,
     /// The fare classes this element carries, written as a space-separated list.
+    ///
+    /// An element holding no tokens reads as none and, like an absent one, is not
+    /// written back.
     #[serde(
         rename = "FareClasses",
         default,

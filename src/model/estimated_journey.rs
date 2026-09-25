@@ -219,6 +219,9 @@ pub struct EstimatedVehicleJourney {
     )]
     pub monitored: Option<bool>,
     /// Why tracking is not working, in the producer's own codes.
+    ///
+    /// An element holding no tokens reads as none and, like an absent one, is not
+    /// written back.
     #[serde(
         rename = "MonitoringError",
         default,

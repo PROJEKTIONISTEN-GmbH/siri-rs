@@ -303,3 +303,32 @@ fn text_with_surrounding_whitespace_keeps_what_it_read_before() {
     );
     assert_eq!(summaries(&read_whole(&xml))[0].value, "Bomb  at Barchester");
 }
+
+#[test]
+fn an_empty_token_list_is_read_as_no_tokens_and_is_not_written_back() {
+    // A `Vec` cannot tell an element holding no tokens from an absent one, so the
+    // written document is the one without the element. Keeping the element needs a
+    // field type that can say "present and empty", which changes the public API
+    // and waits for a major release; this pins what 2.x does until then.
+    let original = std::fs::read_to_string(
+        fixtures_dir().join("xml/sm/exs_stopMonitoring_response_complex.xml"),
+    )
+    .expect("readable fixture");
+    let monitored = "<Monitored>true</Monitored>";
+    for empty in ["<MonitoringError/>", "<MonitoringError></MonitoringError>"] {
+        let xml = original.replacen(monitored, &format!("{monitored}{empty}"), 1);
+        let document: Siri = siri_rs::from_str(&xml).expect("the document reads");
+        let Some(ServiceDeliveryPayload::StopMonitoringDelivery(delivery)) =
+            deliveries(&document).first()
+        else {
+            panic!("the delivery is a stop monitoring delivery");
+        };
+        let journey = &delivery.monitored_stop_visit[0].monitored_vehicle_journey;
+        assert!(journey.monitoring_error.is_empty(), "{empty}");
+
+        let written = siri_rs::to_string(&document).expect("the document writes");
+        assert!(!written.contains("MonitoringError"), "{empty} is left out: {written}");
+        compare(&parse(&original), &parse(&written))
+            .unwrap_or_else(|e| panic!("{empty}: only the empty element is lost: {e}"));
+    }
+}
