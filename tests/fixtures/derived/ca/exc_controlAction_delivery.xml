@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Siri xmlns="http://www.siri.org.uk/siri" version="2.1">
+	<ServiceDelivery>
+		<ResponseTimestamp>2026-03-04T08:15:00+01:00</ResponseTimestamp>
+		<ProducerRef>MY-AGENCY</ProducerRef>
+		<ControlActionDelivery>
+			<ResponseTimestamp>2026-03-04T08:15:00+01:00</ResponseTimestamp>
+			<controlActions>
+				<ControlAction xmlns:ifopt="http://www.ifopt.org.uk/ifopt">
+					<CreationTime>2026-03-04T08:15:00+01:00</CreationTime>
+					<ControlActionCode>CA-1</ControlActionCode>
+					<Reason>
+						<StandardCategory>vehicleBreakdown</StandardCategory>
+					</Reason>
+					<PartialJourneyCancellation>
+						<DatedVehicleJourneyRef>
+							<DataFrameRef>2026-03-04</DataFrameRef>
+							<DatedVehicleJourneyRef>10-0815</DatedVehicleJourneyRef>
+						</DatedVehicleJourneyRef>
+						<AllCallsAfterPointInJourneyPatternRef>
+							<StopPointRef>de:03241:101</StopPointRef>
+						</AllCallsAfterPointInJourneyPatternRef>
+						<ConcernsArrivals>true</ConcernsArrivals>
+						<ConcernsDepartures>true</ConcernsDepartures>
+					</PartialJourneyCancellation>
+				</ControlAction>
+				<ControlAction xmlns:ifopt="http://www.ifopt.org.uk/ifopt">
+					<CreationTime>2026-03-04T08:15:00+01:00</CreationTime>
+					<ControlActionCode>CA-2</ControlActionCode>
+					<Reason>
+						<StandardCategory>vehicleBreakdown</StandardCategory>
+					</Reason>
+					<ChangeOfJourneyTiming>
+						<DatedVehicleJourneyRef>
+							<DataFrameRef>2026-03-04</DataFrameRef>
+							<DatedVehicleJourneyRef>10-0815</DatedVehicleJourneyRef>
+						</DatedVehicleJourneyRef>
+						<TypeOfChange>respacing</TypeOfChange>
+						<RelativeTime>
+							<FromPointInJourneyPatternRef>
+								<StopPointRef>de:03241:101</StopPointRef>
+							</FromPointInJourneyPatternRef>
+							<Offset>PT3M</Offset>
+							<ChangeModel>minimal</ChangeModel>
+						</RelativeTime>
+					</ChangeOfJourneyTiming>
+				</ControlAction>
+				<ControlAction xmlns:ifopt="http://www.ifopt.org.uk/ifopt">
+					<CreationTime>2026-03-04T08:15:00+01:00</CreationTime>
+					<ControlActionCode>CA-3</ControlActionCode>
+					<Reason>
+						<StandardCategory>vehicleBreakdown</StandardCategory>
+					</Reason>
+					<InterchangeCreation>
+						<FeederCallRef>
+							<DatedVehicleJourneyRef>
+								<DataFrameRef>2026-03-04</DataFrameRef>
+								<DatedVehicleJourneyRef>10-0815</DatedVehicleJourneyRef>
+							</DatedVehicleJourneyRef>
+							<StopPointRef>de:03241:101</StopPointRef>
+						</FeederCallRef>
+						<FetcherCallRef>
+							<DatedVehicleJourneyRef>
+								<DataFrameRef>2026-03-04</DataFrameRef>
+								<DatedVehicleJourneyRef>10-0815</DatedVehicleJourneyRef>
+							</DatedVehicleJourneyRef>
+							<StopPointRef>de:03241:102</StopPointRef>
+						</FetcherCallRef>
+						<MaxWaitForFeederDuration>PT5M</MaxWaitForFeederDuration>
+						<IsExposedToStaff>true</IsExposedToStaff>
+						<IsExposedToPassengers>true</IsExposedToPassengers>
+					</InterchangeCreation>
+				</ControlAction>
+				<ControlAction xmlns:ifopt="http://www.ifopt.org.uk/ifopt">
+					<CreationTime>2026-03-04T08:15:00+01:00</CreationTime>
+					<ControlActionCode>CA-4</ControlActionCode>
+					<Reason>
+						<StandardCategory>vehicleBreakdown</StandardCategory>
+					</Reason>
+					<VehicleWorkAssignment>
+						<VehicleRef>VEH-4711</VehicleRef>
+						<DeAssignment>false</DeAssignment>
+						<DatedVehicleJourneyRef>
+							<DataFrameRef>2026-03-04</DataFrameRef>
+							<DatedVehicleJourneyRef>10-0815</DatedVehicleJourneyRef>
+						</DatedVehicleJourneyRef>
+					</VehicleWorkAssignment>
+				</ControlAction>
+			</controlActions>
+			<driverMessages>
+				<DriverMessage xmlns:ifopt="http://www.ifopt.org.uk/ifopt">
+					<RecordedAtTime>2026-03-04T08:15:00+01:00</RecordedAtTime>
+					<MessageIdentifier>DM-1</MessageIdentifier>
+					<MessageHeading>Turn back at Kröpcke</MessageHeading>
+					<MessageContents>
+						<MessageContent>Please turn back at Kröpcke and resume the timetable outbound</MessageContent>
+					</MessageContents>
+					<OriginatedByDriver>false</OriginatedByDriver>
+					<CallForMeans>false</CallForMeans>
+					<CallForRepairs>false</CallForRepairs>
+					<DriverScope>
+						<EmployeeRef>driver-42</EmployeeRef>
+					</DriverScope>
+				</DriverMessage>
+			</driverMessages>
+		</ControlActionDelivery>
+	</ServiceDelivery>
+</Siri>

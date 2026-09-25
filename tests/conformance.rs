@@ -11,78 +11,10 @@
 
 mod support;
 
-use siri_rs::cm::ConnectionMonitoringCapabilitiesResponse;
-use siri_rs::ct::ConnectionTimetableCapabilitiesResponse;
-use siri_rs::et::EstimatedTimetableCapabilitiesResponse;
-use siri_rs::fm::FacilityMonitoringCapabilitiesResponse;
-use siri_rs::framework::SituationExchangeCapabilitiesResponse;
-use siri_rs::gm::GeneralMessageCapabilitiesResponse;
-use siri_rs::pt::ProductionTimetableCapabilitiesResponse;
-use siri_rs::sm::{StopMonitoringCapabilitiesResponse, StopMonitoringPermissions};
-use siri_rs::st::StopTimetableCapabilitiesResponse;
-use siri_rs::sx::{PtSituationElement, RoadSituationElement};
-use siri_rs::vm::VehicleMonitoringCapabilitiesResponse;
-use siri_rs::Siri;
-use support::{compare, parse, validate, validator_available, Fixture, VALIDATOR_MISSING};
-
-/// Reads a document into `T` and writes it straight back out.
-///
-/// A token the crate does not recognise is kept and written back as it was, so a
-/// field transcribed against the wrong enumeration would round-trip without a
-/// trace; what is read is therefore checked for one before it is written.
-fn rewrite<T: siri_rs::SiriRoot + std::fmt::Debug>(xml: &str) -> Result<String, String> {
-    let document = siri_rs::from_str::<T>(xml).map_err(|error| error.to_string())?;
-    let read = format!("{document:?}");
-    if let Some(at) = read.find("Unrecognised(") {
-        let end = read[at..].find(')').map_or(read.len(), |close| at + close + 1);
-        return Err(format!("read a token the crate does not recognise: {}", &read[at..end]));
-    }
-    siri_rs::to_string_pretty(&document).map_err(|error| error.to_string())
-}
-
-/// Reads a document into the type its root element names, then writes it back out.
-///
-/// SIRI declares every message as a global element, so a document may be rooted at
-/// something other than `<Siri>`. Every root the fixtures use is listed here; an
-/// unlisted one is reported as a failure rather than skipped quietly.
-fn round_trip(root: &str, xml: &str) -> Result<String, String> {
-    let written = match root {
-        "Siri" => rewrite::<Siri>(xml),
-        "ConnectionMonitoringCapabilitiesResponse" => {
-            rewrite::<ConnectionMonitoringCapabilitiesResponse>(xml)
-        }
-        "ConnectionTimetableCapabilitiesResponse" => {
-            rewrite::<ConnectionTimetableCapabilitiesResponse>(xml)
-        }
-        "EstimatedTimetableCapabilitiesResponse" => {
-            rewrite::<EstimatedTimetableCapabilitiesResponse>(xml)
-        }
-        "FacilityMonitoringCapabilitiesResponse" => {
-            rewrite::<FacilityMonitoringCapabilitiesResponse>(xml)
-        }
-        "GeneralMessageCapabilitiesResponse" => rewrite::<GeneralMessageCapabilitiesResponse>(xml),
-        "ProductionTimetableCapabilitiesResponse" => {
-            rewrite::<ProductionTimetableCapabilitiesResponse>(xml)
-        }
-        "PtSituationElement" => rewrite::<PtSituationElement>(xml),
-        "RoadSituationElement" => rewrite::<RoadSituationElement>(xml),
-        "SituationExchangeCapabilitiesResponse" => {
-            rewrite::<SituationExchangeCapabilitiesResponse>(xml)
-        }
-        "StopMonitoringCapabilitiesResponse" => rewrite::<StopMonitoringCapabilitiesResponse>(xml),
-        "StopMonitoringPermissions" => rewrite::<StopMonitoringPermissions>(xml),
-        "StopTimetableCapabilitiesResponse" => rewrite::<StopTimetableCapabilitiesResponse>(xml),
-        "VehicleMonitoringCapabilitiesResponse" => {
-            rewrite::<VehicleMonitoringCapabilitiesResponse>(xml)
-        }
-        other => {
-            return Err(format!(
-                "no document type is registered for root element <{other}>"
-            ))
-        }
-    };
-    written.map_err(|error| format!("cannot round-trip: {error}"))
-}
+use siri_rs::sx::RoadSituationElement;
+use support::{
+    compare, parse, round_trip, validate_fixture, validator_available, Fixture, VALIDATOR_MISSING,
+};
 
 /// Reads every document, writes it back and reports each one that lost, invented or
 /// reordered content.
@@ -120,7 +52,7 @@ fn written_documents_the_validator_rejects(fixtures: Vec<Fixture>) -> Vec<String
                 continue;
             }
         };
-        if let Err(complaint) = validate(&written) {
+        if let Err(complaint) = validate_fixture(&fixture.name, &written) {
             failures.push(format!("{}:\n{complaint}", fixture.name));
         }
     }
@@ -152,8 +84,10 @@ fn every_official_example_is_written_back_as_schema_valid_xml() {
 }
 
 /// The derived documents cover content the official examples leave uncovered —
-/// extension payloads and an embedded DATEX II record. They are held to the same
-/// bar; `tests/fixtures/derived/README.md` says what each is derived from.
+/// extension payloads, an embedded DATEX II record, elements the schema gives a
+/// default value, and the Control Actions messages the standard publishes no
+/// example of. They are held to the same bar; `tests/fixtures/derived/README.md`
+/// says what each is derived from.
 #[test]
 fn every_derived_example_round_trips_without_loss() {
     let failures = round_trip_differences(support::derived_fixtures());
@@ -187,7 +121,7 @@ fn the_fixtures_are_valid_siri_to_begin_with() {
     let mut failures = Vec::new();
 
     for fixture in support::fixtures().into_iter().chain(support::derived_fixtures()) {
-        if let Err(complaint) = validate(&fixture.xml) {
+        if let Err(complaint) = validate_fixture(&fixture.name, &fixture.xml) {
             failures.push(format!("{}:\n{complaint}", fixture.name));
         }
     }
@@ -297,8 +231,26 @@ fn the_expected_documents_are_covered() {
 #[test]
 fn the_expected_derived_documents_are_covered() {
     const EXPECTED: &[&str] = &[
+        "ca/exc_controlAction_capabilitiesResponse.xml",
+        "ca/exc_controlAction_delivery.xml",
+        "ca/exc_controlAction_request.xml",
+        "capability/exd_allServices_capabilitiesRequest_permissions.xml",
+        "cm/exc_connectionMonitoring_capabilitiesResponse_policy.xml",
+        "cm/exc_connectionMonitoring_request_detail.xml",
+        "discovery/exd_stopPoints_discoveryRequest_detail.xml",
+        "et/ext_estimatedTimetable_response_formation.xml",
+        "et/ext_estimatedTimetable_subscriptionRequest_policy.xml",
+        "fm/exf_facilityMonitoring_capabilitiesResponse_filters.xml",
         "framework/exa_checkStatus_request_extensions.xml",
+        "pt/ext_productionTimetable_capabilitiesResponse_filters.xml",
+        "pt/ext_productionTimetable_response_interchange.xml",
+        "sm/exs_stopMonitoring_capabilitiesResponse_volume.xml",
+        "sm/exs_stopMonitoring_response_rail.xml",
+        "sx/exx_situationExchange_capabilityResponse_filters.xml",
+        "sx/exx_situationExchange_request_filters.xml",
+        "sx/exx_situationExchange_response_scope.xml",
         "sx/exx_situationExchange_road_datex.xml",
+        "vm/exv_vehicleMonitoring_capabilitiesResponse_volume.xml",
     ];
 
     let present: Vec<String> = support::derived_fixtures()

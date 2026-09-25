@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ControlActionCapabilitiesResponse xmlns="http://www.siri.org.uk/siri">
+	<ResponseTimestamp>2026-03-04T08:15:00+01:00</ResponseTimestamp>
+	<Status>true</Status>
+	<ControlActionServiceCapabilities>
+		<TopicFiltering>
+			<DefaultPreviewInterval>PT60M</DefaultPreviewInterval>
+			<ByStartTime>true</ByStartTime>
+			<FilterByMode>true</FilterByMode>
+			<FilterByNetworkRef>true</FilterByNetworkRef>
+			<FilterByLineRef>true</FilterByLineRef>
+		</TopicFiltering>
+		<RequestPolicy>
+			<NationalLanguage>de</NationalLanguage>
+			<WgsDecimalDegrees/>
+			<HasMaximumControlActions>true</HasMaximumControlActions>
+		</RequestPolicy>
+		<ResponseFeatures>
+			<HasSituations>false</HasSituations>
+		</ResponseFeatures>
+	</ControlActionServiceCapabilities>
+</ControlActionCapabilitiesResponse>

@@ -16,6 +16,19 @@ use chrono::{DateTime, FixedOffset};
 use quick_xml::events::Event;
 use quick_xml::name::ResolveResult;
 use quick_xml::NsReader;
+use siri_rs::ca::ControlActionCapabilitiesResponse;
+use siri_rs::cm::ConnectionMonitoringCapabilitiesResponse;
+use siri_rs::ct::ConnectionTimetableCapabilitiesResponse;
+use siri_rs::et::EstimatedTimetableCapabilitiesResponse;
+use siri_rs::fm::FacilityMonitoringCapabilitiesResponse;
+use siri_rs::framework::SituationExchangeCapabilitiesResponse;
+use siri_rs::gm::GeneralMessageCapabilitiesResponse;
+use siri_rs::pt::ProductionTimetableCapabilitiesResponse;
+use siri_rs::sm::{StopMonitoringCapabilitiesResponse, StopMonitoringPermissions};
+use siri_rs::st::StopTimetableCapabilitiesResponse;
+use siri_rs::sx::{PtSituationElement, RoadSituationElement};
+use siri_rs::vm::VehicleMonitoringCapabilitiesResponse;
+use siri_rs::Siri;
 
 /// Directory holding the official example documents and schemas.
 pub fn fixtures_dir() -> PathBuf {
@@ -107,6 +120,66 @@ pub fn root_element(xml: &str) -> String {
             _ => {}
         }
     }
+}
+
+/// Reads a document into `T` and writes it straight back out.
+///
+/// A token the crate does not recognise is kept and written back as it was, so a
+/// field transcribed against the wrong enumeration would round-trip without a
+/// trace; what is read is therefore checked for one before it is written.
+fn rewrite<T: siri_rs::SiriRoot + std::fmt::Debug>(xml: &str) -> Result<String, String> {
+    let document = siri_rs::from_str::<T>(xml).map_err(|error| error.to_string())?;
+    let read = format!("{document:?}");
+    if let Some(at) = read.find("Unrecognised(") {
+        let end = read[at..].find(')').map_or(read.len(), |close| at + close + 1);
+        return Err(format!("read a token the crate does not recognise: {}", &read[at..end]));
+    }
+    siri_rs::to_string_pretty(&document).map_err(|error| error.to_string())
+}
+
+/// Reads a document into the type its root element names, then writes it back out.
+///
+/// SIRI declares every message as a global element, so a document may be rooted at
+/// something other than `<Siri>`. Every root the fixtures use is listed here; an
+/// unlisted one is reported as a failure rather than skipped quietly.
+pub fn round_trip(root: &str, xml: &str) -> Result<String, String> {
+    let written = match root {
+        "Siri" => rewrite::<Siri>(xml),
+        "ConnectionMonitoringCapabilitiesResponse" => {
+            rewrite::<ConnectionMonitoringCapabilitiesResponse>(xml)
+        }
+        "ConnectionTimetableCapabilitiesResponse" => {
+            rewrite::<ConnectionTimetableCapabilitiesResponse>(xml)
+        }
+        "ControlActionCapabilitiesResponse" => rewrite::<ControlActionCapabilitiesResponse>(xml),
+        "EstimatedTimetableCapabilitiesResponse" => {
+            rewrite::<EstimatedTimetableCapabilitiesResponse>(xml)
+        }
+        "FacilityMonitoringCapabilitiesResponse" => {
+            rewrite::<FacilityMonitoringCapabilitiesResponse>(xml)
+        }
+        "GeneralMessageCapabilitiesResponse" => rewrite::<GeneralMessageCapabilitiesResponse>(xml),
+        "ProductionTimetableCapabilitiesResponse" => {
+            rewrite::<ProductionTimetableCapabilitiesResponse>(xml)
+        }
+        "PtSituationElement" => rewrite::<PtSituationElement>(xml),
+        "RoadSituationElement" => rewrite::<RoadSituationElement>(xml),
+        "SituationExchangeCapabilitiesResponse" => {
+            rewrite::<SituationExchangeCapabilitiesResponse>(xml)
+        }
+        "StopMonitoringCapabilitiesResponse" => rewrite::<StopMonitoringCapabilitiesResponse>(xml),
+        "StopMonitoringPermissions" => rewrite::<StopMonitoringPermissions>(xml),
+        "StopTimetableCapabilitiesResponse" => rewrite::<StopTimetableCapabilitiesResponse>(xml),
+        "VehicleMonitoringCapabilitiesResponse" => {
+            rewrite::<VehicleMonitoringCapabilitiesResponse>(xml)
+        }
+        other => {
+            return Err(format!(
+                "no document type is registered for root element <{other}>"
+            ))
+        }
+    };
+    written.map_err(|error| format!("cannot round-trip: {error}"))
 }
 
 /// An XML element reduced to what the schema treats as content.
@@ -313,6 +386,17 @@ pub fn validate(xml: &str) -> Result<(), String> {
 /// See [`substitution_group_schema_path`] for when that is the one to use.
 pub fn validate_with_substitution_groups(xml: &str) -> Result<(), String> {
     validate_against(xml, substitution_group_schema_path())
+}
+
+/// Validates a fixture document against the schema that can judge it: the
+/// substitution-group variant for a Control Actions document, which lives under
+/// `ca/` in the fixture directories, and the root schema for every other.
+pub fn validate_fixture(name: &str, xml: &str) -> Result<(), String> {
+    if name.replace('\\', "/").starts_with("ca/") {
+        validate_with_substitution_groups(xml)
+    } else {
+        validate(xml)
+    }
 }
 
 fn validate_against(xml: &str, schema: PathBuf) -> Result<(), String> {

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Siri xmlns="http://www.siri.org.uk/siri" version="2.1">
+	<ServiceRequest>
+		<RequestTimestamp>2026-03-04T08:15:00+01:00</RequestTimestamp>
+		<RequestorRef>CONTROL-ROOM</RequestorRef>
+		<ControlActionRequest>
+			<RequestTimestamp>2026-03-04T08:15:00+01:00</RequestTimestamp>
+			<PreviewInterval>PT2H</PreviewInterval>
+			<OperatorRef>USTRA</OperatorRef>
+			<LineRef>10</LineRef>
+			<IncludeDriverMessages>false</IncludeDriverMessages>
+			<IncludeVehicleDetectings>false</IncludeVehicleDetectings>
+			<Language>de</Language>
+			<IncludeSituations>false</IncludeSituations>
+		</ControlActionRequest>
+	</ServiceRequest>
+</Siri>
