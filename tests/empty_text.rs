@@ -252,9 +252,9 @@ fn whitespace_alone_in_an_enumeration_is_kept_as_the_token_it_is_not() {
 /// A check-status request carrying the given extension payload.
 fn check_status_request_with(extensions: &str) -> String {
     format!(
-        r#"<Siri xmlns="http://www.siri.org.uk/siri" version="2.0"><CheckStatusRequest>\
-        <RequestTimestamp>2004-12-17T09:30:47-05:00</RequestTimestamp><RequestorRef>NADER</RequestorRef>\
-        {extensions}</CheckStatusRequest></Siri>"#
+        "<Siri xmlns=\"http://www.siri.org.uk/siri\" version=\"2.0\"><CheckStatusRequest>\
+         <RequestTimestamp>2004-12-17T09:30:47-05:00</RequestTimestamp>\
+         <RequestorRef>NADER</RequestorRef>{extensions}</CheckStatusRequest></Siri>"
     )
 }
 
