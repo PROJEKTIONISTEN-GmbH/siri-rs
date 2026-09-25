@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.1 — 2026-09-25
+
+### Fixed
+
+- Empty text / posList elements no longer fail deserialisation. An element of
+  `NaturalLanguageString`, `DefaultedText` or `PosList` with no content —
+  `<Summary/>`, `<Summary></Summary>`, `<gml:posList/>` — failed the whole
+  document with "missing field `$text`"; it is now read as an empty `value`, and
+  the rest of the document with it. An empty position list is valid GML. An
+  empty text is not valid SIRI, which asks for at least one character, but real
+  feeds carry one; it is read, and written back as it stands.
+
 ## 2.0.0 — 2026-09-14
 
 A review of 1.0.0 read the whole crate against the schemas and against what a
