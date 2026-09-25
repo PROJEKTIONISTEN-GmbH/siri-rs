@@ -75,19 +75,16 @@ fn deliveries(document: &Siri) -> &[ServiceDeliveryPayload] {
         .deliveries
 }
 
+/// The summaries of every situation in the delivery, public-transport ones first.
 fn summaries(document: &Siri) -> Vec<&DefaultedText> {
     let Some(ServiceDeliveryPayload::SituationExchangeDelivery(delivery)) = deliveries(document).first()
     else {
         panic!("the delivery is a situation exchange delivery");
     };
-    delivery
-        .situations
-        .as_ref()
-        .expect("the delivery carries situations")
-        .pt_situation_element
-        .iter()
-        .flat_map(|situation| &situation.summary)
-        .collect()
+    let situations = delivery.situations.as_ref().expect("the delivery carries situations");
+    let pt = situations.pt_situation_element.iter().flat_map(|situation| &situation.summary);
+    let road = situations.road_situation_element.iter().flat_map(|situation| &situation.summary);
+    pt.chain(road).collect()
 }
 
 fn published_line_names(document: &Siri) -> Vec<&NaturalLanguageString> {
@@ -134,7 +131,7 @@ fn an_empty_summary_is_read_as_empty_text_and_the_situations_around_it_are_kept(
         let document = read_whole(&xml);
 
         let summaries = summaries(&document);
-        assert_eq!(summaries.len(), 2, "{empty}: both situations keep their summary");
+        assert_eq!(summaries.len(), 2, "{empty}: the road situation keeps its summary too");
         assert_eq!(summaries[0].value, "", "{empty}");
         assert_eq!(summaries[0].lang.as_deref(), lang, "{empty}");
         assert_eq!(summaries[0].overridden, None, "{empty}");
