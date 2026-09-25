@@ -51,13 +51,18 @@ siri_ref! {
 /// SIRI carries free text in `NaturalLanguageStringStructure`, which is element
 /// content plus an `xml:lang` attribute. Repeating the element with different
 /// languages is how SIRI expresses a multilingual value.
+///
+/// The schema requires at least one character, so an empty text is not
+/// schema-conformant. Feeds carry one all the same, and it is read as an empty
+/// [`value`](Self::value) rather than failing the document around it. It is written
+/// back as it stands: a value left empty produces an element the schema refuses.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NaturalLanguageString {
     /// The `xml:lang` tag of this text, e.g. `DE`.
     #[serde(rename = "@xml:lang", alias = "@lang", default, skip_serializing_if = "Option::is_none")]
     pub lang: Option<String>,
-    /// The text itself.
-    #[serde(rename = "$text")]
+    /// The text itself; empty when the element has no content.
+    #[serde(rename = "$text", default)]
     pub value: String,
 }
 
@@ -93,6 +98,9 @@ pub type NaturalLanguagePlaceName = NaturalLanguageString;
 ///
 /// `overridden` distinguishes text an operator typed by hand (`true`) from text a
 /// system generated out of the situation's classifiers (`false`).
+///
+/// As with [`NaturalLanguageString`], an empty text is not schema-conformant; it is
+/// read as an empty [`value`](Self::value) and written back as it stands.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DefaultedText {
     /// The `xml:lang` tag of this text.
@@ -101,8 +109,8 @@ pub struct DefaultedText {
     /// Whether the text replaces the value that would otherwise be derived.
     #[serde(rename = "@overridden", default, skip_serializing_if = "Option::is_none")]
     pub overridden: Option<bool>,
-    /// The text itself.
-    #[serde(rename = "$text")]
+    /// The text itself; empty when the element has no content.
+    #[serde(rename = "$text", default)]
     pub value: String,
 }
 

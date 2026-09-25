@@ -289,6 +289,9 @@ impl LinearRing {
 }
 
 /// A list of positions, written as one whitespace-separated run of numbers.
+///
+/// GML declares the list as a list type, so a list of no positions is valid and is
+/// read and written as an empty [`value`](Self::value).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PosList {
     /// How many numbers make up one position; two unless stated otherwise.
@@ -297,8 +300,8 @@ pub struct PosList {
     /// How many positions the list holds.
     #[serde(rename = "@count", default, skip_serializing_if = "Option::is_none")]
     pub count: Option<u64>,
-    /// The numbers themselves.
-    #[serde(rename = "$text")]
+    /// The numbers themselves; empty for a list of no positions.
+    #[serde(rename = "$text", default)]
     pub value: String,
 }
 
