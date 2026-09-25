@@ -55,7 +55,9 @@ siri_ref! {
 /// The schema requires at least one character, so an empty text is not
 /// schema-conformant. Feeds carry one all the same, and it is read as an empty
 /// [`value`](Self::value) rather than failing the document around it. It is written
-/// back as it stands: a value left empty produces an element the schema refuses.
+/// back as it stands: a value left empty produces an element the schema refuses. A
+/// text of whitespace alone is not empty: it is read as that whitespace and written
+/// back the same.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NaturalLanguageString {
     /// The `xml:lang` tag of this text, e.g. `DE`.
@@ -655,7 +657,8 @@ pub struct AnyContent {
 /// again, in that order, and the order is the content. The reader drops the
 /// whitespace at either end of a run of text that borders an element, so what
 /// comes back is `Hello<b>world</b>again`; the words, the element and their order
-/// are kept, the spaces between them are not.
+/// are kept, the spaces between them are not. A text of whitespace alone that is
+/// the whole content of an element borders no element and is kept as written.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 pub enum Node {

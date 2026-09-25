@@ -57,7 +57,8 @@
 //! # Speed
 //!
 //! [`from_str`] hands the document to the deserialiser borrowed unless it writes an
-//! element with a namespace prefix, and [`to_string`] produces the finished
+//! element with a namespace prefix or an element holding nothing but whitespace,
+//! and [`to_string`] produces the finished
 //! document — declaration, namespace and body — into a single buffer. What is left
 //! is the profile the finished program is built with, which a library cannot impose
 //! on its consumer: a program that wants the calls into this crate optimised across

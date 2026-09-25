@@ -162,8 +162,9 @@ and wants it on the wire.
 Two things do not come back. A prefix on an attribute *inside* such a payload: the
 reader reports attributes by local name, so `xsi:type="…"` returns as `type="…"`. And
 the space at either end of a run of text that borders an element: the reader drops
-it, so `Hello <b>world</b> again` is written back as `Hello<b>world</b>again`.
-`AnyContent`'s documentation says so, and tests pin both.
+it, so `Hello <b>world</b> again` is written back as `Hello<b>world</b>again`. A text
+of whitespace alone is kept, though: `<Note>   </Note>` comes back as it was.
+`AnyContent`'s documentation says so, and tests pin all three.
 
 ## Running an endpoint
 
@@ -398,8 +399,8 @@ Two things follow from the measurements and are worth knowing when reading the c
 
 - **Reading borrows.** A document written without namespace prefixes — how most feeds
   are written — is handed to the deserialiser as it arrived, with no copy and no
-  rewrite. Only a document that does write a prefixed element is rewritten, once,
-  before it is read.
+  rewrite. Only a document that writes a prefixed element, or an element holding
+  nothing but whitespace, is rewritten, once, before it is read.
 - **Writing fills one buffer.** The declaration, the namespace and the body are
   produced into a single string rather than assembled from several.
 

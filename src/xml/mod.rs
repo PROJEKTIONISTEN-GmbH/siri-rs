@@ -22,6 +22,7 @@
 
 pub mod namespace;
 pub(crate) mod token_list;
+mod whitespace;
 
 use serde::{de::DeserializeOwned, Serialize};
 
@@ -39,12 +40,15 @@ pub trait SiriRoot: Serialize + DeserializeOwned {
 ///
 /// Accepts both namespace bindings used in practice — the SIRI namespace as the
 /// document default, or bound to a prefix — and rejects documents whose root
-/// element is not the one `T` describes.
+/// element is not the one `T` describes. An element whose content is whitespace
+/// alone is read as that whitespace, which the deserialiser would otherwise drop.
 pub fn from_str<T: SiriRoot>(xml: &str) -> Result<T> {
     let normalised = namespace::normalise(xml)?;
-    check_root::<T>(&normalised)?;
-    let rewritten = matches!(normalised, std::borrow::Cow::Owned(_));
-    deserialize(&normalised, !rewritten)
+    let kept = whitespace::preserve(&normalised);
+    check_root::<T>(&kept)?;
+    let rewritten = matches!(normalised, std::borrow::Cow::Owned(_))
+        || matches!(kept, std::borrow::Cow::Owned(_));
+    deserialize(&kept, !rewritten)
 }
 
 /// Reads a value out of `xml`, reporting where in the document a failure was.
