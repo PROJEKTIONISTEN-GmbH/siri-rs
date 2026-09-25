@@ -43,7 +43,7 @@ pub struct EstimatedTimetableRequest {
     #[serde(
         rename = "VehicleMode",
         default,
-        deserialize_with = "crate::xml::token_list::deserialize",
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
         skip_serializing_if = "Vec::is_empty"
     )]
     pub vehicle_mode: Vec<VehicleModesOfTransport>,
@@ -54,22 +54,52 @@ pub struct EstimatedTimetableRequest {
     #[serde(rename = "StopPointRef", default, skip_serializing_if = "Vec::is_empty")]
     pub stop_point_ref: Vec<StopPointRef>,
     /// Languages the requestor would like texts in, most preferred first.
-    #[serde(rename = "Language", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub language: Vec<String>,
     /// Whether to include every translation of a text rather than only one.
-    #[serde(rename = "IncludeTranslations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeTranslations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_translations: Option<bool>,
     /// Whether to include the interchanges planned around the journeys.
-    #[serde(rename = "IncludeInterchanges", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeInterchanges",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_interchanges: Option<bool>,
     /// Whether to include the relations to journeys joined, split or continued.
-    #[serde(rename = "IncludeJourneyRelations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeJourneyRelations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_journey_relations: Option<bool>,
     /// Whether to include how the trains are put together.
-    #[serde(rename = "IncludeTrainFormations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeTrainFormations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_train_formations: Option<bool>,
     /// How much detail to give per journey.
-    #[serde(rename = "EstimatedTimetableDetailLevel", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "EstimatedTimetableDetailLevel",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_calls",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub estimated_timetable_detail_level: Option<EstimatedTimetableDetail>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -134,16 +164,31 @@ pub struct EstimatedTimetableSubscriptionRequest {
     #[serde(rename = "EstimatedTimetableRequest")]
     pub estimated_timetable_request: EstimatedTimetableRequest,
     /// Whether to send only what has changed rather than the full set each time.
-    #[serde(rename = "IncrementalUpdates", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncrementalUpdates",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub incremental_updates: Option<bool>,
     /// How large a change has to be before it is worth a delivery.
     #[serde(rename = "ChangeBeforeUpdates", default, skip_serializing_if = "Option::is_none")]
     pub change_before_updates: Option<Duration>,
     /// Whether to leave out updates that only restate calls already made.
-    #[serde(rename = "SkipRecordedCallUpdates", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "SkipRecordedCallUpdates",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub skip_recorded_call_updates: Option<bool>,
     /// Whether to send *only* the updates to calls already made.
-    #[serde(rename = "IncludeOnlyRecordedCallUpdates", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeOnlyRecordedCallUpdates",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_only_recorded_call_updates: Option<bool>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]

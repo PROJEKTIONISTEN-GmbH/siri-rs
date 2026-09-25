@@ -33,7 +33,12 @@ pub struct ConnectionMonitoringCapabilitiesResponse {
     #[serde(rename = "DelegatorRef", default, skip_serializing_if = "Option::is_none")]
     pub delegator_ref: Option<ParticipantRef>,
     /// Whether the capability request was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the capability request could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -119,19 +124,39 @@ pub struct ConnectionMonitoringServiceCapabilities {
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub struct ConnectionMonitoringTopicFiltering {
     /// The look-ahead window applied when a request does not name one.
-    #[serde(rename = "DefaultPreviewInterval", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DefaultPreviewInterval",
+        default,
+        deserialize_with = "crate::xml::schema_default::duration_pt60m",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub default_preview_interval: Option<Duration>,
     /// Whether connections can be narrowed to one connection link.
-    #[serde(rename = "FilterByConnectionLinkRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByConnectionLinkRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_connection_link_ref: Option<bool>,
     /// Whether connections can be narrowed to named feeder journeys.
     ///
     /// The schema fixes this to `true`: naming the journeys is one of the two ways
     /// a connection-monitoring request states its topic.
-    #[serde(rename = "FilterByJourney", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByJourney",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_journey: Option<bool>,
     /// Whether they can be narrowed to a window of arrival times instead.
-    #[serde(rename = "FilterByTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByTime",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_time: Option<bool>,
 }
 
@@ -148,7 +173,12 @@ pub struct ConnectionMonitoringRequestPolicy {
     #[serde(rename = "$value")]
     pub coordinate_format: CoordinateFormat,
     /// Whether the service reports only feeders run by other operators.
-    #[serde(rename = "ForeignJourneysOnly", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ForeignJourneysOnly",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub foreign_journeys_only: Option<bool>,
 }
 

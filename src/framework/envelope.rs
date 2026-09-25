@@ -364,13 +364,23 @@ pub struct ServiceDelivery {
     #[serde(rename = "DelegatorRef", default, skip_serializing_if = "Option::is_none")]
     pub delegator_ref: Option<ParticipantRef>,
     /// Whether the request was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the request could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
     pub error_condition: Option<ErrorCondition<DeliveryError>>,
     /// Whether further parts of this delivery follow.
-    #[serde(rename = "MoreData", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MoreData",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub more_data: Option<bool>,
     /// The functional service deliveries.
     #[serde(rename = "$value")]
@@ -536,7 +546,12 @@ pub struct ServiceRequestContext {
     #[serde(rename = "DataNameSpaces", default, skip_serializing_if = "Option::is_none")]
     pub data_name_spaces: Option<DataNameSpaces>,
     /// Languages the requestor would like texts in, most preferred first.
-    #[serde(rename = "Language", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub language: Vec<String>,
     /// Requests that positions be given as WGS 84 decimal degrees.
     #[serde(rename = "WgsDecimalDegrees", default, skip_serializing_if = "Option::is_none")]
@@ -557,19 +572,39 @@ pub struct ServiceRequestContext {
     #[serde(rename = "RequestTimeout", default, skip_serializing_if = "Option::is_none")]
     pub request_timeout: Option<Duration>,
     /// Whether deliveries are pushed directly or fetched after a notification.
-    #[serde(rename = "DeliveryMethod", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DeliveryMethod",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_direct",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub delivery_method: Option<DeliveryMethod>,
     /// Whether a delivery may be split over several messages.
-    #[serde(rename = "MultipartDespatch", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MultipartDespatch",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub multipart_despatch: Option<bool>,
     /// Whether the consumer will acknowledge each delivery.
-    #[serde(rename = "ConfirmDelivery", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ConfirmDelivery",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub confirm_delivery: Option<bool>,
     /// How many subscriptions the requestor may hold at once.
     #[serde(rename = "MaximimumNumberOfSubscriptions", default, skip_serializing_if = "Option::is_none")]
     pub maximimum_number_of_subscriptions: Option<u64>,
     /// Which sources of prediction the requestor accepts.
-    #[serde(rename = "AllowedPredictors", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AllowedPredictors",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_anyone",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub allowed_predictors: Option<Predictors>,
     /// Name of the prediction function the requestor asks for.
     #[serde(rename = "PredictionFunction", default, skip_serializing_if = "Option::is_none")]

@@ -178,6 +178,13 @@ impl Duration {
         Self(format!("PT{seconds}S"))
     }
 
+    /// A lexical form as a document wrote it, kept unchecked — what reading a
+    /// document produces, so that a value read for an element the schema gives a
+    /// default is no different from one read plainly.
+    pub(crate) fn as_written(lexical: String) -> Self {
+        Self(lexical)
+    }
+
     /// The lexical form as written on the wire.
     pub fn as_str(&self) -> &str {
         &self.0
@@ -501,7 +508,12 @@ pub struct HalfOpenTimestampOutputRange {
     #[serde(rename = "EndTime", default, skip_serializing_if = "Option::is_none")]
     pub end_time: Option<DateTime<FixedOffset>>,
     /// How to read an absent end: as short term, long term, or simply unknown.
-    #[serde(rename = "EndTimeStatus", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "EndTimeStatus",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_undefined",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub end_time_status: Option<EndTimeStatus>,
 }
 
@@ -539,7 +551,12 @@ pub struct HalfOpenTimestampInputRange {
     #[serde(rename = "EndTime", default, skip_serializing_if = "Option::is_none")]
     pub end_time: Option<DateTime<FixedOffset>>,
     /// How exactly the end is to be taken; the default is to the second.
-    #[serde(rename = "EndTimePrecision", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "EndTimePrecision",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_second",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub end_time_precision: Option<EndTimePrecision>,
 }
 

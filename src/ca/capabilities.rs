@@ -33,7 +33,12 @@ pub struct ControlActionCapabilitiesResponse {
     #[serde(rename = "DelegatorRef", default, skip_serializing_if = "Option::is_none")]
     pub delegator_ref: Option<ParticipantRef>,
     /// Whether the capability request was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the capability request could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -118,19 +123,44 @@ pub struct ControlActionServiceCapabilities {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ControlActionTopicFiltering {
     /// The look-ahead window applied when a request does not name one.
-    #[serde(rename = "DefaultPreviewInterval", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DefaultPreviewInterval",
+        default,
+        deserialize_with = "crate::xml::schema_default::duration_pt60m",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub default_preview_interval: Option<Duration>,
     /// Whether the look-ahead window may start at a stated time.
-    #[serde(rename = "ByStartTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ByStartTime",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub by_start_time: Option<bool>,
     /// Whether actions can be narrowed to one mode of transport.
-    #[serde(rename = "FilterByMode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByMode",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_mode: Option<bool>,
     /// Whether they can be narrowed to one network.
-    #[serde(rename = "FilterByNetworkRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByNetworkRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_network_ref: Option<bool>,
     /// Whether they can be narrowed to one line.
-    #[serde(rename = "FilterByLineRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByLineRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_line_ref: Option<bool>,
 }
 
@@ -147,7 +177,12 @@ pub struct ControlActionRequestPolicy {
     #[serde(rename = "$value")]
     pub coordinate_format: CoordinateFormat,
     /// Whether a request may cap how many actions come back.
-    #[serde(rename = "HasMaximumControlActions", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasMaximumControlActions",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_maximum_control_actions: Option<bool>,
 }
 
@@ -167,13 +202,28 @@ impl ControlActionRequestPolicy {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ControlActionResponseFeatures {
     /// Whether the responses name the situations the actions belong to.
-    #[serde(rename = "HasSituations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasSituations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_situations: Option<bool>,
     /// Whether they carry the messages exchanged with drivers.
-    #[serde(rename = "HasDriverMessages", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasDriverMessages",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_driver_messages: Option<bool>,
     /// Whether they carry vehicles detected by trackside equipment.
-    #[serde(rename = "HasVehicleDetectings", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasVehicleDetectings",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_vehicle_detectings: Option<bool>,
 }
 

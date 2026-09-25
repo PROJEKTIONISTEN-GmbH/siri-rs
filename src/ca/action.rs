@@ -334,7 +334,12 @@ pub struct PointInJourneyPatternRef {
     #[serde(rename = "QuayRef", default, skip_serializing_if = "Option::is_none")]
     pub quay_ref: Option<QuayRef>,
     /// Whether the vehicle's passing time there is a timing point.
-    #[serde(rename = "TimingPoint", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TimingPoint",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub timing_point: Option<bool>,
     /// Which visit to the point this is, when the journey calls more than once.
     #[serde(rename = "VisitNumber", default, skip_serializing_if = "Option::is_none")]
@@ -393,7 +398,12 @@ pub struct TargetPoint {
     #[serde(rename = "QuayRef", default, skip_serializing_if = "Option::is_none")]
     pub quay_ref: Option<QuayRef>,
     /// Whether the passing time there is a timing point.
-    #[serde(rename = "TimingPoint", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TimingPoint",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub timing_point: Option<bool>,
 }
 
@@ -426,7 +436,12 @@ pub struct DatedCallRef {
     #[serde(rename = "QuayRef", default, skip_serializing_if = "Option::is_none")]
     pub quay_ref: Option<QuayRef>,
     /// Whether the passing time there is a timing point.
-    #[serde(rename = "TimingPoint", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TimingPoint",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub timing_point: Option<bool>,
     /// Which visit to the stop this is, when the journey calls more than once.
     #[serde(rename = "VisitNumber", default, skip_serializing_if = "Option::is_none")]
@@ -653,10 +668,20 @@ pub struct CallCancellationAction {
     #[serde(rename = "CallsBetweenPoints", default, skip_serializing_if = "Option::is_none")]
     pub calls_between_points: Option<CallsBetweenPoints>,
     /// Whether the arrivals at those calls are cancelled.
-    #[serde(rename = "ConcernsArrivals", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ConcernsArrivals",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub concerns_arrivals: Option<bool>,
     /// Whether the departures from them are.
-    #[serde(rename = "ConcernsDepartures", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ConcernsDepartures",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub concerns_departures: Option<bool>,
 }
 
@@ -910,7 +935,12 @@ pub struct RelativeTime {
     #[serde(rename = "Offset")]
     pub offset: Duration,
     /// How the offset is carried over to the calls that follow.
-    #[serde(rename = "ChangeModel", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ChangeModel",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_minimal",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub change_model: Option<ChangeModel>,
 }
 
@@ -1034,13 +1064,28 @@ pub struct ExtraConnection {
     #[serde(rename = "MinChangeDuration", default, skip_serializing_if = "Option::is_none")]
     pub min_change_duration: Option<Duration>,
     /// Whether passengers can stay in the vehicle, both journeys being the same one.
-    #[serde(rename = "StaySeated", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StaySeated",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stay_seated: Option<bool>,
     /// Whether staff are to be told about the interchange.
-    #[serde(rename = "IsExposedToStaff", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IsExposedToStaff",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub is_exposed_to_staff: Option<bool>,
     /// Whether passengers are.
-    #[serde(rename = "IsExposedToPassengers", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IsExposedToPassengers",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub is_exposed_to_passengers: Option<bool>,
 }
 
@@ -1124,7 +1169,12 @@ pub struct VehicleWorkAssignment {
     #[serde(rename = "VehicleRef")]
     pub vehicle_ref: VehicleRef,
     /// Whether the vehicle is being taken off the work rather than put on it.
-    #[serde(rename = "DeAssignment", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DeAssignment",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub de_assignment: Option<bool>,
     /// The driver or crew logged in to it.
     #[serde(rename = "DriverRef", default, skip_serializing_if = "Option::is_none")]
@@ -1182,7 +1232,12 @@ impl VehicleWorkAssignment {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct SituationDescription {
     /// The language the texts are in unless one says otherwise.
-    #[serde(rename = "Language", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub language: Option<String>,
     /// A headline, one per language offered.
     #[serde(rename = "Summary", default, skip_serializing_if = "Vec::is_empty")]

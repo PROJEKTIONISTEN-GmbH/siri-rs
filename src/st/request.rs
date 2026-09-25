@@ -34,10 +34,20 @@ pub struct StopTimetableRequest {
     #[serde(rename = "DirectionRef", default, skip_serializing_if = "Option::is_none")]
     pub direction_ref: Option<DirectionRef>,
     /// Languages the requestor would like texts in, most preferred first.
-    #[serde(rename = "Language", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub language: Vec<String>,
     /// Whether to include every translation of a text rather than only one.
-    #[serde(rename = "IncludeTranslations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeTranslations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_translations: Option<bool>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -90,7 +100,12 @@ pub struct StopTimetableSubscriptionRequest {
     #[serde(rename = "StopTimetableRequest")]
     pub stop_timetable_request: StopTimetableRequest,
     /// Whether to send only what has changed rather than the full set each time.
-    #[serde(rename = "IncrementalUpdates", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncrementalUpdates",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub incremental_updates: Option<bool>,
     /// How large a change has to be before it is worth a delivery.
     #[serde(rename = "ChangeBeforeUpdates", default, skip_serializing_if = "Option::is_none")]

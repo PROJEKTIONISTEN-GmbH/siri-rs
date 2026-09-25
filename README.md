@@ -322,6 +322,14 @@ transcribes, so a mistyped wire value is a test failure rather than a rejected
 message in production. Losing an enumeration from that check is itself a failure:
 the count is compared with the number the crate declares.
 
+Every element the schema declares a default value for is checked against the
+schemas the same way. XML Schema says an element so declared that is written empty
+means the declared value — `<Monitored/>` is `true` — and the declarations are read
+out of the schemas into a table the tests keep in step with them. Every one the
+crate models is emptied in a real document, read as the declared value, written
+back in full, and validated; the official examples carry fewer than half of them,
+so derived documents under `tests/fixtures/derived/` carry the rest.
+
 One service is the exception, and says so: **Control Actions ships no example
 documents at all**, so there is nothing to read back and compare. It is checked
 against the schemas instead — a message is built for every control action the
@@ -428,6 +436,10 @@ better read here than discovered:
   on a subscription and `UpdateInterval` on a vehicle-monitoring request are read
   and kept; the producer delivers what its source answers, every time it is asked.
   A source that wants to send only changes has to remember what it sent.
+- **An empty element with a schema default is written back in full.** `<Monitored/>`
+  reads as `true` and is written as `<Monitored>true</Monitored>`, which the schema
+  holds equal; whether the document spelled the value out is not kept. The one
+  element read the other way is `Allow`, whose `DefaultedBoolean` keeps its wording.
 - **The types are large.** They transcribe the schema, optional fields included, so
   a `MonitoredStopVisit` is 4 304 bytes and an `EstimatedCall` 1 664 — a journey with
   thirty calls costs about 50 KB before any text is stored. Since 2.0 every

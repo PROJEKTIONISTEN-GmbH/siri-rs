@@ -49,13 +49,28 @@ pub struct StopMonitoringRequest {
     #[serde(rename = "DestinationRef", default, skip_serializing_if = "Option::is_none")]
     pub destination_ref: Option<DestinationRef>,
     /// Whether to report arrivals, departures or both.
-    #[serde(rename = "StopVisitTypes", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StopVisitTypes",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_all",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stop_visit_types: Option<StopVisitType>,
     /// Languages the requestor would like texts in, most preferred first.
-    #[serde(rename = "Language", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub language: Vec<String>,
     /// Whether to include every translation of a text rather than only one.
-    #[serde(rename = "IncludeTranslations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeTranslations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_translations: Option<bool>,
     /// At most this many visits altogether.
     #[serde(rename = "MaximumStopVisits", default, skip_serializing_if = "Option::is_none")]
@@ -67,13 +82,28 @@ pub struct StopMonitoringRequest {
     #[serde(rename = "MinimumStopVisitsPerLineVia", default, skip_serializing_if = "Option::is_none")]
     pub minimum_stop_visits_per_line_via: Option<u64>,
     /// How long texts may be, for a display with a fixed width.
-    #[serde(rename = "MaximumTextLength", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MaximumTextLength",
+        default,
+        deserialize_with = "crate::xml::schema_default::integer_30",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub maximum_text_length: Option<u64>,
     /// How much detail to give per visit.
-    #[serde(rename = "StopMonitoringDetailLevel", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StopMonitoringDetailLevel",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_normal",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stop_monitoring_detail_level: Option<StopMonitoringDetail>,
     /// Whether to include the situations affecting the services.
-    #[serde(rename = "IncludeSituations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeSituations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_situations: Option<bool>,
     /// How many calls before and after this stop to include.
     #[serde(rename = "MaximumNumberOfCalls", default, skip_serializing_if = "Option::is_none")]
@@ -178,13 +208,28 @@ pub struct StopMonitoringFilter {
     #[serde(rename = "DestinationRef", default, skip_serializing_if = "Option::is_none")]
     pub destination_ref: Option<DestinationRef>,
     /// Whether to report arrivals, departures or both.
-    #[serde(rename = "StopVisitTypes", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StopVisitTypes",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_all",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stop_visit_types: Option<StopVisitType>,
     /// Languages the requestor would like texts in, most preferred first.
-    #[serde(rename = "Language", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub language: Vec<String>,
     /// Whether to include every translation of a text rather than only one.
-    #[serde(rename = "IncludeTranslations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeTranslations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_translations: Option<bool>,
     /// At most this many visits altogether.
     #[serde(rename = "MaximumStopVisits", default, skip_serializing_if = "Option::is_none")]
@@ -196,13 +241,28 @@ pub struct StopMonitoringFilter {
     #[serde(rename = "MinimumStopVisitsPerLineVia", default, skip_serializing_if = "Option::is_none")]
     pub minimum_stop_visits_per_line_via: Option<u64>,
     /// How long texts may be, for a display with a fixed width.
-    #[serde(rename = "MaximumTextLength", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MaximumTextLength",
+        default,
+        deserialize_with = "crate::xml::schema_default::integer_30",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub maximum_text_length: Option<u64>,
     /// How much detail to give per visit.
-    #[serde(rename = "StopMonitoringDetailLevel", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StopMonitoringDetailLevel",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_normal",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stop_monitoring_detail_level: Option<StopMonitoringDetail>,
     /// Whether to include the situations affecting the services.
-    #[serde(rename = "IncludeSituations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeSituations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_situations: Option<bool>,
     /// How many calls before and after this stop to include.
     #[serde(rename = "MaximumNumberOfCalls", default, skip_serializing_if = "Option::is_none")]
@@ -257,7 +317,12 @@ pub struct StopMonitoringSubscriptionRequest {
     #[serde(rename = "StopMonitoringRequest")]
     pub stop_monitoring_request: StopMonitoringRequest,
     /// Whether to send only what has changed rather than the full set each time.
-    #[serde(rename = "IncrementalUpdates", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncrementalUpdates",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub incremental_updates: Option<bool>,
     /// How large a change has to be before it is worth a delivery.
     #[serde(rename = "ChangeBeforeUpdates", default, skip_serializing_if = "Option::is_none")]

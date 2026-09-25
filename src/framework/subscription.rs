@@ -301,7 +301,12 @@ pub struct StatusResponse {
     #[serde(rename = "SubscriptionRef")]
     pub subscription_ref: SubscriptionRef,
     /// Whether the subscription was accepted.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the subscription was refused.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -518,7 +523,12 @@ pub struct TerminationResponseStatus {
     #[serde(rename = "SubscriptionRef")]
     pub subscription_ref: SubscriptionRef,
     /// Whether the subscription was closed.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the subscription could not be closed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]

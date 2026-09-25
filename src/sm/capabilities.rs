@@ -35,7 +35,12 @@ pub struct StopMonitoringCapabilitiesResponse {
     #[serde(rename = "DelegatorRef", default, skip_serializing_if = "Option::is_none")]
     pub delegator_ref: Option<ParticipantRef>,
     /// Whether the capability request was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the capability request could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -117,28 +122,57 @@ pub struct StopMonitoringServiceCapabilities {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StopMonitoringTopicFiltering {
     /// The look-ahead window applied when a request does not name one.
-    #[serde(rename = "DefaultPreviewInterval")]
+    #[serde(
+        rename = "DefaultPreviewInterval",
+        deserialize_with = "crate::xml::schema_default::duration_pt60m"
+    )]
     pub default_preview_interval: Duration,
     /// Whether that window may be made to start at a stated time.
-    #[serde(rename = "ByStartTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ByStartTime",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub by_start_time: Option<bool>,
     /// Whether visits can be narrowed to one monitoring point.
     ///
     /// The schema fixes this to `true`: naming the monitoring point is how a
     /// stop-monitoring request states its topic at all.
-    #[serde(rename = "FilterByMonitoringRef")]
+    #[serde(
+        rename = "FilterByMonitoringRef",
+        deserialize_with = "crate::xml::schema_default::boolean_true"
+    )]
     pub filter_by_monitoring_ref: bool,
     /// Whether visits can be narrowed to a line.
-    #[serde(rename = "FilterByLineRef")]
+    #[serde(
+        rename = "FilterByLineRef",
+        deserialize_with = "crate::xml::schema_default::boolean_true"
+    )]
     pub filter_by_line_ref: bool,
     /// Whether visits can be narrowed to a direction.
-    #[serde(rename = "FilterByDirectionRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByDirectionRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_direction_ref: Option<bool>,
     /// Whether visits can be narrowed to a destination.
-    #[serde(rename = "FilterByDestination", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByDestination",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_destination: Option<bool>,
     /// Whether visits can be narrowed to arrivals or to departures.
-    #[serde(rename = "FilterByVisitType", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByVisitType",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_visit_type: Option<bool>,
 }
 
@@ -155,31 +189,76 @@ pub struct StopMonitoringRequestPolicy {
     #[serde(rename = "$value")]
     pub coordinate_format: CoordinateFormat,
     /// Whether the responses name entities by reference.
-    #[serde(rename = "UseReferences", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "UseReferences",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub use_references: Option<bool>,
     /// Whether they name them by name.
-    #[serde(rename = "UseNames", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "UseNames",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub use_names: Option<bool>,
     /// Whether a request may ask for a particular level of detail.
-    #[serde(rename = "HasDetailLevel", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasDetailLevel",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_detail_level: Option<bool>,
     /// The level of detail applied when a request does not ask for one.
-    #[serde(rename = "DefaultDetailLevel", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DefaultDetailLevel",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_normal",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub default_detail_level: Option<StopMonitoringDetail>,
     /// Whether a request may cap how many visits come back.
-    #[serde(rename = "HasMaximumVisits", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasMaximumVisits",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_maximum_visits: Option<bool>,
     /// Whether a request may reserve a minimum number of visits per line.
-    #[serde(rename = "HasMinimumVisitsPerLine", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasMinimumVisitsPerLine",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_minimum_visits_per_line: Option<bool>,
     /// Whether it may reserve them per via point instead.
-    #[serde(rename = "HasMinimumVisitsPerVia", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasMinimumVisitsPerVia",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_minimum_visits_per_via: Option<bool>,
     /// Whether a request may cap how many calls after this stop come back.
-    #[serde(rename = "HasNumberOfOnwardsCalls", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasNumberOfOnwardsCalls",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_number_of_onwards_calls: Option<bool>,
     /// Whether it may cap how many calls before this stop come back.
-    #[serde(rename = "HasNumberOfPreviousCalls", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasNumberOfPreviousCalls",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_number_of_previous_calls: Option<bool>,
 }
 
@@ -207,10 +286,20 @@ impl StopMonitoringRequestPolicy {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StopMonitoringResponseFeatures {
     /// Whether the responses carry notices about the lines calling at the stop.
-    #[serde(rename = "HasLineNotices", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasLineNotices",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_line_notices: Option<bool>,
     /// Whether they carry the situations affecting the services.
-    #[serde(rename = "HasSituations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasSituations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_situations: Option<bool>,
 }
 

@@ -38,7 +38,12 @@ pub struct VehicleMonitoringCapabilitiesResponse {
     #[serde(rename = "DelegatorRef", default, skip_serializing_if = "Option::is_none")]
     pub delegator_ref: Option<ParticipantRef>,
     /// Whether the capability request was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the capability request could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -127,22 +132,43 @@ pub struct VehicleMonitoringServiceCapabilities {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct VehicleMonitoringTopicFiltering {
     /// The look-ahead window applied when a request does not name one.
-    #[serde(rename = "DefaultPreviewInterval")]
+    #[serde(
+        rename = "DefaultPreviewInterval",
+        deserialize_with = "crate::xml::schema_default::duration_pt60m"
+    )]
     pub default_preview_interval: Duration,
     /// Whether vehicles can be narrowed to one of the producer's monitoring services.
     ///
     /// The schema fixes this to `true`: naming the monitoring service is how a
     /// vehicle-monitoring request states its topic at all.
-    #[serde(rename = "FilterByVehicleMonitoringRef")]
+    #[serde(
+        rename = "FilterByVehicleMonitoringRef",
+        deserialize_with = "crate::xml::schema_default::boolean_true"
+    )]
     pub filter_by_vehicle_monitoring_ref: bool,
     /// Whether vehicles can be narrowed to one vehicle.
-    #[serde(rename = "FilterByVehicleRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByVehicleRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_vehicle_ref: Option<bool>,
     /// Whether vehicles can be narrowed to a line.
-    #[serde(rename = "FilterByLineRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByLineRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_line_ref: Option<bool>,
     /// Whether vehicles can be narrowed to a direction.
-    #[serde(rename = "FilterByDirectionRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByDirectionRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_direction_ref: Option<bool>,
 }
 
@@ -159,22 +185,52 @@ pub struct VehicleMonitoringRequestPolicy {
     #[serde(rename = "$value")]
     pub coordinate_format: CoordinateFormat,
     /// Whether a request may ask for a particular level of detail.
-    #[serde(rename = "HasDetailLevel", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasDetailLevel",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_detail_level: Option<bool>,
     /// The level of detail applied when a request does not ask for one.
-    #[serde(rename = "DefaultDetailLevel", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DefaultDetailLevel",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_normal",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub default_detail_level: Option<VehicleMonitoringDetail>,
     /// Whether a request may cap how many vehicles come back.
-    #[serde(rename = "HasMaximumVehicles", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasMaximumVehicles",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_maximum_vehicles: Option<bool>,
     /// Whether a request may cap how many calls come back per vehicle.
-    #[serde(rename = "HasMaximumNumberOfCalls", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasMaximumNumberOfCalls",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_maximum_number_of_calls: Option<bool>,
     /// Whether that cap may be set for the calls still to come.
-    #[serde(rename = "HasNumberOfOnwardsCalls", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasNumberOfOnwardsCalls",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_number_of_onwards_calls: Option<bool>,
     /// Whether that cap may be set for the calls already made.
-    #[serde(rename = "HasNumberOfPreviousCalls", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasNumberOfPreviousCalls",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_number_of_previous_calls: Option<bool>,
 }
 
@@ -183,17 +239,35 @@ pub struct VehicleMonitoringRequestPolicy {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VehicleMonitoringAccessControl {
     /// Whether requests are checked against permissions at all.
-    #[serde(rename = "RequestChecking")]
+    #[serde(
+        rename = "RequestChecking",
+        deserialize_with = "crate::xml::schema_default::boolean_false"
+    )]
     pub request_checking: bool,
     /// Whether the operator a request names is checked against its permissions.
-    #[serde(rename = "CheckOperatorRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "CheckOperatorRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub check_operator_ref: Option<bool>,
     /// Whether the line a request names is checked against its permissions.
-    #[serde(rename = "CheckLineRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "CheckLineRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub check_line_ref: Option<bool>,
     /// Whether the monitoring service a request names is checked against its
     /// permissions.
-    #[serde(rename = "CheckVehicleMonitoringRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "CheckVehicleMonitoringRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub check_vehicle_monitoring_ref: Option<bool>,
 }
 
@@ -201,10 +275,20 @@ pub struct VehicleMonitoringAccessControl {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct VehicleMonitoringResponseFeatures {
     /// Whether the responses carry vehicle positions.
-    #[serde(rename = "HasLocation", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasLocation",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_location: Option<bool>,
     /// Whether they carry the situations affecting the vehicles.
-    #[serde(rename = "HasSituations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasSituations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_situations: Option<bool>,
 }
 

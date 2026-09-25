@@ -559,7 +559,12 @@ pub struct AnnotatedFacility {
     #[serde(rename = "FacilityRef")]
     pub facility_ref: FacilityRef,
     /// Whether the producer is watching it in real time.
-    #[serde(rename = "Monitored", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Monitored",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub monitored: Option<bool>,
     /// What the facility is.
     #[serde(rename = "Facility", default, skip_serializing_if = "Option::is_none")]
@@ -600,7 +605,10 @@ pub struct EquipmentAvailability {
     #[serde(rename = "ValidityPeriod", default, skip_serializing_if = "Option::is_none")]
     pub validity_period: Option<HalfOpenTimestampOutputRange>,
     /// Whether the equipment can be used.
-    #[serde(rename = "EquipmentStatus")]
+    #[serde(
+        rename = "EquipmentStatus",
+        deserialize_with = "crate::xml::schema_default::enumeration_not_available"
+    )]
     pub equipment_status: EquipmentStatus,
     /// What the equipment offers.
     #[serde(rename = "EquipmentFeatures", default, skip_serializing_if = "Option::is_none")]
@@ -643,7 +651,7 @@ pub struct MobilityDisruption {
     #[serde(
         rename = "AccessFacility",
         default,
-        deserialize_with = "crate::xml::token_list::deserialize",
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
         skip_serializing_if = "Vec::is_empty"
     )]
     pub access_facility: Vec<AccessFacility>,

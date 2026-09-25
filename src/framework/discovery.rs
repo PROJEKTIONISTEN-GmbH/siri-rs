@@ -67,10 +67,20 @@ pub struct StopPointsRequest {
     #[serde(rename = "LineRef", default, skip_serializing_if = "Option::is_none")]
     pub line_ref: Option<LineRef>,
     /// Languages the requestor would like names in, most preferred first.
-    #[serde(rename = "Language", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub language: Vec<String>,
     /// How much detail each stop should be described with.
-    #[serde(rename = "StopPointsDetailLevel", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StopPointsDetailLevel",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_normal",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stop_points_detail_level: Option<StopPointsDetail>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -137,7 +147,12 @@ pub struct StopPointsDelivery {
     #[serde(rename = "ResponseTimestamp")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Whether the request was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the request could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -219,10 +234,20 @@ pub struct LinesRequest {
     #[serde(rename = "OperatorRef", default, skip_serializing_if = "Option::is_none")]
     pub operator_ref: Option<OperatorRef>,
     /// Languages the requestor would like names in, most preferred first.
-    #[serde(rename = "Language", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub language: Vec<String>,
     /// How much detail each line should be described with.
-    #[serde(rename = "LinesDetailLevel", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "LinesDetailLevel",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_normal",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub lines_detail_level: Option<LinesDetail>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -295,7 +320,12 @@ pub struct LinesDelivery {
     #[serde(rename = "ResponseTimestamp")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Whether the request was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the request could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -391,7 +421,12 @@ pub struct ServiceFeaturesDelivery {
     #[serde(rename = "ResponseTimestamp")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Whether the request was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the request could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -452,7 +487,12 @@ pub struct VehicleFeaturesRequest {
     #[serde(rename = "MessageIdentifier", default, skip_serializing_if = "Option::is_none")]
     pub message_identifier: Option<MessageQualifier>,
     /// Languages the requestor would like names in, most preferred first.
-    #[serde(rename = "Language", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub language: Vec<String>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -489,7 +529,12 @@ pub struct VehicleFeaturesDelivery {
     #[serde(rename = "ResponseTimestamp")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Whether the request was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the request could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -552,7 +597,12 @@ pub struct ProductCategoriesRequest {
     #[serde(rename = "MessageIdentifier", default, skip_serializing_if = "Option::is_none")]
     pub message_identifier: Option<MessageQualifier>,
     /// Languages the requestor would like names in, most preferred first.
-    #[serde(rename = "Language", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub language: Vec<String>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -589,7 +639,12 @@ pub struct ProductCategoriesDelivery {
     #[serde(rename = "ResponseTimestamp")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Whether the request was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the request could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -638,10 +693,20 @@ pub struct AnnotatedStopPointRef {
     pub stop_point_ref: StopPointRef,
     /// Whether the stop is a timing point, i.e. one whose passing times are held to
     /// and published rather than merely interpolated.
-    #[serde(rename = "TimingPoint", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TimingPoint",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub timing_point: Option<bool>,
     /// Whether real-time data is available for the stop.
-    #[serde(rename = "Monitored", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Monitored",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub monitored: Option<bool>,
     /// Names of the stop, one per language.
     #[serde(rename = "StopName", default, skip_serializing_if = "Vec::is_empty")]
@@ -727,7 +792,12 @@ pub struct AnnotatedLineRef {
     #[serde(rename = "LineName")]
     pub line_name: Vec<NaturalLanguageString>,
     /// Whether real-time data is available for the line.
-    #[serde(rename = "Monitored", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Monitored",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub monitored: Option<bool>,
     /// Places the line runs to, as shown to passengers.
     #[serde(rename = "Destinations", default, skip_serializing_if = "Option::is_none")]
@@ -843,10 +913,20 @@ pub struct StopPointInPattern {
     pub stop_point_ref: StopPointRef,
     /// Whether the stop is a timing point, i.e. one whose passing times are held to
     /// and published rather than merely interpolated.
-    #[serde(rename = "TimingPoint", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TimingPoint",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub timing_point: Option<bool>,
     /// Whether real-time data is available for the stop.
-    #[serde(rename = "Monitored", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Monitored",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub monitored: Option<bool>,
     /// Names of the stop, one per language.
     #[serde(rename = "StopName", default, skip_serializing_if = "Vec::is_empty")]

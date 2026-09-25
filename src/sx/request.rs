@@ -45,40 +45,95 @@ pub struct SituationExchangeRequest {
     #[serde(rename = "ValidityPeriod", default, skip_serializing_if = "Option::is_none")]
     pub validity_period: Option<HalfOpenTimestampInputRange>,
     /// Only situations the producer is currently publishing.
-    #[serde(rename = "IncludeOnlyIfInPublicationWindow", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeOnlyIfInPublicationWindow",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_only_if_in_publication_window: Option<bool>,
     /// Only situations affecting this mode of transport.
-    #[serde(rename = "VehicleMode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VehicleMode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub vehicle_mode: Option<VehicleModesOfTransport>,
     /// Only situations affecting this kind of air service.
-    #[serde(rename = "AirSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AirSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub air_submode: Option<AirSubmodesOfTransport>,
     /// Only situations affecting this kind of bus service.
-    #[serde(rename = "BusSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "BusSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub bus_submode: Option<BusSubmodesOfTransport>,
     /// Only situations affecting this kind of coach service.
-    #[serde(rename = "CoachSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "CoachSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub coach_submode: Option<CoachSubmodesOfTransport>,
     /// Only situations affecting this kind of metro service.
-    #[serde(rename = "MetroSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MetroSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub metro_submode: Option<MetroSubmodesOfTransport>,
     /// Only situations affecting this kind of rail service.
-    #[serde(rename = "RailSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "RailSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub rail_submode: Option<RailSubmodesOfTransport>,
     /// Only situations affecting this kind of tram service.
-    #[serde(rename = "TramSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TramSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub tram_submode: Option<TramSubmodesOfTransport>,
     /// Only situations affecting this kind of water-borne service.
-    #[serde(rename = "WaterSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "WaterSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub water_submode: Option<WaterSubmodesOfTransport>,
     /// Only situations affecting this kind of cable-drawn service.
-    #[serde(rename = "TelecabinSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TelecabinSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub telecabin_submode: Option<TelecabinSubmodesOfTransport>,
     /// Only situations affecting this way of reaching or leaving a stop.
     #[serde(rename = "AccessMode", default, skip_serializing_if = "Option::is_none")]
     pub access_mode: Option<AccessModes>,
     /// Only situations at least this severe.
-    #[serde(rename = "Severity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Severity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_normal",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub severity: Option<Severity>,
     /// Only situations whose scope is one of these.
     #[serde(
@@ -101,7 +156,7 @@ pub struct SituationExchangeRequest {
     #[serde(
         rename = "Progress",
         default,
-        deserialize_with = "crate::xml::token_list::deserialize",
+        deserialize_with = "crate::xml::schema_default::enumeration_open",
         skip_serializing_if = "Vec::is_empty"
     )]
     pub progress: Vec<WorkflowStatus>,
@@ -166,10 +221,20 @@ pub struct SituationExchangeRequest {
     #[serde(rename = "AccessibilityNeedFilter", default, skip_serializing_if = "Vec::is_empty")]
     pub accessibility_need_filter: Vec<PassengerAccessibilityNeeds>,
     /// Languages the requestor would like texts in, most preferred first.
-    #[serde(rename = "Language", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub language: Vec<String>,
     /// Whether to include every translation of a text rather than only one.
-    #[serde(rename = "IncludeTranslations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeTranslations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_translations: Option<bool>,
     /// At most this many situations.
     #[serde(rename = "MaximumNumberOfSituationElements", default, skip_serializing_if = "Option::is_none")]
@@ -293,7 +358,12 @@ pub struct SituationExchangeSubscriptionRequest {
     #[serde(rename = "SituationExchangeRequest")]
     pub situation_exchange_request: SituationExchangeRequest,
     /// Whether to send only what has changed rather than the full set each time.
-    #[serde(rename = "IncrementalUpdates", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncrementalUpdates",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub incremental_updates: Option<bool>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]

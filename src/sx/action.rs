@@ -263,7 +263,12 @@ pub struct BeforeNotices {
 pub struct PublishToWebAction {
     /// How far the action has got at the moment the situation is published. Absent
     /// means the action is still open.
-    #[serde(rename = "ActionStatus", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActionStatus",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_open",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub action_status: Option<ActionStatus>,
     /// What the action is, in words.
     #[serde(rename = "Description", default, skip_serializing_if = "Option::is_none")]
@@ -276,13 +281,28 @@ pub struct PublishToWebAction {
     #[serde(rename = "PublicationWindow", default, skip_serializing_if = "Vec::is_empty")]
     pub publication_window: Vec<ClosedTimestampRange>,
     /// Include in the site's list of current disruptions. Absent means include.
-    #[serde(rename = "Incidents", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Incidents",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub incidents: Option<bool>,
     /// Include on the site's home page. Absent means do not.
-    #[serde(rename = "HomePage", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HomePage",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub home_page: Option<bool>,
     /// Include in the scrolling news band. Absent means do not.
-    #[serde(rename = "Ticker", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Ticker",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub ticker: Option<bool>,
     /// Social networks to post to, named by host, e.g. `twitter.com`. Anything the
     /// posting needs beyond the name travels as action data.
@@ -294,7 +314,12 @@ pub struct PublishToWebAction {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct PublishToMobileAction {
     /// How far the action has got. Absent means still open.
-    #[serde(rename = "ActionStatus", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActionStatus",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_open",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub action_status: Option<ActionStatus>,
     /// What the action is, in words.
     #[serde(rename = "Description", default, skip_serializing_if = "Option::is_none")]
@@ -306,10 +331,20 @@ pub struct PublishToMobileAction {
     #[serde(rename = "PublicationWindow", default, skip_serializing_if = "Vec::is_empty")]
     pub publication_window: Vec<ClosedTimestampRange>,
     /// Include in the app's list of current disruptions. Absent means include.
-    #[serde(rename = "Incidents", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Incidents",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub incidents: Option<bool>,
     /// Include on the app's home screen. Absent means do not.
-    #[serde(rename = "HomePage", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HomePage",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub home_page: Option<bool>,
 }
 
@@ -317,7 +352,12 @@ pub struct PublishToMobileAction {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct PublishToDisplayAction {
     /// How far the action has got. Absent means still open.
-    #[serde(rename = "ActionStatus", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActionStatus",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_open",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub action_status: Option<ActionStatus>,
     /// What the action is, in words.
     #[serde(rename = "Description", default, skip_serializing_if = "Option::is_none")]
@@ -329,10 +369,20 @@ pub struct PublishToDisplayAction {
     #[serde(rename = "PublicationWindow", default, skip_serializing_if = "Vec::is_empty")]
     pub publication_window: Vec<ClosedTimestampRange>,
     /// Show on displays at stops and stations.
-    #[serde(rename = "OnPlace", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "OnPlace",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub on_place: Option<bool>,
     /// Show on displays inside vehicles.
-    #[serde(rename = "OnBoard", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "OnBoard",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub on_board: Option<bool>,
 }
 
@@ -340,7 +390,12 @@ pub struct PublishToDisplayAction {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct PublishToAlertsAction {
     /// How far the action has got. Absent means still open.
-    #[serde(rename = "ActionStatus", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActionStatus",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_open",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub action_status: Option<ActionStatus>,
     /// What the action is, in words.
     #[serde(rename = "Description", default, skip_serializing_if = "Option::is_none")]
@@ -358,10 +413,20 @@ pub struct PublishToAlertsAction {
     #[serde(rename = "ClearNotice", default, skip_serializing_if = "Option::is_none")]
     pub clear_notice: Option<bool>,
     /// Send the alert as email.
-    #[serde(rename = "ByEmail", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ByEmail",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub by_email: Option<bool>,
     /// Send the alert to mobile devices.
-    #[serde(rename = "ByMobile", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ByMobile",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub by_mobile: Option<bool>,
 }
 
@@ -369,7 +434,12 @@ pub struct PublishToAlertsAction {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct PublishToTvAction {
     /// How far the action has got. Absent means still open.
-    #[serde(rename = "ActionStatus", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActionStatus",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_open",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub action_status: Option<ActionStatus>,
     /// What the action is, in words.
     #[serde(rename = "Description", default, skip_serializing_if = "Option::is_none")]
@@ -381,10 +451,20 @@ pub struct PublishToTvAction {
     #[serde(rename = "PublicationWindow", default, skip_serializing_if = "Vec::is_empty")]
     pub publication_window: Vec<ClosedTimestampRange>,
     /// Publish to the Ceefax service. Absent means publish.
-    #[serde(rename = "Ceefax", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Ceefax",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub ceefax: Option<bool>,
     /// Publish to the Teletext service. Absent means publish.
-    #[serde(rename = "Teletext", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Teletext",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub teletext: Option<bool>,
 }
 
@@ -396,7 +476,12 @@ pub struct PublishToTvAction {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ManualAction {
     /// How far the action has got. Absent means still open.
-    #[serde(rename = "ActionStatus", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActionStatus",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_open",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub action_status: Option<ActionStatus>,
     /// What is to be done, in words.
     #[serde(rename = "Description", default, skip_serializing_if = "Option::is_none")]
@@ -413,7 +498,12 @@ pub struct ManualAction {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct NotifyBySmsAction {
     /// How far the action has got. Absent means still open.
-    #[serde(rename = "ActionStatus", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActionStatus",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_open",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub action_status: Option<ActionStatus>,
     /// What the action is, in words.
     #[serde(rename = "Description", default, skip_serializing_if = "Option::is_none")]
@@ -434,7 +524,12 @@ pub struct NotifyBySmsAction {
     #[serde(rename = "Phone", default, skip_serializing_if = "Option::is_none")]
     pub phone: Option<String>,
     /// Whether the message is charged at a premium rate. Absent means it is not.
-    #[serde(rename = "Premium", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Premium",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub premium: Option<bool>,
 }
 
@@ -442,7 +537,12 @@ pub struct NotifyBySmsAction {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct NotifyByEmailAction {
     /// How far the action has got. Absent means still open.
-    #[serde(rename = "ActionStatus", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActionStatus",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_open",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub action_status: Option<ActionStatus>,
     /// What the action is, in words.
     #[serde(rename = "Description", default, skip_serializing_if = "Option::is_none")]
@@ -468,7 +568,12 @@ pub struct NotifyByEmailAction {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct NotifyByPagerAction {
     /// How far the action has got. Absent means still open.
-    #[serde(rename = "ActionStatus", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActionStatus",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_open",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub action_status: Option<ActionStatus>,
     /// What the action is, in words.
     #[serde(rename = "Description", default, skip_serializing_if = "Option::is_none")]
@@ -497,7 +602,12 @@ pub struct NotifyByPagerAction {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct NotifyUserAction {
     /// How far the action has got. Absent means still open.
-    #[serde(rename = "ActionStatus", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActionStatus",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_open",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub action_status: Option<ActionStatus>,
     /// What the action is, in words.
     #[serde(rename = "Description", default, skip_serializing_if = "Option::is_none")]
@@ -562,7 +672,12 @@ impl PublishingAction {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PassengerInformationAction {
     /// How far the action has got. Absent means still open.
-    #[serde(rename = "ActionStatus", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActionStatus",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_open",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub action_status: Option<ActionStatus>,
     /// What the action is, in words.
     #[serde(rename = "Description", default, skip_serializing_if = "Option::is_none")]

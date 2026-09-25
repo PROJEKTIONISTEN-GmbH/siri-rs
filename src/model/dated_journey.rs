@@ -42,10 +42,20 @@ pub struct DatedVehicleJourney {
     #[serde(rename = "VehicleJourneyRef", default, skip_serializing_if = "Option::is_none")]
     pub vehicle_journey_ref: Option<VehicleJourneyRef>,
     /// Whether this run is being added to the timetable.
-    #[serde(rename = "ExtraJourney", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExtraJourney",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub extra_journey: Option<bool>,
     /// Whether the timetabled run will not happen.
-    #[serde(rename = "Cancellation", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Cancellation",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub cancellation: Option<bool>,
     /// The journey pattern the run follows.
     #[serde(rename = "JourneyPatternRef", default, skip_serializing_if = "Option::is_none")]
@@ -57,7 +67,7 @@ pub struct DatedVehicleJourney {
     #[serde(
         rename = "VehicleMode",
         default,
-        deserialize_with = "crate::xml::token_list::deserialize",
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
         skip_serializing_if = "Vec::is_empty"
     )]
     pub vehicle_mode: Vec<VehicleModesOfTransport>,
@@ -143,13 +153,28 @@ pub struct DatedVehicleJourney {
     #[serde(rename = "LineNote", default, skip_serializing_if = "Vec::is_empty")]
     pub line_note: Vec<NaturalLanguagePlaceName>,
     /// Whether this is the first or the last run of the day on the line.
-    #[serde(rename = "FirstOrLastJourney", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FirstOrLastJourney",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unspecified",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub first_or_last_journey: Option<FirstOrLastJourney>,
     /// Whether the service runs to a headway rather than to fixed times.
-    #[serde(rename = "HeadwayService", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HeadwayService",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub headway_service: Option<bool>,
     /// Whether the run will be tracked in real time.
-    #[serde(rename = "Monitored", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Monitored",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub monitored: Option<bool>,
     /// The parts the train is formed of, and where each sits.
     #[serde(rename = "TrainBlockPart", default, skip_serializing_if = "Vec::is_empty")]
@@ -229,19 +254,44 @@ pub struct DatedCall {
     #[serde(rename = "StopPointName", default, skip_serializing_if = "Vec::is_empty")]
     pub stop_point_name: Vec<NaturalLanguageString>,
     /// Whether the call is being added to the timetable.
-    #[serde(rename = "ExtraCall", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExtraCall",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub extra_call: Option<bool>,
     /// Whether the stop is being skipped.
-    #[serde(rename = "Cancellation", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Cancellation",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub cancellation: Option<bool>,
     /// Whether the stop is a timing point the timetable is measured against.
-    #[serde(rename = "TimingPoint", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TimingPoint",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub timing_point: Option<bool>,
     /// Whether passengers may board anywhere along the stretch before this stop.
-    #[serde(rename = "BoardingStretch", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "BoardingStretch",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub boarding_stretch: Option<bool>,
     /// Whether the vehicle calls only when asked to.
-    #[serde(rename = "RequestStop", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "RequestStop",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub request_stop: Option<bool>,
     /// What is shown as the origin from this stop on, one per language.
     #[serde(rename = "OriginDisplay", default, skip_serializing_if = "Vec::is_empty")]
@@ -259,7 +309,12 @@ pub struct DatedCall {
     #[serde(rename = "ArrivalPlatformName", default, skip_serializing_if = "Vec::is_empty")]
     pub arrival_platform_name: Vec<NaturalLanguageString>,
     /// Whether passengers may alight here.
-    #[serde(rename = "ArrivalBoardingActivity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ArrivalBoardingActivity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_alighting",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub arrival_boarding_activity: Option<ArrivalBoardingActivity>,
     /// Where the vehicle is planned to stand on arrival.
     #[serde(rename = "ArrivalStopAssignment", default, skip_serializing_if = "Vec::is_empty")]
@@ -277,7 +332,12 @@ pub struct DatedCall {
     #[serde(rename = "DeparturePlatformName", default, skip_serializing_if = "Vec::is_empty")]
     pub departure_platform_name: Vec<NaturalLanguageString>,
     /// Whether passengers may board here.
-    #[serde(rename = "DepartureBoardingActivity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DepartureBoardingActivity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_boarding",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub departure_boarding_activity: Option<DepartureBoardingActivity>,
     /// Where the vehicle is planned to stand for departure.
     #[serde(rename = "DepartureStopAssignment", default, skip_serializing_if = "Vec::is_empty")]
@@ -385,13 +445,28 @@ pub struct TargetedInterchange {
     #[serde(rename = "DistributorOrder", default, skip_serializing_if = "Option::is_none")]
     pub distributor_order: Option<u64>,
     /// Whether passengers may stay in their seats.
-    #[serde(rename = "StaySeated", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StaySeated",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stay_seated: Option<bool>,
     /// Whether the connection is guaranteed to be held.
-    #[serde(rename = "Guaranteed", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Guaranteed",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub guaranteed: Option<bool>,
     /// Whether the connection is shown to passengers.
-    #[serde(rename = "Advertised", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Advertised",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub advertised: Option<bool>,
     /// How long the onward service normally waits.
     #[serde(rename = "StandardWaitTime", default, skip_serializing_if = "Option::is_none")]
@@ -472,10 +547,20 @@ pub struct ServiceJourneyInterchange {
     #[serde(rename = "ConnectionLinkRef", default, skip_serializing_if = "Option::is_none")]
     pub connection_link_ref: Option<ConnectionLinkRef>,
     /// Whether the interchange is being added to the timetable.
-    #[serde(rename = "ExtraInterchange", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExtraInterchange",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub extra_interchange: Option<bool>,
     /// Whether the planned interchange will not happen.
-    #[serde(rename = "Cancellation", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Cancellation",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub cancellation: Option<bool>,
     /// The run passengers arrive on.
     #[serde(rename = "FeederRef")]
@@ -508,13 +593,28 @@ pub struct ServiceJourneyInterchange {
     #[serde(rename = "AimedDepartureTimeOfDistributor", default, skip_serializing_if = "Option::is_none")]
     pub aimed_departure_time_of_distributor: Option<DateTime<FixedOffset>>,
     /// Whether passengers may stay in their seats.
-    #[serde(rename = "StaySeated", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StaySeated",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stay_seated: Option<bool>,
     /// Whether the connection is guaranteed to be held.
-    #[serde(rename = "Guaranteed", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Guaranteed",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub guaranteed: Option<bool>,
     /// Whether the connection is shown to passengers.
-    #[serde(rename = "Advertised", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Advertised",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub advertised: Option<bool>,
     /// How long the distributor normally waits.
     #[serde(rename = "StandardWaitTime", default, skip_serializing_if = "Option::is_none")]
@@ -570,13 +670,28 @@ pub struct FromServiceJourneyInterchange {
     #[serde(rename = "AimedDepartureTimeOfDistributor", default, skip_serializing_if = "Option::is_none")]
     pub aimed_departure_time_of_distributor: Option<DateTime<FixedOffset>>,
     /// Whether passengers may stay in their seats.
-    #[serde(rename = "StaySeated", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StaySeated",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stay_seated: Option<bool>,
     /// Whether the connection is guaranteed to be held.
-    #[serde(rename = "Guaranteed", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Guaranteed",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub guaranteed: Option<bool>,
     /// Whether the connection is shown to passengers.
-    #[serde(rename = "Advertised", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Advertised",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub advertised: Option<bool>,
     /// How long the onward service normally waits.
     #[serde(rename = "StandardWaitTime", default, skip_serializing_if = "Option::is_none")]
@@ -632,13 +747,28 @@ pub struct ToServiceJourneyInterchange {
     #[serde(rename = "AimedDepartureTimeOfDistributor", default, skip_serializing_if = "Option::is_none")]
     pub aimed_departure_time_of_distributor: Option<DateTime<FixedOffset>>,
     /// Whether passengers may stay in their seats.
-    #[serde(rename = "StaySeated", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StaySeated",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stay_seated: Option<bool>,
     /// Whether the connection is guaranteed to be held.
-    #[serde(rename = "Guaranteed", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Guaranteed",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub guaranteed: Option<bool>,
     /// Whether the connection is shown to passengers.
-    #[serde(rename = "Advertised", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Advertised",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub advertised: Option<bool>,
     /// How long the distributor normally waits.
     #[serde(rename = "StandardWaitTime", default, skip_serializing_if = "Option::is_none")]

@@ -33,7 +33,12 @@ pub struct ProductionTimetableCapabilitiesResponse {
     #[serde(rename = "DelegatorRef", default, skip_serializing_if = "Option::is_none")]
     pub delegator_ref: Option<ParticipantRef>,
     /// Whether the capability request was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the capability request could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -119,25 +124,52 @@ pub struct ProductionTimetableServiceCapabilities {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ProductionTimetableTopicFiltering {
     /// Whether journeys can be narrowed to a period.
-    #[serde(rename = "FilterByValidityPeriod")]
+    #[serde(
+        rename = "FilterByValidityPeriod",
+        deserialize_with = "crate::xml::schema_default::boolean_true"
+    )]
     pub filter_by_validity_period: bool,
     /// Whether journeys can be narrowed to an operator.
-    #[serde(rename = "FilterByOperatorRef")]
+    #[serde(
+        rename = "FilterByOperatorRef",
+        deserialize_with = "crate::xml::schema_default::boolean_true"
+    )]
     pub filter_by_operator_ref: bool,
     /// Whether journeys can be narrowed to a line.
-    #[serde(rename = "FilterByLineRef")]
+    #[serde(
+        rename = "FilterByLineRef",
+        deserialize_with = "crate::xml::schema_default::boolean_true"
+    )]
     pub filter_by_line_ref: bool,
     /// Whether journeys can be narrowed to a mode of transport.
-    #[serde(rename = "FilterByVehicleMode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByVehicleMode",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_vehicle_mode: Option<bool>,
     /// Whether journeys can be narrowed to a commercial category.
-    #[serde(rename = "FilterByProductCategoryRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByProductCategoryRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_product_category_ref: Option<bool>,
     /// Whether journeys can be narrowed to a scheduled stop point.
-    #[serde(rename = "FilterByStopPointRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByStopPointRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_stop_point_ref: Option<bool>,
     /// Whether journeys can be narrowed to an edition of the timetable.
-    #[serde(rename = "FilterByVersionRef")]
+    #[serde(
+        rename = "FilterByVersionRef",
+        deserialize_with = "crate::xml::schema_default::boolean_true"
+    )]
     pub filter_by_version_ref: bool,
 }
 
@@ -148,7 +180,10 @@ pub struct ProductionTimetableTopicFiltering {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ProductionTimetableSubscriptionPolicy {
     /// Whether a subscriber may ask to be sent only what changed.
-    #[serde(rename = "HasIncrementalUpdates")]
+    #[serde(
+        rename = "HasIncrementalUpdates",
+        deserialize_with = "crate::xml::schema_default::boolean_true"
+    )]
     pub has_incremental_updates: bool,
 }
 

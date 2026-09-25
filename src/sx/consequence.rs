@@ -77,7 +77,12 @@ pub struct Consequence {
     pub condition_name: Vec<NaturalLanguageString>,
     /// How badly passengers are affected, if that differs from the situation's own
     /// severity.
-    #[serde(rename = "Severity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Severity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_normal",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub severity: Option<Severity>,
     /// The part of the network this effect applies to, if narrower than the part the
     /// situation as a whole names.
@@ -142,11 +147,21 @@ pub struct PtAdvice {
 pub struct Blocking {
     /// Whether journey planners should suppress the affected part of the network.
     /// Absent means do not suppress.
-    #[serde(rename = "JourneyPlanner", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "JourneyPlanner",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub journey_planner: Option<bool>,
     /// Whether real-time departure displays should suppress it. Absent means do not
     /// suppress.
-    #[serde(rename = "RealTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "RealTime",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub real_time: Option<bool>,
 }
 
@@ -157,10 +172,20 @@ pub struct Blocking {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Boarding {
     /// What alighting is allowed on arrival. Absent means alighting as normal.
-    #[serde(rename = "ArrivalBoardingActivity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ArrivalBoardingActivity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_alighting",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub arrival_boarding_activity: Option<ArrivalBoardingActivity>,
     /// What boarding is allowed on departure. Absent means boarding as normal.
-    #[serde(rename = "DepartureBoardingActivity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DepartureBoardingActivity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_boarding",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub departure_boarding_activity: Option<DepartureBoardingActivity>,
 }
 

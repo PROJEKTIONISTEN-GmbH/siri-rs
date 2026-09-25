@@ -47,7 +47,7 @@ pub struct TargetedVehicleJourney {
     #[serde(
         rename = "VehicleMode",
         default,
-        deserialize_with = "crate::xml::token_list::deserialize",
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
         skip_serializing_if = "Vec::is_empty"
     )]
     pub vehicle_mode: Vec<VehicleModesOfTransport>,
@@ -124,7 +124,12 @@ pub struct TargetedVehicleJourney {
     #[serde(rename = "OperationsContact", default, skip_serializing_if = "Option::is_none")]
     pub operations_contact: Option<SimpleContact>,
     /// Whether the service runs to a headway rather than to fixed times.
-    #[serde(rename = "HeadwayService", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HeadwayService",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub headway_service: Option<bool>,
     /// When the journey is planned to leave its origin.
     #[serde(rename = "OriginAimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
@@ -133,7 +138,12 @@ pub struct TargetedVehicleJourney {
     #[serde(rename = "DestinationAimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
     pub destination_aimed_arrival_time: Option<DateTime<FixedOffset>>,
     /// Whether this is the first or the last journey of the day on the line.
-    #[serde(rename = "FirstOrLastJourney", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FirstOrLastJourney",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unspecified",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub first_or_last_journey: Option<FirstOrLastJourney>,
     /// The call the journey makes at the stop being asked about.
     #[serde(rename = "TargetedCall", default, skip_serializing_if = "Option::is_none")]
@@ -196,7 +206,12 @@ pub struct TargetedCall {
     #[serde(rename = "Order", default, skip_serializing_if = "Option::is_none")]
     pub order: Option<u64>,
     /// Whether the stop is a timing point the timetable is measured against.
-    #[serde(rename = "TimingPoint", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TimingPoint",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub timing_point: Option<bool>,
     /// The operator running the journey, when it differs from stop to stop.
     #[serde(rename = "OperatorRef", default, skip_serializing_if = "Option::is_none")]
@@ -217,7 +232,12 @@ pub struct TargetedCall {
     #[serde(rename = "ArrivalPlatformName", default, skip_serializing_if = "Vec::is_empty")]
     pub arrival_platform_name: Vec<NaturalLanguageString>,
     /// Whether passengers may alight here.
-    #[serde(rename = "ArrivalBoardingActivity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ArrivalBoardingActivity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_alighting",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub arrival_boarding_activity: Option<ArrivalBoardingActivity>,
     /// Where the vehicle is planned to stand on arrival.
     #[serde(rename = "ArrivalStopAssignment", default, skip_serializing_if = "Vec::is_empty")]
@@ -235,7 +255,12 @@ pub struct TargetedCall {
     #[serde(rename = "DeparturePlatformName", default, skip_serializing_if = "Vec::is_empty")]
     pub departure_platform_name: Vec<NaturalLanguageString>,
     /// Whether passengers may board here.
-    #[serde(rename = "DepartureBoardingActivity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DepartureBoardingActivity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_boarding",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub departure_boarding_activity: Option<DepartureBoardingActivity>,
     /// Where the vehicle is planned to stand for departure.
     #[serde(rename = "DepartureStopAssignment", default, skip_serializing_if = "Vec::is_empty")]

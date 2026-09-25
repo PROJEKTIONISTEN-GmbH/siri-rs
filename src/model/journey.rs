@@ -82,7 +82,12 @@ pub struct ViaName {
     #[serde(rename = "PlaceShortName", default, skip_serializing_if = "Vec::is_empty")]
     pub place_short_name: Vec<NaturalLanguagePlaceName>,
     /// How prominently to show this place; lower numbers come first.
-    #[serde(rename = "ViaPriority", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ViaPriority",
+        default,
+        deserialize_with = "crate::xml::schema_default::integer_2",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub via_priority: Option<u64>,
 }
 
@@ -140,7 +145,12 @@ pub struct PredictionQuality {
     #[serde(rename = "PredictionLevel")]
     pub prediction_level: QualityIndex,
     /// The share of vehicles expected to fall within the limits below.
-    #[serde(rename = "Percentile", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Percentile",
+        default,
+        deserialize_with = "crate::xml::schema_default::decimal_0_9",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub percentile: Option<f64>,
     /// The earliest time within that share.
     #[serde(rename = "LowerTimeLimit", default, skip_serializing_if = "Option::is_none")]

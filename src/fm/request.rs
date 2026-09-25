@@ -73,10 +73,20 @@ pub struct FacilityMonitoringRequest {
     #[serde(rename = "AccessibilityNeedsFilter", default, skip_serializing_if = "Vec::is_empty")]
     pub accessibility_needs_filter: Vec<AccessibilityNeedsFilter>,
     /// Languages the requestor would like texts in, most preferred first.
-    #[serde(rename = "Language", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub language: Vec<String>,
     /// Whether to include every translation of a text rather than only one.
-    #[serde(rename = "IncludeTranslations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeTranslations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_translations: Option<bool>,
     /// At most this many facility conditions.
     #[serde(
@@ -168,7 +178,12 @@ pub struct FacilityMonitoringSubscriptionRequest {
     #[serde(rename = "FacilityMonitoringRequest")]
     pub facility_monitoring_request: FacilityMonitoringRequest,
     /// Whether to send only what has changed rather than the full set each time.
-    #[serde(rename = "IncrementalUpdates", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncrementalUpdates",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub incremental_updates: Option<bool>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]

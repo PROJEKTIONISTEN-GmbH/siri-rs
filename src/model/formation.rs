@@ -288,7 +288,12 @@ pub struct VehicleOccupancy {
     #[serde(rename = "EntranceToVehicleRef", default, skip_serializing_if = "Option::is_none")]
     pub entrance_to_vehicle_ref: Option<EntranceToVehicleRef>,
     /// The fare class the counts are about.
-    #[serde(rename = "FareClass", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FareClass",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub fare_class: Option<FareClass>,
     /// The kind of passenger the counts are about, in the producer's own words.
     #[serde(rename = "PassengerCategory", default, skip_serializing_if = "Option::is_none")]
@@ -364,7 +369,12 @@ pub struct PassengerCapacity {
     #[serde(rename = "EntranceToVehicleRef", default, skip_serializing_if = "Option::is_none")]
     pub entrance_to_vehicle_ref: Option<EntranceToVehicleRef>,
     /// The fare class the capacities are about.
-    #[serde(rename = "FareClass", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FareClass",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub fare_class: Option<FareClass>,
     /// The kind of passenger the capacities are about.
     #[serde(rename = "PassengerCategory", default, skip_serializing_if = "Option::is_none")]
@@ -428,10 +438,20 @@ pub struct TrainElement {
     #[serde(rename = "PrivateCode", default, skip_serializing_if = "Option::is_none")]
     pub private_code: Option<String>,
     /// Whether it can be driven from either end.
-    #[serde(rename = "ReversingDirection", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ReversingDirection",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub reversing_direction: Option<bool>,
     /// Whether it can move under its own power.
-    #[serde(rename = "SelfPropelled", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "SelfPropelled",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub self_propelled: Option<bool>,
     /// What it runs on.
     #[serde(rename = "TypeOfFuel", default, skip_serializing_if = "Option::is_none")]
@@ -516,7 +536,12 @@ pub struct TrainComponent {
     #[serde(rename = "TrainElement", default, skip_serializing_if = "Option::is_none")]
     pub train_element: Option<TrainElement>,
     /// Whether the element is coupled the other way round.
-    #[serde(rename = "ReversedOrientation", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ReversedOrientation",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub reversed_orientation: Option<bool>,
 }
 
@@ -539,10 +564,20 @@ pub struct Train {
     #[serde(rename = "PrivateCode", default, skip_serializing_if = "Option::is_none")]
     pub private_code: Option<String>,
     /// Whether it can be driven from either end.
-    #[serde(rename = "ReversingDirection", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ReversingDirection",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub reversing_direction: Option<bool>,
     /// Whether it can move under its own power.
-    #[serde(rename = "SelfPropelled", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "SelfPropelled",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub self_propelled: Option<bool>,
     /// What it runs on.
     #[serde(rename = "TypeOfFuel", default, skip_serializing_if = "Option::is_none")]
@@ -578,7 +613,12 @@ pub struct Train {
     #[serde(rename = "NumberOfCars", default, skip_serializing_if = "Option::is_none")]
     pub number_of_cars: Option<u64>,
     /// Whether it is running at normal, short or long length today.
-    #[serde(rename = "TrainSizeType", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TrainSizeType",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_normal",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub train_size_type: Option<TrainSize>,
     /// The positions it is made up of.
     #[serde(rename = "TrainComponents", default, skip_serializing_if = "Option::is_none")]
@@ -624,10 +664,20 @@ pub struct CompoundTrain {
     #[serde(rename = "PrivateCode", default, skip_serializing_if = "Option::is_none")]
     pub private_code: Option<String>,
     /// Whether it can be driven from either end.
-    #[serde(rename = "ReversingDirection", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ReversingDirection",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub reversing_direction: Option<bool>,
     /// Whether it can move under its own power.
-    #[serde(rename = "SelfPropelled", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "SelfPropelled",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub self_propelled: Option<bool>,
     /// What it runs on.
     #[serde(rename = "TypeOfFuel", default, skip_serializing_if = "Option::is_none")]
@@ -731,7 +781,12 @@ pub struct TrainInCompoundTrain {
     #[serde(rename = "OriginDisplayAtDestination", default, skip_serializing_if = "Vec::is_empty")]
     pub origin_display_at_destination: Vec<NaturalLanguagePlaceName>,
     /// Whether the train is coupled the other way round.
-    #[serde(rename = "ReversedOrientation", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ReversedOrientation",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub reversed_orientation: Option<bool>,
     /// Whether passengers can walk between this train and its neighbours.
     #[serde(rename = "Passages", default, skip_serializing_if = "Option::is_none")]

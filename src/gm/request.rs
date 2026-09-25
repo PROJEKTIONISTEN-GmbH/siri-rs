@@ -25,7 +25,12 @@ pub struct GeneralMessageRequest {
     #[serde(rename = "InfoChannelRef", default, skip_serializing_if = "Vec::is_empty")]
     pub info_channel_ref: Vec<InfoChannelRef>,
     /// Languages the requestor would like texts in, most preferred first.
-    #[serde(rename = "Language", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub language: Vec<String>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]

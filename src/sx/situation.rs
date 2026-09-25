@@ -75,10 +75,20 @@ pub struct PtSituationElement {
     pub verification: Option<VerificationStatus>,
     /// How far the situation has moved through the editorial workflow, from draft
     /// to closed.
-    #[serde(rename = "Progress", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Progress",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_open",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub progress: Option<WorkflowStatus>,
     /// How much the producer trusts the data.
-    #[serde(rename = "QualityIndex", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "QualityIndex",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_reliable",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub quality_index: Option<QualityIndex>,
     /// Whether the situation is real or part of an exercise or test.
     #[serde(rename = "Reality", default, skip_serializing_if = "Option::is_none")]
@@ -149,7 +159,12 @@ pub struct PtSituationElement {
     #[serde(rename = "ControlActionRef", default, skip_serializing_if = "Option::is_none")]
     pub control_action_ref: Option<ControlActionRef>,
     /// How badly the situation disrupts travel.
-    #[serde(rename = "Severity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Severity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_normal",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub severity: Option<Severity>,
     /// Producer-defined ranking, 1 being the most important.
     #[serde(rename = "Priority", default, skip_serializing_if = "Option::is_none")]
@@ -158,18 +173,33 @@ pub struct PtSituationElement {
     #[serde(rename = "Sensitivity", default, skip_serializing_if = "Option::is_none")]
     pub sensitivity: Option<Sensitivity>,
     /// Who the situation is written for.
-    #[serde(rename = "Audience", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Audience",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_public",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub audience: Option<Audience>,
     /// The kind of thing the situation is about, e.g. a stop place or a whole
     /// network.
     #[serde(rename = "ScopeType", default, skip_serializing_if = "Option::is_none")]
     pub scope_type: Option<ScopeType>,
     /// The kind of report, e.g. an incident or general information.
-    #[serde(rename = "ReportType", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ReportType",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub report_type: Option<ReportType>,
     /// Whether the situation was planned, such as engineering works, rather than
     /// unexpected.
-    #[serde(rename = "Planned", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Planned",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub planned: Option<bool>,
     /// Application-specific classifiers, as whitespace-separated tokens.
     #[serde(rename = "Keywords", default, skip_serializing_if = "Option::is_none")]
@@ -178,7 +208,12 @@ pub struct PtSituationElement {
     #[serde(rename = "SecondaryReasons", default, skip_serializing_if = "Option::is_none")]
     pub secondary_reasons: Option<SecondaryReasons>,
     /// Language the texts below are written in unless they say otherwise.
-    #[serde(rename = "Language", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub language: Option<String>,
     /// A headline, one per language offered.
     #[serde(rename = "Summary", default, skip_serializing_if = "Vec::is_empty")]
@@ -330,10 +365,20 @@ pub struct RoadSituationElement {
     #[serde(rename = "Verification", default, skip_serializing_if = "Option::is_none")]
     pub verification: Option<VerificationStatus>,
     /// How far the situation has moved through the editorial workflow.
-    #[serde(rename = "Progress", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Progress",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_open",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub progress: Option<WorkflowStatus>,
     /// How much the producer trusts the data.
-    #[serde(rename = "QualityIndex", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "QualityIndex",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_reliable",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub quality_index: Option<QualityIndex>,
     /// Whether the situation is real or part of an exercise or test.
     #[serde(rename = "Reality", default, skip_serializing_if = "Option::is_none")]
@@ -399,7 +444,12 @@ pub struct RoadSituationElement {
     #[serde(rename = "ControlActionRef", default, skip_serializing_if = "Option::is_none")]
     pub control_action_ref: Option<ControlActionRef>,
     /// How badly the situation disrupts travel.
-    #[serde(rename = "Severity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Severity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_normal",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub severity: Option<Severity>,
     /// Producer-defined ranking, 1 being the most important.
     #[serde(rename = "Priority", default, skip_serializing_if = "Option::is_none")]
@@ -408,17 +458,32 @@ pub struct RoadSituationElement {
     #[serde(rename = "Sensitivity", default, skip_serializing_if = "Option::is_none")]
     pub sensitivity: Option<Sensitivity>,
     /// Who the situation is written for.
-    #[serde(rename = "Audience", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Audience",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_public",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub audience: Option<Audience>,
     /// The kind of thing the situation is about, e.g. a road or an area.
     #[serde(rename = "ScopeType", default, skip_serializing_if = "Option::is_none")]
     pub scope_type: Option<ScopeType>,
     /// The kind of report, e.g. an incident or general information.
-    #[serde(rename = "ReportType", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ReportType",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub report_type: Option<ReportType>,
     /// Whether the situation was planned, such as roadworks, rather than
     /// unexpected.
-    #[serde(rename = "Planned", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Planned",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub planned: Option<bool>,
     /// Application-specific classifiers, as whitespace-separated tokens.
     #[serde(rename = "Keywords", default, skip_serializing_if = "Option::is_none")]
@@ -427,7 +492,12 @@ pub struct RoadSituationElement {
     #[serde(rename = "SecondaryReasons", default, skip_serializing_if = "Option::is_none")]
     pub secondary_reasons: Option<SecondaryReasons>,
     /// Language the texts below are written in unless they say otherwise.
-    #[serde(rename = "Language", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub language: Option<String>,
     /// A headline, one per language offered.
     #[serde(rename = "Summary", default, skip_serializing_if = "Vec::is_empty")]
@@ -714,7 +784,10 @@ impl SituationSource {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SituationRepetitions {
     /// The day types the situation applies on, at least one.
-    #[serde(rename = "DayType", deserialize_with = "crate::xml::token_list::deserialize")]
+    #[serde(
+        rename = "DayType",
+        deserialize_with = "crate::xml::schema_default::enumeration_every_day"
+    )]
     pub day_type: Vec<DayType>,
 }
 

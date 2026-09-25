@@ -52,7 +52,12 @@ macro_rules! connection_monitoring_delivery {
             #[serde(rename = "DelegatorRef", default, skip_serializing_if = "Option::is_none")]
             pub delegator_ref: Option<ParticipantRef>,
             /// Whether the request or subscription was processed successfully.
-            #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+            #[serde(
+                rename = "Status",
+                default,
+                deserialize_with = "crate::xml::schema_default::boolean_true",
+                skip_serializing_if = "Option::is_none"
+            )]
             pub status: Option<bool>,
             /// Why it could not be processed.
             #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -173,7 +178,12 @@ pub struct MonitoredFeederArrival {
     #[serde(rename = "FeederJourney")]
     pub feeder_journey: InterchangeJourney,
     /// Whether the feeder is standing at the stop.
-    #[serde(rename = "VehicleAtStop", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VehicleAtStop",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub vehicle_at_stop: Option<bool>,
     /// How many passengers want to change here.
     #[serde(rename = "NumberOfTransferPassengers", default, skip_serializing_if = "Option::is_none")]
@@ -274,7 +284,7 @@ pub struct MonitoredFeederArrivalCancellation {
     #[serde(
         rename = "VehicleMode",
         default,
-        deserialize_with = "crate::xml::token_list::deserialize",
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
         skip_serializing_if = "Vec::is_empty"
     )]
     pub vehicle_mode: Vec<VehicleModesOfTransport>,

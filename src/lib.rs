@@ -96,6 +96,13 @@
 //!   the alternatives are not single elements and cannot carry an enum's tag. Such
 //!   types offer constructors for each alternative and an accessor that reports
 //!   which one is present — see [`model::Location::position`].
+//! * **An element the schema gives a default value means that value when written
+//!   empty.** `<Monitored/>` is `true` and `<Severity/>` is `normal`: XML Schema
+//!   says so, and the reader reads it so. The declarations are read out of the
+//!   schemas into a table the tests keep in step with them, and every field that
+//!   transcribes one reads through it. The value is written back in full,
+//!   `<Monitored>true</Monitored>`, which the schema holds equal to the empty
+//!   element; a text of whitespace alone is not empty and is read as it stands.
 //! * **What the schema leaves open is kept, not interpreted.** An `<Extensions>`
 //!   payload, a general-message body and an embedded DATEX II record belong to
 //!   profiles outside SIRI, so they are held as the subtree they are and written

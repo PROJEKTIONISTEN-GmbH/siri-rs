@@ -6,7 +6,9 @@
 ///
 /// Beyond the enum itself this generates `XSD_TYPE` and `ALL`, which the
 /// conformance tests use to check the transcription against the schema token by
-/// token. `ALL` lists the schema's tokens only.
+/// token. `ALL` lists the schema's tokens only. The enumeration also reads as a
+/// [`Defaulted`](crate::xml::defaulted::Defaulted) value, for the elements the
+/// schema declares a default token for.
 macro_rules! siri_enum {
     (
         $(#[$meta:meta])*
@@ -80,6 +82,15 @@ macro_rules! siri_enum {
                 serializer: S,
             ) -> ::core::result::Result<S::Ok, S::Error> {
                 serializer.serialize_str(self.as_str())
+            }
+        }
+
+        impl<'de> crate::xml::defaulted::Defaulted<'de> for $name {
+            fn read<D: ::serde::Deserializer<'de>>(
+                deserializer: D,
+                default: &'static str,
+            ) -> ::core::result::Result<Self, D::Error> {
+                crate::xml::defaulted::token(deserializer, default, Self::from_token)
             }
         }
 

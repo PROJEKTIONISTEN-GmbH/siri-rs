@@ -36,7 +36,12 @@ pub struct GeneralMessageCapabilitiesResponse {
     #[serde(rename = "DelegatorRef", default, skip_serializing_if = "Option::is_none")]
     pub delegator_ref: Option<ParticipantRef>,
     /// Whether the capability request was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the capability request could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -112,10 +117,18 @@ pub struct GeneralMessageServiceCapabilities {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GeneralMessageTopicFiltering {
     /// The look-ahead window applied when a request does not name one.
-    #[serde(rename = "DefaultPreviewInterval")]
+    #[serde(
+        rename = "DefaultPreviewInterval",
+        deserialize_with = "crate::xml::schema_default::duration_pt60m"
+    )]
     pub default_preview_interval: Duration,
     /// Whether messages can be narrowed to named channels.
-    #[serde(rename = "FilterByInfoChannel", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByInfoChannel",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_info_channel: Option<bool>,
 }
 
@@ -124,10 +137,16 @@ pub struct GeneralMessageTopicFiltering {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GeneralMessageAccessControl {
     /// Whether requests are checked against permissions at all.
-    #[serde(rename = "RequestChecking")]
+    #[serde(
+        rename = "RequestChecking",
+        deserialize_with = "crate::xml::schema_default::boolean_false"
+    )]
     pub request_checking: bool,
     /// Whether the channel a request names is checked against its permissions.
-    #[serde(rename = "CheckInfoChannelRef")]
+    #[serde(
+        rename = "CheckInfoChannelRef",
+        deserialize_with = "crate::xml::schema_default::boolean_true"
+    )]
     pub check_info_channel_ref: bool,
 }
 

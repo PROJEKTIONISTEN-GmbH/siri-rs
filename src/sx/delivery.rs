@@ -46,7 +46,12 @@ pub struct SituationExchangeDelivery {
     #[serde(rename = "DelegatorRef", default, skip_serializing_if = "Option::is_none")]
     pub delegator_ref: Option<ParticipantRef>,
     /// Whether the request or subscription was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why it could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -173,7 +178,12 @@ pub struct Network {
     #[serde(rename = "NetworkName", default, skip_serializing_if = "Vec::is_empty")]
     pub network_name: Vec<NaturalLanguageString>,
     /// The mode of transport the network is being referred to for.
-    #[serde(rename = "VehicleMode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VehicleMode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub vehicle_mode: Option<VehicleModesOfTransport>,
     /// The kind of air service concerned.
     #[serde(rename = "AirSubmode", default, skip_serializing_if = "Option::is_none")]

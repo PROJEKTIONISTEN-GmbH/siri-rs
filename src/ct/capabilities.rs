@@ -33,7 +33,12 @@ pub struct ConnectionTimetableCapabilitiesResponse {
     #[serde(rename = "DelegatorRef", default, skip_serializing_if = "Option::is_none")]
     pub delegator_ref: Option<ParticipantRef>,
     /// Whether the capability request was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the capability request could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -119,10 +124,16 @@ pub struct ConnectionTimetableServiceCapabilities {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ConnectionTimetableTopicFiltering {
     /// Whether connections can be narrowed to a line.
-    #[serde(rename = "FilterByLineRef")]
+    #[serde(
+        rename = "FilterByLineRef",
+        deserialize_with = "crate::xml::schema_default::boolean_true"
+    )]
     pub filter_by_line_ref: bool,
     /// Whether connections can be narrowed to one connection link.
-    #[serde(rename = "FilterByConnectionLinkRef")]
+    #[serde(
+        rename = "FilterByConnectionLinkRef",
+        deserialize_with = "crate::xml::schema_default::boolean_true"
+    )]
     pub filter_by_connection_link_ref: bool,
 }
 
@@ -139,7 +150,12 @@ pub struct ConnectionTimetableRequestPolicy {
     #[serde(rename = "$value")]
     pub coordinate_format: CoordinateFormat,
     /// Whether the service reports only feeders run by other operators.
-    #[serde(rename = "ForeignJourneysOnly", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ForeignJourneysOnly",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub foreign_journeys_only: Option<bool>,
 }
 

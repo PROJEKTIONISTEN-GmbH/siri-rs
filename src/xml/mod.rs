@@ -20,7 +20,9 @@
 //! # Ok::<(), siri_rs::Error>(())
 //! ```
 
+pub(crate) mod defaulted;
 pub mod namespace;
+pub(crate) mod schema_default;
 pub(crate) mod token_list;
 mod whitespace;
 

@@ -369,31 +369,76 @@ macro_rules! pt_submode {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AffectedMode {
     /// The broad mode of transport, e.g. bus, rail or ferry.
-    #[serde(rename = "VehicleMode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VehicleMode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub vehicle_mode: Option<VehicleModesOfTransport>,
     /// Refinement of the mode when it is air transport.
-    #[serde(rename = "AirSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AirSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub air_submode: Option<AirSubmodesOfTransport>,
     /// Refinement of the mode when it is bus transport.
-    #[serde(rename = "BusSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "BusSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub bus_submode: Option<BusSubmodesOfTransport>,
     /// Refinement of the mode when it is coach transport.
-    #[serde(rename = "CoachSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "CoachSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub coach_submode: Option<CoachSubmodesOfTransport>,
     /// Refinement of the mode when it is metro transport.
-    #[serde(rename = "MetroSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MetroSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub metro_submode: Option<MetroSubmodesOfTransport>,
     /// Refinement of the mode when it is rail transport.
-    #[serde(rename = "RailSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "RailSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub rail_submode: Option<RailSubmodesOfTransport>,
     /// Refinement of the mode when it is tram transport.
-    #[serde(rename = "TramSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TramSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub tram_submode: Option<TramSubmodesOfTransport>,
     /// Refinement of the mode when it is water transport.
-    #[serde(rename = "WaterSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "WaterSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub water_submode: Option<WaterSubmodesOfTransport>,
     /// Refinement of the mode when it is cable-hauled transport.
-    #[serde(rename = "TelecabinSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TelecabinSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub telecabin_submode: Option<TelecabinSubmodesOfTransport>,
     /// How passengers reach the affected place on foot or by other private means.
     #[serde(rename = "AccessMode", default, skip_serializing_if = "Option::is_none")]
@@ -476,31 +521,76 @@ pub struct Network {
     #[serde(rename = "NetworkName", default, skip_serializing_if = "Vec::is_empty")]
     pub network_name: Vec<NaturalLanguageString>,
     /// The broad mode of transport the network runs.
-    #[serde(rename = "VehicleMode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VehicleMode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub vehicle_mode: Option<VehicleModesOfTransport>,
     /// Refinement of the mode when it is air transport.
-    #[serde(rename = "AirSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AirSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub air_submode: Option<AirSubmodesOfTransport>,
     /// Refinement of the mode when it is bus transport.
-    #[serde(rename = "BusSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "BusSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub bus_submode: Option<BusSubmodesOfTransport>,
     /// Refinement of the mode when it is coach transport.
-    #[serde(rename = "CoachSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "CoachSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub coach_submode: Option<CoachSubmodesOfTransport>,
     /// Refinement of the mode when it is metro transport.
-    #[serde(rename = "MetroSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MetroSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub metro_submode: Option<MetroSubmodesOfTransport>,
     /// Refinement of the mode when it is rail transport.
-    #[serde(rename = "RailSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "RailSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub rail_submode: Option<RailSubmodesOfTransport>,
     /// Refinement of the mode when it is tram transport.
-    #[serde(rename = "TramSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TramSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub tram_submode: Option<TramSubmodesOfTransport>,
     /// Refinement of the mode when it is water transport.
-    #[serde(rename = "WaterSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "WaterSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub water_submode: Option<WaterSubmodesOfTransport>,
     /// Refinement of the mode when it is cable-hauled transport.
-    #[serde(rename = "TelecabinSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TelecabinSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub telecabin_submode: Option<TelecabinSubmodesOfTransport>,
     /// How passengers reach the network on foot or by other private means.
     #[serde(rename = "AccessMode", default, skip_serializing_if = "Option::is_none")]
@@ -539,31 +629,76 @@ pub struct AffectedNetwork {
     #[serde(rename = "RoutesAffected", default, skip_serializing_if = "Vec::is_empty")]
     pub routes_affected: Vec<NaturalLanguageString>,
     /// The broad mode of transport affected within the network.
-    #[serde(rename = "VehicleMode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VehicleMode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub vehicle_mode: Option<VehicleModesOfTransport>,
     /// Refinement of the mode when it is air transport.
-    #[serde(rename = "AirSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AirSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub air_submode: Option<AirSubmodesOfTransport>,
     /// Refinement of the mode when it is bus transport.
-    #[serde(rename = "BusSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "BusSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub bus_submode: Option<BusSubmodesOfTransport>,
     /// Refinement of the mode when it is coach transport.
-    #[serde(rename = "CoachSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "CoachSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub coach_submode: Option<CoachSubmodesOfTransport>,
     /// Refinement of the mode when it is metro transport.
-    #[serde(rename = "MetroSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MetroSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub metro_submode: Option<MetroSubmodesOfTransport>,
     /// Refinement of the mode when it is rail transport.
-    #[serde(rename = "RailSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "RailSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub rail_submode: Option<RailSubmodesOfTransport>,
     /// Refinement of the mode when it is tram transport.
-    #[serde(rename = "TramSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TramSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub tram_submode: Option<TramSubmodesOfTransport>,
     /// Refinement of the mode when it is water transport.
-    #[serde(rename = "WaterSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "WaterSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub water_submode: Option<WaterSubmodesOfTransport>,
     /// Refinement of the mode when it is cable-hauled transport.
-    #[serde(rename = "TelecabinSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TelecabinSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub telecabin_submode: Option<TelecabinSubmodesOfTransport>,
     /// How passengers reach the network on foot or by other private means.
     #[serde(rename = "AccessMode", default, skip_serializing_if = "Option::is_none")]
@@ -907,7 +1042,12 @@ pub struct AffectedRoute {
 pub struct AffectedRouteStopPoints {
     /// Whether the list holds only the affected stop points rather than the whole
     /// route. Absent means the whole route is listed.
-    #[serde(rename = "AffectedOnly", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AffectedOnly",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub affected_only: Option<bool>,
     /// The stop points and the projections between them, in order of travel.
     #[serde(rename = "$value", default, skip_serializing_if = "Vec::is_empty")]
@@ -960,7 +1100,12 @@ pub struct AffectedStopPoint {
     pub stop_point_name: Vec<NaturalLanguageString>,
     /// What kind of stop it is, e.g. a bus stop or a platform. Usually implied by
     /// the mode.
-    #[serde(rename = "StopPointType", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StopPointType",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stop_point_type: Option<StopPointType>,
     /// Where the stop is.
     #[serde(rename = "Location", default, skip_serializing_if = "Option::is_none")]
@@ -1065,7 +1210,12 @@ pub struct AffectedConnectionLink {
     #[serde(rename = "ConnectingZoneRef", default, skip_serializing_if = "Option::is_none")]
     pub connecting_zone_ref: Option<ZoneRef>,
     /// Which way along the link the situation applies. Absent means both ways.
-    #[serde(rename = "ConnectionDirection", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ConnectionDirection",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_both",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub connection_direction: Option<ConnectionDirection>,
     /// The walking links making up the connection that are affected.
     #[serde(rename = "AffectedPathLink", default, skip_serializing_if = "Vec::is_empty")]
@@ -1171,7 +1321,12 @@ pub struct AffectedInterchange {
     #[serde(rename = "ConnectingVehicleJourneyRef", default, skip_serializing_if = "Option::is_none")]
     pub connecting_vehicle_journey_ref: Option<DatedVehicleJourneyRef>,
     /// Whether the connection will be held, has been broken, or is uncertain.
-    #[serde(rename = "InterchangeStatusType", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "InterchangeStatusType",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub interchange_status_type: Option<InterchangeStatus>,
     /// The connection links used to make the interchange.
     #[serde(rename = "ConnectionLink", default, skip_serializing_if = "Vec::is_empty")]
@@ -1425,7 +1580,12 @@ pub struct AffectedCall {
     #[serde(rename = "StopPointName", default, skip_serializing_if = "Vec::is_empty")]
     pub stop_point_name: Vec<NaturalLanguageString>,
     /// What kind of stop it is. Usually implied by the mode.
-    #[serde(rename = "StopPointType", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StopPointType",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stop_point_type: Option<StopPointType>,
     /// Where the stop is.
     #[serde(rename = "Location", default, skip_serializing_if = "Option::is_none")]
@@ -1478,7 +1638,12 @@ pub struct AffectedCall {
     )]
     pub call_condition: Vec<RoutePointType>,
     /// Whether the vehicle is currently standing at the stop.
-    #[serde(rename = "VehicleAtStop", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VehicleAtStop",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub vehicle_at_stop: Option<bool>,
     /// Where the vehicle is standing, when that is more precise than the stop's own
     /// position.
@@ -1486,13 +1651,28 @@ pub struct AffectedCall {
     pub vehicle_location_at_stop: Option<Location>,
     /// Whether the call is a timing point, i.e. one the timetable is measured
     /// against rather than an intermediate stop.
-    #[serde(rename = "TimingPoint", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TimingPoint",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub timing_point: Option<bool>,
     /// Whether the call lies in a stretch where passengers may board anywhere.
-    #[serde(rename = "BoardingStretch", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "BoardingStretch",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub boarding_stretch: Option<bool>,
     /// Whether the vehicle only calls here when asked to.
-    #[serde(rename = "RequestStop", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "RequestStop",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub request_stop: Option<bool>,
     /// The origin shown on the vehicle at this call, one entry per language.
     #[serde(rename = "OriginDisplay", default, skip_serializing_if = "Vec::is_empty")]
@@ -1517,7 +1697,12 @@ pub struct AffectedCall {
     #[serde(rename = "ArrivalPlatformName", default, skip_serializing_if = "Vec::is_empty")]
     pub arrival_platform_name: Vec<NaturalLanguageString>,
     /// Whether passengers may alight here.
-    #[serde(rename = "ArrivalBoardingActivity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ArrivalBoardingActivity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_alighting",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub arrival_boarding_activity: Option<ArrivalBoardingActivity>,
     /// When the vehicle is timetabled to depart.
     #[serde(rename = "AimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
@@ -1535,7 +1720,12 @@ pub struct AffectedCall {
     #[serde(rename = "DeparturePlatformName", default, skip_serializing_if = "Vec::is_empty")]
     pub departure_platform_name: Vec<NaturalLanguageString>,
     /// Whether passengers may board here.
-    #[serde(rename = "DepartureBoardingActivity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DepartureBoardingActivity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_boarding",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub departure_boarding_activity: Option<DepartureBoardingActivity>,
     /// The timetabled interval between vehicles, for services shown as a frequency
     /// rather than at fixed times.
@@ -1649,10 +1839,20 @@ pub struct AffectedVehicle {
     #[serde(rename = "InCongestion", default, skip_serializing_if = "Option::is_none")]
     pub in_congestion: Option<bool>,
     /// Whether the vehicle's panic alarm has been raised.
-    #[serde(rename = "InPanic", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "InPanic",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub in_panic: Option<bool>,
     /// Whether the vehicle runs to a frequency rather than to fixed times.
-    #[serde(rename = "HeadwayService", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HeadwayService",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub headway_service: Option<bool>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]

@@ -51,7 +51,12 @@ pub struct ControlActionDelivery {
     #[serde(rename = "DelegatorRef", default, skip_serializing_if = "Option::is_none")]
     pub delegator_ref: Option<ParticipantRef>,
     /// Whether the request or subscription was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why it could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -340,13 +345,28 @@ pub struct DriverMessage {
     #[serde(rename = "MessageCode", default, skip_serializing_if = "Option::is_none")]
     pub message_code: Option<String>,
     /// Whether the driver sent the message rather than received it.
-    #[serde(rename = "OriginatedByDriver", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "OriginatedByDriver",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub originated_by_driver: Option<bool>,
     /// Whether the message asks a parking point for a vehicle held in reserve.
-    #[serde(rename = "CallForMeans", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "CallForMeans",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub call_for_means: Option<bool>,
     /// Whether it asks a garage to repair a vehicle.
-    #[serde(rename = "CallForRepairs", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "CallForRepairs",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub call_for_repairs: Option<bool>,
     /// Who the message is to, or from.
     #[serde(rename = "DriverScope")]

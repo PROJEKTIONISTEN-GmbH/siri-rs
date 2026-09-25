@@ -55,7 +55,7 @@ pub struct MonitoredVehicleJourney {
     #[serde(
         rename = "VehicleMode",
         default,
-        deserialize_with = "crate::xml::token_list::deserialize",
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
         skip_serializing_if = "Vec::is_empty"
     )]
     pub vehicle_mode: Vec<VehicleModesOfTransport>,
@@ -132,7 +132,12 @@ pub struct MonitoredVehicleJourney {
     #[serde(rename = "OperationsContact", default, skip_serializing_if = "Option::is_none")]
     pub operations_contact: Option<SimpleContact>,
     /// Whether the service runs to a headway rather than to fixed times.
-    #[serde(rename = "HeadwayService", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HeadwayService",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub headway_service: Option<bool>,
     /// When the journey is planned to leave its origin.
     #[serde(rename = "OriginAimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
@@ -141,7 +146,12 @@ pub struct MonitoredVehicleJourney {
     #[serde(rename = "DestinationAimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
     pub destination_aimed_arrival_time: Option<DateTime<FixedOffset>>,
     /// Whether this is the first or the last journey of the day on the line.
-    #[serde(rename = "FirstOrLastJourney", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FirstOrLastJourney",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unspecified",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub first_or_last_journey: Option<FirstOrLastJourney>,
     /// Changes to how the train is put together.
     #[serde(rename = "FormationCondition", default, skip_serializing_if = "Vec::is_empty")]
@@ -159,7 +169,12 @@ pub struct MonitoredVehicleJourney {
     #[serde(rename = "ControlActionRef", default, skip_serializing_if = "Option::is_none")]
     pub control_action_ref: Option<ControlActionRef>,
     /// Whether the journey is being tracked in real time.
-    #[serde(rename = "Monitored", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Monitored",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub monitored: Option<bool>,
     /// Why tracking is not working, in the producer's own codes.
     #[serde(
@@ -173,10 +188,20 @@ pub struct MonitoredVehicleJourney {
     #[serde(rename = "InCongestion", default, skip_serializing_if = "Option::is_none")]
     pub in_congestion: Option<bool>,
     /// Whether the crew has raised an alarm.
-    #[serde(rename = "InPanic", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "InPanic",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub in_panic: Option<bool>,
     /// Whether the predicted times should be treated as unreliable.
-    #[serde(rename = "PredictionInaccurate", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "PredictionInaccurate",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub prediction_inaccurate: Option<bool>,
     /// Why they are unreliable.
     #[serde(rename = "PredictionInaccurateReason", default, skip_serializing_if = "Option::is_none")]
@@ -185,7 +210,12 @@ pub struct MonitoredVehicleJourney {
     #[serde(rename = "DataSource", default, skip_serializing_if = "Option::is_none")]
     pub data_source: Option<String>,
     /// How much confidence to put in the data.
-    #[serde(rename = "ConfidenceLevel", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ConfidenceLevel",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_reliable",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub confidence_level: Option<QualityIndex>,
     /// Where the vehicle is.
     #[serde(rename = "VehicleLocation", default, skip_serializing_if = "Option::is_none")]
@@ -203,7 +233,12 @@ pub struct MonitoredVehicleJourney {
     #[serde(rename = "Velocity", default, skip_serializing_if = "Option::is_none")]
     pub velocity: Option<u64>,
     /// Whether the engine is running.
-    #[serde(rename = "EngineOn", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "EngineOn",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub engine_on: Option<bool>,
     /// How full the vehicle is.
     #[serde(rename = "Occupancy", default, skip_serializing_if = "Option::is_none")]
@@ -266,7 +301,12 @@ pub struct MonitoredVehicleJourney {
     #[serde(rename = "OnwardCalls", default, skip_serializing_if = "Option::is_none")]
     pub onward_calls: Option<OnwardCalls>,
     /// Whether the calls above are the journey's whole stop sequence.
-    #[serde(rename = "IsCompleteStopSequence", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IsCompleteStopSequence",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub is_complete_stop_sequence: Option<bool>,
 }
 
@@ -328,7 +368,12 @@ pub struct PreviousCall {
     #[serde(rename = "StopPointName", default, skip_serializing_if = "Vec::is_empty")]
     pub stop_point_name: Vec<NaturalLanguageString>,
     /// Whether the vehicle is standing at the stop.
-    #[serde(rename = "VehicleAtStop", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VehicleAtStop",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub vehicle_at_stop: Option<bool>,
     /// When the vehicle was planned to arrive.
     #[serde(rename = "AimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
@@ -375,28 +420,58 @@ pub struct MonitoredCall {
     #[serde(rename = "StopPointName", default, skip_serializing_if = "Vec::is_empty")]
     pub stop_point_name: Vec<NaturalLanguageString>,
     /// Whether the vehicle is standing at the stop.
-    #[serde(rename = "VehicleAtStop", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VehicleAtStop",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub vehicle_at_stop: Option<bool>,
     /// Where the vehicle is standing, when that is more precise than the stop.
     #[serde(rename = "VehicleLocationAtStop", default, skip_serializing_if = "Option::is_none")]
     pub vehicle_location_at_stop: Option<Location>,
     /// Whether the train changes direction here.
-    #[serde(rename = "ReversesAtStop", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ReversesAtStop",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub reverses_at_stop: Option<bool>,
     /// Whether the train runs through the platform without stopping.
-    #[serde(rename = "PlatformTraversal", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "PlatformTraversal",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub platform_traversal: Option<bool>,
     /// The state of the signal governing the approach, in the operator's own codes.
     #[serde(rename = "SignalStatus", default, skip_serializing_if = "Option::is_none")]
     pub signal_status: Option<String>,
     /// Whether the stop is a timing point the timetable is measured against.
-    #[serde(rename = "TimingPoint", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TimingPoint",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub timing_point: Option<bool>,
     /// Whether passengers may board anywhere along the stretch before this stop.
-    #[serde(rename = "BoardingStretch", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "BoardingStretch",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub boarding_stretch: Option<bool>,
     /// Whether the vehicle calls only when asked to.
-    #[serde(rename = "RequestStop", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "RequestStop",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub request_stop: Option<bool>,
     /// What is shown as the origin from this stop on, one per language.
     #[serde(rename = "OriginDisplay", default, skip_serializing_if = "Vec::is_empty")]
@@ -447,7 +522,12 @@ pub struct MonitoredCall {
     #[serde(rename = "ArrivalPlatformName", default, skip_serializing_if = "Vec::is_empty")]
     pub arrival_platform_name: Vec<NaturalLanguageString>,
     /// Whether passengers may alight here.
-    #[serde(rename = "ArrivalBoardingActivity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ArrivalBoardingActivity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_alighting",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub arrival_boarding_activity: Option<ArrivalBoardingActivity>,
     /// Where the vehicle stands on arrival.
     #[serde(rename = "ArrivalStopAssignment", default, skip_serializing_if = "Vec::is_empty")]
@@ -498,7 +578,12 @@ pub struct MonitoredCall {
     #[serde(rename = "DeparturePlatformName", default, skip_serializing_if = "Vec::is_empty")]
     pub departure_platform_name: Vec<NaturalLanguageString>,
     /// Whether passengers may board here.
-    #[serde(rename = "DepartureBoardingActivity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DepartureBoardingActivity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_boarding",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub departure_boarding_activity: Option<DepartureBoardingActivity>,
     /// Where the vehicle stands for departure.
     #[serde(rename = "DepartureStopAssignment", default, skip_serializing_if = "Vec::is_empty")]
@@ -557,10 +642,20 @@ pub struct OnwardCall {
     #[serde(rename = "StopPointName", default, skip_serializing_if = "Vec::is_empty")]
     pub stop_point_name: Vec<NaturalLanguageString>,
     /// Whether the vehicle is standing at the stop.
-    #[serde(rename = "VehicleAtStop", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VehicleAtStop",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub vehicle_at_stop: Option<bool>,
     /// Whether the stop is a timing point the timetable is measured against.
-    #[serde(rename = "TimingPoint", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TimingPoint",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub timing_point: Option<bool>,
     /// When the vehicle is planned to arrive.
     #[serde(rename = "AimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
@@ -590,7 +685,12 @@ pub struct OnwardCall {
     #[serde(rename = "ArrivalPlatformName", default, skip_serializing_if = "Vec::is_empty")]
     pub arrival_platform_name: Vec<NaturalLanguageString>,
     /// Whether passengers may alight here.
-    #[serde(rename = "ArrivalBoardingActivity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ArrivalBoardingActivity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_alighting",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub arrival_boarding_activity: Option<ArrivalBoardingActivity>,
     /// Where the vehicle stands on arrival.
     #[serde(rename = "ArrivalStopAssignment", default, skip_serializing_if = "Vec::is_empty")]
@@ -641,7 +741,12 @@ pub struct OnwardCall {
     #[serde(rename = "DeparturePlatformName", default, skip_serializing_if = "Vec::is_empty")]
     pub departure_platform_name: Vec<NaturalLanguageString>,
     /// Whether passengers may board here.
-    #[serde(rename = "DepartureBoardingActivity", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DepartureBoardingActivity",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_boarding",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub departure_boarding_activity: Option<DepartureBoardingActivity>,
     /// Where the vehicle stands for departure.
     #[serde(rename = "DepartureStopAssignment", default, skip_serializing_if = "Vec::is_empty")]

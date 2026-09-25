@@ -33,7 +33,12 @@ pub struct FacilityMonitoringCapabilitiesResponse {
     #[serde(rename = "DelegatorRef", default, skip_serializing_if = "Option::is_none")]
     pub delegator_ref: Option<ParticipantRef>,
     /// Whether the capability request was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why the capability request could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -122,37 +127,81 @@ pub struct FacilityMonitoringServiceCapabilities {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FacilityMonitoringTopicFiltering {
     /// The look-ahead window applied when a request does not name one.
-    #[serde(rename = "DefaultPreviewInterval")]
+    #[serde(
+        rename = "DefaultPreviewInterval",
+        deserialize_with = "crate::xml::schema_default::duration_pt60m"
+    )]
     pub default_preview_interval: Duration,
     /// Whether facilities can be narrowed to named facilities.
-    #[serde(rename = "FilterByFacilityRef")]
+    #[serde(
+        rename = "FilterByFacilityRef",
+        deserialize_with = "crate::xml::schema_default::boolean_true"
+    )]
     pub filter_by_facility_ref: bool,
     /// Whether they can be narrowed to a place or a service.
     ///
     /// The schema fixes this to `true`: naming where the facility is, is how a
     /// facility-monitoring request states its topic at all.
-    #[serde(rename = "FilterByLocationRef")]
+    #[serde(
+        rename = "FilterByLocationRef",
+        deserialize_with = "crate::xml::schema_default::boolean_true"
+    )]
     pub filter_by_location_ref: bool,
     /// Whether they can be narrowed to one vehicle.
-    #[serde(rename = "FilterByVehicleRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByVehicleRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_vehicle_ref: Option<bool>,
     /// Whether they can be narrowed to one line.
-    #[serde(rename = "FilterByLineRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByLineRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_line_ref: Option<bool>,
     /// Whether they can be narrowed to one stop.
-    #[serde(rename = "FilterByStopPointRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByStopPointRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_stop_point_ref: Option<bool>,
     /// Whether they can be narrowed to one journey.
-    #[serde(rename = "FilterByVehicleJourneyRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByVehicleJourneyRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_vehicle_journey_ref: Option<bool>,
     /// Whether they can be narrowed to one connection link.
-    #[serde(rename = "FilterByConnectionLinkRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByConnectionLinkRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_connection_link_ref: Option<bool>,
     /// Whether they can be narrowed to one interchange.
-    #[serde(rename = "FilterByInterchangeRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterByInterchangeRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_interchange_ref: Option<bool>,
     /// Whether they can be narrowed to the facilities bearing on a passenger need.
-    #[serde(rename = "FilterBySpecificNeed", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FilterBySpecificNeed",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub filter_by_specific_need: Option<bool>,
 }
 
@@ -169,7 +218,12 @@ pub struct FacilityMonitoringRequestPolicy {
     #[serde(rename = "$value")]
     pub coordinate_format: CoordinateFormat,
     /// Whether a request may cap how many facility conditions come back.
-    #[serde(rename = "HasMaximumFacilityStatus", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasMaximumFacilityStatus",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_maximum_facility_status: Option<bool>,
 }
 
@@ -190,13 +244,26 @@ impl FacilityMonitoringRequestPolicy {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FacilityMonitoringAccessControl {
     /// Whether requests are checked against permissions at all.
-    #[serde(rename = "RequestChecking")]
+    #[serde(
+        rename = "RequestChecking",
+        deserialize_with = "crate::xml::schema_default::boolean_false"
+    )]
     pub request_checking: bool,
     /// Whether the operator a request names is checked against its permissions.
-    #[serde(rename = "CheckOperatorRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "CheckOperatorRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub check_operator_ref: Option<bool>,
     /// Whether the line a request names is checked against its permissions.
-    #[serde(rename = "CheckLineRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "CheckLineRef",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub check_line_ref: Option<bool>,
 }
 
@@ -204,10 +271,20 @@ pub struct FacilityMonitoringAccessControl {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FacilityMonitoringResponseFeatures {
     /// Whether the responses say what is being done about a failure.
-    #[serde(rename = "HasRemedy", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasRemedy",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_remedy: Option<bool>,
     /// Whether they say where the facility is.
-    #[serde(rename = "HasFacilityLocation", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HasFacilityLocation",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub has_facility_location: Option<bool>,
 }
 

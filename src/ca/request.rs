@@ -46,19 +46,44 @@ pub struct ControlActionRequest {
     #[serde(rename = "Lines", default, skip_serializing_if = "Option::is_none")]
     pub lines: Option<RequestedLines>,
     /// Whether to include the messages exchanged with drivers.
-    #[serde(rename = "IncludeDriverMessages", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeDriverMessages",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_driver_messages: Option<bool>,
     /// Whether to include vehicles detected by trackside equipment.
-    #[serde(rename = "IncludeVehicleDetectings", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeVehicleDetectings",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_vehicle_detectings: Option<bool>,
     /// Languages the requestor would like texts in, most preferred first.
-    #[serde(rename = "Language", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub language: Vec<String>,
     /// Whether to include every translation of a text rather than only one.
-    #[serde(rename = "IncludeTranslations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeTranslations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_translations: Option<bool>,
     /// Whether to include the situations the actions belong to.
-    #[serde(rename = "IncludeSituations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeSituations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_situations: Option<bool>,
     /// At most this many actions.
     #[serde(
@@ -175,19 +200,44 @@ pub struct ControlActionFilter {
     #[serde(rename = "Lines", default, skip_serializing_if = "Option::is_none")]
     pub lines: Option<RequestedLines>,
     /// Whether to include the messages exchanged with drivers.
-    #[serde(rename = "IncludeDriverMessages", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeDriverMessages",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_driver_messages: Option<bool>,
     /// Whether to include vehicles detected by trackside equipment.
-    #[serde(rename = "IncludeVehicleDetectings", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeVehicleDetectings",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_vehicle_detectings: Option<bool>,
     /// Languages the requestor would like texts in, most preferred first.
-    #[serde(rename = "Language", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub language: Vec<String>,
     /// Whether to include every translation of a text rather than only one.
-    #[serde(rename = "IncludeTranslations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeTranslations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_translations: Option<bool>,
     /// Whether to include the situations the actions belong to.
-    #[serde(rename = "IncludeSituations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncludeSituations",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub include_situations: Option<bool>,
     /// At most this many actions.
     #[serde(
@@ -230,7 +280,12 @@ pub struct ControlActionSubscriptionRequest {
     #[serde(rename = "ControlActionRequest")]
     pub control_action_request: ControlActionRequest,
     /// Whether to send only what has changed rather than the full set each time.
-    #[serde(rename = "IncrementalUpdates", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "IncrementalUpdates",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub incremental_updates: Option<bool>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]

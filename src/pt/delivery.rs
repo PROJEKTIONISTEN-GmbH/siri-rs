@@ -50,7 +50,12 @@ pub struct ProductionTimetableDelivery {
     #[serde(rename = "DelegatorRef", default, skip_serializing_if = "Option::is_none")]
     pub delegator_ref: Option<ParticipantRef>,
     /// Whether the request or subscription was processed successfully.
-    #[serde(rename = "Status", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub status: Option<bool>,
     /// Why it could not be processed.
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
@@ -139,7 +144,7 @@ pub struct DatedTimetableVersionFrame {
     #[serde(
         rename = "VehicleMode",
         default,
-        deserialize_with = "crate::xml::token_list::deserialize",
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
         skip_serializing_if = "Vec::is_empty"
     )]
     pub vehicle_mode: Vec<VehicleModesOfTransport>,
@@ -186,13 +191,28 @@ pub struct DatedTimetableVersionFrame {
     #[serde(rename = "LineNote", default, skip_serializing_if = "Vec::is_empty")]
     pub line_note: Vec<NaturalLanguagePlaceName>,
     /// Whether these are the first or the last runs of the day on the line.
-    #[serde(rename = "FirstOrLastJourney", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FirstOrLastJourney",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unspecified",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub first_or_last_journey: Option<FirstOrLastJourney>,
     /// Whether the services run to a headway rather than to fixed times.
-    #[serde(rename = "HeadwayService", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HeadwayService",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub headway_service: Option<bool>,
     /// Whether the runs will be tracked in real time.
-    #[serde(rename = "Monitored", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Monitored",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub monitored: Option<bool>,
     /// The runs themselves.
     #[serde(rename = "DatedVehicleJourney", default, skip_serializing_if = "Vec::is_empty")]

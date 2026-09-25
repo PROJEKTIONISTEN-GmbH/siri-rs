@@ -47,7 +47,7 @@ pub struct InterchangeJourney {
     #[serde(
         rename = "VehicleMode",
         default,
-        deserialize_with = "crate::xml::token_list::deserialize",
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
         skip_serializing_if = "Vec::is_empty"
     )]
     pub vehicle_mode: Vec<VehicleModesOfTransport>,
@@ -124,7 +124,12 @@ pub struct InterchangeJourney {
     #[serde(rename = "OperationsContact", default, skip_serializing_if = "Option::is_none")]
     pub operations_contact: Option<SimpleContact>,
     /// Whether the service runs to a headway rather than to fixed times.
-    #[serde(rename = "HeadwayService", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HeadwayService",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_false",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub headway_service: Option<bool>,
     /// When the journey is planned to leave its origin.
     #[serde(rename = "OriginAimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
@@ -133,7 +138,12 @@ pub struct InterchangeJourney {
     #[serde(rename = "DestinationAimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
     pub destination_aimed_arrival_time: Option<DateTime<FixedOffset>>,
     /// Whether this is the first or the last journey of the day on the line.
-    #[serde(rename = "FirstOrLastJourney", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FirstOrLastJourney",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unspecified",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub first_or_last_journey: Option<FirstOrLastJourney>,
     /// Changes to how the train is put together.
     #[serde(rename = "FormationCondition", default, skip_serializing_if = "Vec::is_empty")]
@@ -172,7 +182,12 @@ pub struct InterchangeJourney {
     #[serde(rename = "DriverName", default, skip_serializing_if = "Option::is_none")]
     pub driver_name: Option<String>,
     /// Whether the journey is being tracked in real time.
-    #[serde(rename = "Monitored", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "Monitored",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub monitored: Option<bool>,
     /// When the journey is planned to leave the interchange stop.
     #[serde(rename = "AimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
