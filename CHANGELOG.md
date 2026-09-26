@@ -1,5 +1,33 @@
 # Changelog
 
+## 2.2.0 — 2026-09-26
+
+### Added
+
+- A lenient reader, behind the `lenient` feature: `siri_rs::lenient::from_str`
+  reads a document whose strict reading fails inside a functional service
+  delivery for what reads. The element at fault is left out where the schema
+  makes it optional; where the schema demands it, the smallest enclosing
+  element the document reads without goes, up to the unit — a situation, a
+  journey, a stop visit, a vehicle, a facility, a message, or the delivery
+  itself while another remains. A list of records the reader finds interrupted
+  by another element keeps its first run. Every element left out is a
+  `Finding`, with the element's path in the form the reader's errors use, the
+  reason the reader gave, and what went for it, a unit named by its
+  `SituationNumber`, `DatedVehicleJourneyRef`, `ItemIdentifier` or the like;
+  `Findings` counts them, groups them by reason and lists the units. The
+  envelope, the only delivery, and everything wrong with the document rather
+  than in it — XML that is not well-formed, a root that is not `<Siri>` — fail
+  as they do strictly. Nothing is guessed and nothing is put in a fault's
+  place. A document the strict reader accepts reads leniently as it does
+  strictly, with no findings and at the same cost; one that does not is read
+  again in pieces, each record on its own, so a delivery with a hundred faults
+  costs a few readings of its size rather than a hundred.
+- The feature adds the reader and nothing else: `siri_rs::from_str` reads
+  exactly as before with the feature on or off, and no dependency comes with it.
+  docs.rs builds the documentation with the feature, and the `read` benchmark
+  measures the lenient reader next to the strict one.
+
 ## 2.1.0 — 2026-09-25
 
 ### Added
