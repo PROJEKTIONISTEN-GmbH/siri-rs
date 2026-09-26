@@ -297,3 +297,44 @@ fn the_manifest_points_at_files_that_exist() {
     assert!(manifest.contains("readme = \"README.md\""));
     assert!(manifest.contains("license = \"MIT OR Apache-2.0\""));
 }
+
+/// The lenient reader is a feature a consumer switches on, and one they can find:
+/// declared in the manifest, built into the documentation on docs.rs, and shown on
+/// the front page with the feature line that enables it.
+#[test]
+fn the_lenient_feature_is_declared_and_shown() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let manifest = std::fs::read_to_string(root.join("Cargo.toml")).expect("readable manifest");
+    let features = section(&manifest, "[features]");
+    assert!(
+        features.lines().any(|line| line.trim_start().starts_with("lenient = [")),
+        "the manifest declares the `lenient` feature"
+    );
+    let docs_rs = section(&manifest, "[package.metadata.docs.rs]");
+    assert!(
+        docs_rs.lines().any(|line| line.trim() == "all-features = true"),
+        "docs.rs builds the documentation with every feature, so the lenient reader is shown"
+    );
+
+    let readme = std::fs::read_to_string(root.join("README.md")).expect("readable README");
+    assert!(
+        readme.contains("## Reading streams you don't control"),
+        "the front page has a section on reading streams one does not control"
+    );
+    assert!(
+        readme.contains(r#"features = ["lenient"]"#),
+        "the section shows the feature line that switches the reader on"
+    );
+    assert!(
+        readme.contains("siri_rs::lenient::from_str"),
+        "the section shows the reading function"
+    );
+}
+
+/// The lines of a TOML table, from its header to the next one.
+fn section<'a>(manifest: &'a str, header: &str) -> &'a str {
+    let start = manifest.find(header).map_or(0, |at| at + header.len());
+    let rest = &manifest[start..];
+    let end = rest.find("\n[").unwrap_or(rest.len());
+    &rest[..end]
+}
