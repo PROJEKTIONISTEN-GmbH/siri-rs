@@ -166,6 +166,57 @@ it, so `Hello <b>world</b> again` is written back as `Hello<b>world</b>again`. A
 of whitespace alone is kept, though: `<Note>   </Note>` comes back as it was.
 `AnyContent`'s documentation says so, and tests pin all three.
 
+## Reading streams you don't control
+
+`siri_rs::from_str` reads a document whole or not at all: one element the reader
+cannot make sense of — an empty `<AimedArrivalTime/>`, a journey without its
+`LineRef`, a word where a number goes — fails the document, and the hundreds of
+valid journeys or situations in the same delivery with it. A program that
+consumes another operator's feed has no say in what arrives. For it there is a
+second reader, behind a feature:
+
+```text
+[dependencies]
+siri-rs = { version = "2.2", features = ["lenient"] }
+```
+
+```rust
+let (siri, findings) = siri_rs::lenient::from_str(&xml)?;
+for finding in &findings {
+    log::warn!("{finding}");
+}
+if let Some(delivery) = siri.payload.as_service_delivery() {
+    // every delivery, journey, visit, vehicle and situation that could be read
+}
+```
+
+The feature adds a reader; it changes nothing about the strict one, which stays
+the default and reads exactly as before whether the feature is on or off. What
+the lenient reader does differently starts where the strict one fails:
+
+- **It leaves out the smallest thing the document reads without.** An element
+  the schema leaves optional goes alone, and the unit around it — the situation,
+  journey, stop visit, vehicle, facility, message or delivery — is kept. An
+  element the schema demands takes its parent with it, up to the unit, which then
+  goes whole. Nothing is guessed and nothing is put in a fault's place.
+- **It reports every element left out.** Each `Finding` names the element that
+  could not be read, in the path form the strict reader's errors use, the reason
+  the reader gave, and what went for it — an element, or a unit with its
+  `SituationNumber`, `DatedVehicleJourneyRef`, `ItemIdentifier` or the like, so
+  that what is missing can be named. `findings.len()` counts them,
+  `findings.by_reason()` groups them, `findings.units()` lists the units.
+- **It is no more lenient than that.** The envelope — `<Siri>`,
+  `<ServiceDelivery>` and its own elements — the only delivery, and everything
+  wrong with the document rather than in it (XML that is not well-formed, a root
+  that is not `<Siri>`) fail as they do with the strict reader.
+
+A document the strict reader accepts reads leniently as it does strictly, with
+no findings and at the same cost: the lenient reading is the strict one until it
+fails. A document that fails is read again in pieces — each record on its own,
+then each delivery, then the whole — so a delivery with a hundred faults costs
+about as much as one with a single fault, a few times the strict reading of its
+size. The module documentation lists the units of every service.
+
 ## Running an endpoint
 
 `siri_rs::pubsub` implements both sides of the data hub as state machines. They turn
