@@ -85,21 +85,42 @@ fn a_mandatory_element_that_does_not_read_takes_its_unit_with_it() {
 #[test]
 fn a_mandatory_element_inside_an_optional_one_costs_only_the_optional_one() {
     let example = fixture(SX);
-    // StartTime is mandatory in a validity period; the validity period is one of
-    // a list the situation may leave empty.
-    let broken = remove(&example, "StartTime", 0);
+    // StartTime is mandatory in a period; the second StartTime opens the period of
+    // a consequence, which is one of a list the consequence may leave empty.
+    let broken = remove(&example, "StartTime", 1);
 
     let (read, findings) = lenient(&broken);
 
-    assert_eq!(read, strict(&remove(&example, "ValidityPeriod", 0)));
+    assert_eq!(read, strict(&remove(&example, "Period", 0)));
     assert_eq!(findings.len(), 1);
     let finding = &findings.iter().next().expect("one finding");
     let period = "ServiceDelivery.SituationExchangeDelivery[0].Situations\
-                  .PtSituationElement[0].ValidityPeriod[0]";
+                  .PtSituationElement[0].Consequences.Consequence[0].Period[0]";
     assert_eq!(finding.path, period);
     assert_eq!(finding.reason, "missing field `StartTime`");
     assert!(matches!(&finding.discarded, Discarded::Element { .. }));
     assert_eq!(finding.discarded.path(), period);
+}
+
+#[test]
+fn a_mandatory_element_inside_a_mandatory_one_costs_the_unit() {
+    let example = fixture(SX);
+    // The first StartTime opens the situation's validity period, of which the
+    // schema demands at least one: without its period the situation is no
+    // situation.
+    let broken = remove(&example, "StartTime", 0);
+
+    let (read, findings) = lenient(&broken);
+
+    assert_eq!(read, strict(&remove(&example, "PtSituationElement", 0)));
+    assert_eq!(findings.len(), 1);
+    let finding = &findings.iter().next().expect("one finding");
+    let situation = "ServiceDelivery.SituationExchangeDelivery[0].Situations.PtSituationElement[0]";
+    assert_eq!(finding.path, format!("{situation}.ValidityPeriod[0]"));
+    assert_eq!(finding.reason, "missing field `StartTime`");
+    assert_eq!(finding.discarded.path(), situation);
+    assert_eq!(finding.discarded.unit_name(), Some("PtSituationElement"));
+    assert_eq!(finding.discarded.identifier(), Some("000354"));
 }
 
 /// How one unit of a service is broken: which element, counted over the whole
@@ -173,7 +194,7 @@ const UNIT_CASES: &[UnitCase] = &[
         unit: "TimetabledStopVisit",
         nth: 0,
         fault: Fault::Empty("RecordedAtTime", 0),
-        identifier: Some("HLTST011"),
+        identifier: Some("Oubound"),
     },
     UnitCase {
         fixture: "xml/ct/exc_connectionTimetable_response.xml",
