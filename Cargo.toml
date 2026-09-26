@@ -21,6 +21,9 @@ bench = false
 [dependencies]
 chrono = { version = "0.4.38", default-features = false, features = ["std", "serde", "alloc"] }
 quick-xml = { version = "0.37", features = ["serialize"] }
+# The vectorised byte search the XML reader is built on, used directly to look a
+# document over for an element holding nothing but whitespace before it is read.
+memchr = "2"
 serde = { version = "1", features = ["derive"] }
 # Names the field a document fails at. A reader of a delivery twenty thousand
 # records long is owed more than "missing field"; this is what carries the path.

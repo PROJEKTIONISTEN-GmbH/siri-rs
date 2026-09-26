@@ -20,6 +20,7 @@
 use std::borrow::Cow;
 use std::ops::Range;
 
+use memchr::{memmem, memrchr};
 use quick_xml::events::Event;
 use quick_xml::Reader;
 
@@ -58,12 +59,15 @@ const CDATA_OVERHEAD: usize = "<![CDATA[]]>".len();
 /// CDATA section, so a `true` is a reason to tokenise, not a finding. It cannot
 /// miss an element: the only way to be sure nothing is there is to have looked at
 /// every end tag.
+///
+/// Every document read pays for this scan, so the end tags are found with the
+/// vectorised search the XML reader itself is built on, and the few bytes around
+/// each are all that is looked at. Found with the standard library's substring
+/// search instead, the end tags cost a tenth of the time it takes to read a
+/// document of ten kilobytes; found this way they cost a few per cent.
 fn may_hold_blank_content(xml: &str) -> bool {
     let bytes = xml.as_bytes();
-    let mut from = 0;
-    while let Some(at) = xml[from..].find("</") {
-        let end_tag = from + at;
-        from = end_tag + 2;
+    for end_tag in memmem::find_iter(bytes, b"</") {
         let mut text_start = end_tag;
         while text_start > 0 && bytes[text_start - 1].is_ascii_whitespace() {
             text_start -= 1;
@@ -82,7 +86,7 @@ fn may_hold_blank_content(xml: &str) -> bool {
 /// element, a comment, a processing instruction or a CDATA section, and is not a
 /// `>` inside an attribute value.
 fn closes_a_start_tag(bytes: &[u8], close: usize) -> bool {
-    let Some(open) = bytes[..close].iter().rposition(|&byte| byte == b'<') else {
+    let Some(open) = memrchr(b'<', &bytes[..close]) else {
         return false;
     };
     let tag = &bytes[open + 1..close];

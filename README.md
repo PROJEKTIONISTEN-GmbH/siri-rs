@@ -408,7 +408,8 @@ Two things follow from the measurements and are worth knowing when reading the c
 - **Reading borrows.** A document written without namespace prefixes — how most feeds
   are written — is handed to the deserialiser as it arrived, with no copy and no
   rewrite. Only a document that writes a prefixed element, or an element holding
-  nothing but whitespace, is rewritten, once, before it is read.
+  nothing but whitespace, is rewritten, once, before it is read. Looking a
+  document over for the latter costs a few per cent of the read.
 - **Writing fills one buffer.** The declaration, the namespace and the body are
   produced into a single string rather than assembled from several.
 

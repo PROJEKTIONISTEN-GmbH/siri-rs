@@ -34,7 +34,8 @@
   inside another is not text and is not read as any. A document holding such an
   element is rewritten once before it is read, like one that binds the SIRI
   namespace to a prefix; every other document is still handed to the reader
-  borrowed.
+  borrowed. Looking a document over for such an element costs a few per cent
+  of the time it takes to read it.
 
 ### Known limitations
 

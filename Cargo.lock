@@ -963,6 +963,7 @@ dependencies = [
  "axum",
  "chrono",
  "criterion",
+ "memchr",
  "quick-xml",
  "reqwest",
  "serde",
