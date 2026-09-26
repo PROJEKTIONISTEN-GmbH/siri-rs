@@ -146,6 +146,7 @@
 
 #![deny(missing_docs)]
 #![forbid(unsafe_code)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 #[macro_use]
 mod macros;
@@ -160,6 +161,7 @@ pub mod fm;
 pub mod framework;
 pub mod gm;
 #[cfg(feature = "lenient")]
+#[cfg_attr(docsrs, doc(cfg(feature = "lenient")))]
 pub mod lenient;
 pub mod model;
 pub mod pt;

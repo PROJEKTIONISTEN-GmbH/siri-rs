@@ -781,8 +781,7 @@ fn damage(xml: &str, dice: &mut Dice) -> String {
         _ => {
             let parent = nodes
                 .iter()
-                .filter(|other| other.start < node.start && other.end >= node.end && other.depth + 1 == node.depth)
-                .last()
+                .rfind(|other| other.start < node.start && other.end >= node.end && other.depth + 1 == node.depth)
                 .expect("a parent");
             let end_tag = parent.end - parent.name.len() - 3;
             let moved = xml[node.start..node.end].to_string();

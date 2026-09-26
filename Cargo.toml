@@ -35,6 +35,12 @@ serde_path_to_error = "0.1"
 # further dependency.
 lenient = []
 
+# docs.rs builds the documentation with every feature, so that the lenient
+# reader is shown, marked with the feature that enables it.
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
 [dev-dependencies]
 # The transport the examples and the HTTP endpoint test use. The library builds and
 # reads the messages; carrying them is the application's business, so these are

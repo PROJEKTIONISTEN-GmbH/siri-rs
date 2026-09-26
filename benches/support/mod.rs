@@ -68,3 +68,20 @@ pub fn prefixed_situation() -> Case {
 pub fn default_bound_situation() -> Case {
     case("sx/exx_situationExchange_response.xml")
 }
+
+/// The stop monitoring delivery with many calls, its last stop visit robbed of
+/// the time it was recorded at: a document the strict reader fails and the
+/// lenient reader reads for all but that visit.
+pub fn one_visit_lost() -> Case {
+    let mut damaged = case("sm/exs_stopMonitoring_response_complex.xml");
+    let last = damaged
+        .xml
+        .rfind("<RecordedAtTime>")
+        .expect("the delivery records visits");
+    let end = damaged.xml[last..]
+        .find("</RecordedAtTime>")
+        .map(|at| last + at + "</RecordedAtTime>".len())
+        .expect("the element is closed");
+    damaged.xml.replace_range(last..end, "<RecordedAtTime/>");
+    damaged
+}
