@@ -66,6 +66,19 @@
 //! `[profile.release]`. `benches/` measures reading, writing and one turn of the
 //! publish/subscribe cycle over the official example documents.
 //!
+//! # Reading streams you don't control
+//!
+//! [`from_str`] reads a document whole or not at all: one element that cannot be
+//! read — an empty timestamp, a missing mandatory element — fails the document,
+//! and every valid record in it with it. A program that reads a producer's stream
+//! and has no say in what arrives can ask, with the `lenient` feature, for the
+//! reading in the `lenient` module instead, which leaves out the smallest thing
+//! the document reads without — the element, or the situation, journey, stop
+//! visit or delivery around it — and reports each one with its path, the reason
+//! and, where the unit has one, its identifier. The strict reader is not changed
+//! by the feature; the module's documentation says what may be left out and what
+//! never is.
+//!
 //! # At an open port
 //!
 //! A document from the other side may be anything, and a reader that answers it
@@ -146,6 +159,8 @@ pub mod et;
 pub mod fm;
 pub mod framework;
 pub mod gm;
+#[cfg(feature = "lenient")]
+pub mod lenient;
 pub mod model;
 pub mod pt;
 pub mod pubsub;

@@ -29,6 +29,12 @@ serde = { version = "1", features = ["derive"] }
 # records long is owed more than "missing field"; this is what carries the path.
 serde_path_to_error = "0.1"
 
+[features]
+# Reading a document that carries faults, keeping what reads: `siri_rs::lenient`.
+# It adds a reader; it changes nothing about the strict one, and needs no
+# further dependency.
+lenient = []
+
 [dev-dependencies]
 # The transport the examples and the HTTP endpoint test use. The library builds and
 # reads the messages; carrying them is the application's business, so these are

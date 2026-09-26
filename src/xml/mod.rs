@@ -26,6 +26,8 @@ pub(crate) mod schema_default;
 pub(crate) mod token_list;
 mod whitespace;
 
+use std::borrow::Cow;
+
 use serde::{de::DeserializeOwned, Serialize};
 
 use crate::error::{Error, Result};
@@ -45,33 +47,79 @@ pub trait SiriRoot: Serialize + DeserializeOwned {
 /// element is not the one `T` describes. An element whose content is whitespace
 /// alone is read as that whitespace, which the deserialiser would otherwise drop.
 pub fn from_str<T: SiriRoot>(xml: &str) -> Result<T> {
-    let normalised = namespace::normalise(xml)?;
-    let kept = whitespace::preserve(&normalised);
-    check_root::<T>(&kept)?;
-    let rewritten = matches!(normalised, std::borrow::Cow::Owned(_))
-        || matches!(kept, std::borrow::Cow::Owned(_));
-    deserialize(&kept, !rewritten)
+    let text = prepare::<T>(xml)?;
+    let offsets_apply = matches!(text, Cow::Borrowed(_));
+    deserialize(&text, offsets_apply)
+}
+
+/// Makes a document ready for the reader: the SIRI namespace bound by default,
+/// whitespace-only content kept, and the root element checked against `T`.
+///
+/// The text comes back borrowed when nothing had to be rewritten, which is when
+/// a byte offset into it is an offset into what the caller handed over.
+pub(crate) fn prepare<T: SiriRoot>(xml: &str) -> Result<Cow<'_, str>> {
+    let text = match namespace::normalise(xml)? {
+        Cow::Borrowed(text) => whitespace::preserve(text),
+        Cow::Owned(text) => {
+            let kept = match whitespace::preserve(&text) {
+                Cow::Owned(kept) => Some(kept),
+                Cow::Borrowed(_) => None,
+            };
+            Cow::Owned(kept.unwrap_or(text))
+        }
+    };
+    check_root::<T>(&text)?;
+    Ok(text)
 }
 
 /// Reads a value out of `xml`, reporting where in the document a failure was.
 ///
-/// The path is tracked as the deserialiser descends; `offsets_apply` says whether
-/// `xml` is the text the caller handed over, which is what a byte offset has to
-/// count in to be of any use.
+/// `offsets_apply` says whether `xml` is the text the caller handed over, which is
+/// what a byte offset has to count in to be of any use.
 pub(crate) fn deserialize<T: DeserializeOwned>(xml: &str, offsets_apply: bool) -> Result<T> {
-    // Tracking the path costs something on every field of every document, and what
-    // it buys is only ever spent on one that fails. So a document is read without it
-    // first, and only a failure is read a second time to find out where it was: the
-    // reader is deterministic, so the second read fails in the same place as the
-    // first. A document that parses pays nothing; one that does not is already lost.
+    read(xml).map_err(|fault| fault.into_error(offsets_apply))
+}
+
+/// Where the reader failed and what it could not do there, before it is spelled
+/// out as an [`Error`]: the path as the deserialiser tracked it, for a caller
+/// that has to find the element in the document rather than name it.
+pub(crate) struct Fault {
+    /// The path the deserialiser tracked, in serde's terms.
+    pub(crate) path: serde_path_to_error::Path,
+    /// How far into `xml` the reader had got when it failed, in bytes.
+    pub(crate) offset: u64,
+    /// What the reader could not do there.
+    pub(crate) source: quick_xml::DeError,
+}
+
+impl Fault {
+    /// The fault as the error the reader reports, with the offset when it counts
+    /// into text the caller has seen.
+    pub(crate) fn into_error(self, offsets_apply: bool) -> Error {
+        Error::Deserialize {
+            path: document_path(&self.path),
+            offset: offsets_apply.then_some(self.offset),
+            source: self.source,
+        }
+    }
+}
+
+/// Reads a value out of `xml`, tracking where in the document a failure was.
+///
+/// Tracking the path costs something on every field of every document, and what
+/// it buys is only ever spent on one that fails. So a document is read without it
+/// first, and only a failure is read a second time to find out where it was: the
+/// reader is deterministic, so the second read fails in the same place as the
+/// first. A document that parses pays nothing; one that does not is already lost.
+pub(crate) fn read<T: DeserializeOwned>(xml: &str) -> std::result::Result<T, Fault> {
     let mut untracked = quick_xml::de::Deserializer::from_str(xml);
     if let Ok(value) = T::deserialize(&mut untracked) {
         return Ok(value);
     }
     let mut deserializer = quick_xml::de::Deserializer::from_str(xml);
-    serde_path_to_error::deserialize(&mut deserializer).map_err(|failure| Error::Deserialize {
-        path: document_path(failure.path()),
-        offset: offsets_apply.then(|| deserializer.get_ref().get_ref().buffer_position()),
+    serde_path_to_error::deserialize(&mut deserializer).map_err(|failure| Fault {
+        path: failure.path().clone(),
+        offset: deserializer.get_ref().get_ref().buffer_position(),
         source: failure.into_inner(),
     })
 }
@@ -84,7 +132,7 @@ pub(crate) fn deserialize<T: DeserializeOwned>(xml: &str, offsets_apply: bool) -
 /// are dropped and an index that belonged to one is carried onto the element it
 /// selected — `$value[0].StopMonitoringDelivery` becomes
 /// `StopMonitoringDelivery[0]`.
-fn document_path(path: &serde_path_to_error::Path) -> String {
+pub(crate) fn document_path(path: &serde_path_to_error::Path) -> String {
     use serde_path_to_error::Segment;
 
     let mut spelled = String::new();
