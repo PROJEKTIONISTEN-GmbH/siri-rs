@@ -86,9 +86,10 @@ impl Mutation {
 /// Where the fault sits.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 enum Position {
-    /// In an element the schema leaves optional: the element goes, the unit stays.
+    /// In an element the schema leaves optional: that element alone goes.
     Optional,
-    /// In an element the schema demands: the unit goes.
+    /// In an element the schema demands: an element around it goes — the
+    /// smallest the document reads without, up to the unit.
     Mandatory,
 }
 
@@ -288,7 +289,7 @@ const CATALOGUE: &[Case] = &[
     // so the only feature's unknown choice costs the list.
     Case {
         class: "unknown choice",
-        position: Position::Optional,
+        position: Position::Mandatory,
         fixture: FM,
         fault: Mutation::Markup("AccessFacility", 0, "<NoSuchFacility>lift</NoSuchFacility>"),
         repair: Mutation::Remove("Features", 0),
@@ -326,9 +327,9 @@ const CATALOGUE: &[Case] = &[
         fixture: VM,
         fault: Mutation::Text("NumberOfBlockParts", 0, "many"),
         repair: Mutation::Remove("TrainBlockPart", 0),
-        path: "ServiceDelivery.VehicleMonitoringDelivery[0].VehicleActivity[0].MonitoredVehicleJourney.TrainBlockPart.NumberOfBlockParts",
+        path: "ServiceDelivery.VehicleMonitoringDelivery[0].VehicleActivity[0].MonitoredVehicleJourney.TrainBlockPart[0].NumberOfBlockParts",
         reason: "invalid type: string \"many\"",
-        discarded: "ServiceDelivery.VehicleMonitoringDelivery[0].VehicleActivity[0].MonitoredVehicleJourney.TrainBlockPart",
+        discarded: "ServiceDelivery.VehicleMonitoringDelivery[0].VehicleActivity[0].MonitoredVehicleJourney.TrainBlockPart[0]",
         unit: None,
     },
 ];
@@ -361,7 +362,16 @@ fn the_catalogue_of_faults_costs_exactly_what_each_fault_touches() {
             case.unit,
             "{label}"
         );
-        assert_eq!(finding.discarded.is_unit(), case.position == Position::Mandatory, "{label}");
+        match case.position {
+            Position::Optional => {
+                assert_eq!(finding.discarded.path(), finding.path, "{label}: only the element at fault goes");
+            }
+            Position::Mandatory => assert!(
+                finding.path.starts_with(finding.discarded.path()),
+                "{label}: what goes holds the fault"
+            ),
+        }
+        assert_eq!(finding.discarded.is_unit(), case.unit.is_some(), "{label}");
         *covered.entry((case.class, case.position)).or_default() += 1;
     }
     for class in ["empty timestamp", "missing mandatory element", "broken number"] {
