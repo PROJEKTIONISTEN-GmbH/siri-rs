@@ -6,6 +6,7 @@
 #![allow(dead_code)]
 
 pub mod http;
+pub mod mutation;
 
 use std::collections::BTreeMap;
 use std::fmt::Write as _;
