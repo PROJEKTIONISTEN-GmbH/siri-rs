@@ -16,21 +16,22 @@ use chrono::{DateTime, Duration, FixedOffset};
 
 use siri_rs::cm::{ConnectingTimeFilter, ConnectionMonitoringRequest, MonitoredFeederArrival};
 use siri_rs::ct::{ConnectionTimetableRequest, TimetabledFeederArrival};
-use siri_rs::enumerations::FacilityStatus as Availability;
+use siri_rs::enumerations::{DeliveryMethod, FacilityStatus as Availability};
+use siri_rs::et::EstimatedTimetableRequest;
 use siri_rs::fm::FacilityMonitoringRequest;
 use siri_rs::gm::{GeneralMessageRequest, InfoMessage};
 use siri_rs::model::{
-    FacilityCondition, FacilityStatus, InterchangeJourney, MonitoredVehicleJourney,
-    TargetedVehicleJourney,
+    EstimatedVehicleJourney, FacilityCondition, FacilityStatus, InterchangeJourney,
+    MonitoredVehicleJourney, TargetedVehicleJourney,
 };
 use siri_rs::framework::ServiceDelivery;
 use siri_rs::pubsub::{
     ConnectionMonitoringFeeder, ConnectionMonitoringFeederSource, ConnectionTimetable,
-    ConnectionTimetableSource, Consumer, ConsumerEvent, EstimatedTimetable, FacilityMonitoring,
-    FacilityMonitoringSource, GeneralMessage, GeneralMessageSource, Producer, ProducerConfig,
-    ProductionTimetable, Service, SituationExchange, Source, StopMonitoring,
-    StopMonitoringSource, StopTimetable, StopTimetableSource, VehicleMonitoring,
-    PROTOCOL_VERSION,
+    ConnectionTimetableSource, Consumer, ConsumerEvent, EstimatedTimetable,
+    EstimatedTimetableSource, FacilityMonitoring, FacilityMonitoringSource, GeneralMessage,
+    GeneralMessageSource, Producer, ProducerConfig, ProductionTimetable, Service,
+    SituationExchange, Source, StopMonitoring, StopMonitoringSource, StopTimetable,
+    StopTimetableSource, SubscriptionState, VehicleMonitoring, PROTOCOL_VERSION,
 };
 use siri_rs::sm::{MonitoredStopVisit, StopMonitoringRequest};
 use siri_rs::st::{StopTimetableRequest, TimetabledStopVisit};
@@ -199,6 +200,65 @@ fn an_estimated_timetable_delivery_cannot_carry_no_journeys() {
     );
 }
 
+/// Since the schema has no form for an estimated timetable of no journeys, a
+/// producer whose source holds none for a subscription sends it nothing — in
+/// either delivery method — rather than a document no consumer can read, and
+/// delivers as soon as there is a journey to deliver.
+#[test]
+fn an_estimated_timetable_subscription_is_sent_nothing_while_there_is_no_journey() {
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    for config in [
+        ProducerConfig::new("MY-AGENCY"),
+        ProducerConfig::new("MY-AGENCY").with_fetched_delivery(),
+    ] {
+        let fetched = matches!(config.delivery_method(), DeliveryMethod::Fetched);
+        let mut producer = Producer::new(config, Journeys(Vec::new()));
+        let mut consumer = Consumer::<EstimatedTimetable>::new("PASSENGER-APP");
+        let subscribe = consumer.subscribe(
+            "running",
+            now() + Duration::hours(1),
+            EstimatedTimetableRequest::new(now()),
+            now(),
+        );
+        producer
+            .handle(&valid(&subscribe), now())
+            .expect("the subscription is understood")
+            .expect("a subscription request is answered");
+
+        assert!(
+            producer.poll(now()).is_empty(),
+            "fetched {fetched}: nothing is sent while the source holds no journey"
+        );
+        assert_eq!(producer.subscriptions()[0].state(), &SubscriptionState::Idle, "nothing is owed");
+
+        producer.source_mut().0.push(EstimatedVehicleJourney::dated("10", "OUT", "10-0815"));
+        producer.data_changed();
+        let outbound = producer.poll(now());
+        assert_eq!(outbound.len(), 1, "fetched {fetched}: the journey is announced or delivered");
+        let delivered = if fetched {
+            let ConsumerEvent::DataReady { fetch, .. } = consumer
+                .handle(&valid(&outbound[0].message), now())
+                .expect("the notification is understood")
+            else {
+                panic!("a fetched subscription announces its data");
+            };
+            producer
+                .handle(&valid(&fetch), now())
+                .expect("the fetch is understood")
+                .expect("a fetch is answered")
+        } else {
+            outbound[0].message.clone()
+        };
+        let ConsumerEvent::Delivered { items, .. } = consumer
+            .handle(&valid(&delivered), now())
+            .expect("the delivery is understood")
+        else {
+            panic!("fetched {fetched}: the journey is delivered");
+        };
+        assert_eq!(items.len(), 1);
+    }
+}
+
 /// Opens a subscription, lets the producer answer it, and returns what was delivered.
 ///
 /// Every message the two sides put out is validated against the official schemas
@@ -249,6 +309,15 @@ fn valid(message: &Siri) -> Siri {
 
 fn now() -> DateTime<FixedOffset> {
     DateTime::parse_from_rfc3339("2026-03-04T08:15:00+01:00").expect("valid instant")
+}
+
+/// Whatever a real-time system already keeps its running journeys in.
+struct Journeys(Vec<EstimatedVehicleJourney>);
+
+impl EstimatedTimetableSource for Journeys {
+    fn journeys(&self, _request: &EstimatedTimetableRequest) -> Vec<EstimatedVehicleJourney> {
+        self.0.clone()
+    }
 }
 
 /// Whatever a departure board already keeps its due services in.

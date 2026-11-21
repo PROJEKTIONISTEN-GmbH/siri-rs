@@ -537,7 +537,9 @@ fn crate_fields() -> Vec<Field> {
                 "f32" | "f64" => (Some(Class::Decimal), None),
                 "String" => (Some(Class::String), None),
                 "Duration" => (Some(Class::Duration), None),
-                other => match enum_types.get(other) {
+                // A type may be spelled with its path, `crate::enumerations::X`; the
+                // enumeration it names is the last segment.
+                other => match enum_types.get(other.rsplit("::").next().unwrap_or(other)) {
                     Some(xsd) => (Some(Class::Enumeration), Some(xsd.clone())),
                     None => (None, None),
                 },
@@ -1065,6 +1067,20 @@ fn an_empty_boolean_reads_as_the_declared_value() {
     };
     let visit = delivery.monitored_stop_visit.first().expect("the board has a visit");
     assert_eq!(visit.monitored_vehicle_journey.monitored, Some(true));
+}
+
+/// The network a situation's context names carries the same submode elements as an
+/// affected network, declared with the same default; an empty one is `unknown`
+/// there too, not a token nobody wrote.
+#[test]
+fn an_empty_submode_in_the_situation_context_reads_as_the_declared_value() {
+    use siri_rs::enumerations::{BusSubmodesOfTransport, TelecabinSubmodesOfTransport};
+
+    let network: siri_rs::sx::delivery::Network =
+        quick_xml::de::from_str("<Network><BusSubmode/><TelecabinSubmode></TelecabinSubmode></Network>")
+            .expect("an empty submode is valid");
+    assert_eq!(network.bus_submode, Some(BusSubmodesOfTransport::Unknown));
+    assert_eq!(network.telecabin_submode, Some(TelecabinSubmodesOfTransport::Unknown));
 }
 
 #[test]

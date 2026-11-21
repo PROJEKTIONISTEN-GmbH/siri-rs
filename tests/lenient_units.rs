@@ -16,7 +16,7 @@ mod support;
 
 use siri_rs::lenient::{self, Discarded, Findings};
 use siri_rs::Siri;
-use support::mutation::{copy, element, emptied, insert_after, remove};
+use support::mutation::{copy, element, emptied, insert_after, remove, with_text};
 
 /// The official example at `name` under `tests/fixtures`.
 fn fixture(name: &str) -> String {
@@ -36,6 +36,7 @@ fn lenient(xml: &str) -> (Siri, Findings) {
 
 const SM: &str = "xml/sm/exs_stopMonitoring_response.xml";
 const SX: &str = "xml/sx/exx_situationExchange_response.xml";
+const ET: &str = "xml/et/ext_estimatedTimetable_response.xml";
 
 #[test]
 fn an_optional_element_that_does_not_read_is_left_out_and_its_unit_kept() {
@@ -148,6 +149,13 @@ const UNIT_CASES: &[UnitCase] = &[
         identifier: Some("000354"),
     },
     UnitCase {
+        fixture: "derived/sm/exs_stopMonitoring_response_included_situation.xml",
+        unit: "PtSituationElement",
+        nth: 0,
+        fault: Fault::Empty("CreationTime", 0),
+        identifier: Some("HLTST011-LIFT"),
+    },
+    UnitCase {
         fixture: "xml/et/ext_estimatedTimetable_response.xml",
         unit: "EstimatedVehicleJourney",
         nth: 1,
@@ -225,6 +233,52 @@ const UNIT_CASES: &[UnitCase] = &[
         identifier: Some("CA-1"),
     },
 ];
+
+/// Leaving out an element the schema gives a default value is not leaving it
+/// unsaid: an absent `Cancellation` reads as the default, a journey that runs. A
+/// journey whose cancellation cannot be read is therefore not kept as one that
+/// runs; it is left out, and so is anything else that would read as a value the
+/// producer did not send.
+#[test]
+fn an_element_whose_absence_means_its_default_takes_its_parent_with_it() {
+    let example = fixture(ET);
+    // The second Cancellation belongs to the second journey, 00009, which the
+    // example cancels.
+    let broken = with_text(&example, "Cancellation", 1, "True");
+    assert!(siri_rs::from_str::<Siri>(&broken).is_err(), "xsd:boolean is lower case");
+
+    let (read, findings) = lenient(&broken);
+
+    assert_eq!(read, strict(&remove(&example, "EstimatedVehicleJourney", 1)));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    let finding = findings.iter().next().expect("one finding");
+    let journey = "ServiceDelivery.EstimatedTimetableDelivery[0].EstimatedJourneyVersionFrame[0]\
+                   .EstimatedVehicleJourney[1]";
+    assert_eq!(finding.path, format!("{journey}.Cancellation"), "the fault is named where it was");
+    assert_eq!(finding.discarded.path(), journey);
+    assert_eq!(finding.discarded.unit_name(), Some("EstimatedVehicleJourney"));
+    assert_eq!(finding.discarded.identifier(), Some("00009"));
+}
+
+#[test]
+fn an_element_whose_absence_means_its_default_costs_the_optional_element_around_it() {
+    let example = fixture(SM);
+    // The second VehicleAtStop is the monitored call's own, and an absent one reads
+    // as false: the vehicle is not at the stop. The call is optional, the visit is
+    // kept without it.
+    let broken = with_text(&example, "VehicleAtStop", 1, "yes");
+
+    let (read, findings) = lenient(&broken);
+
+    assert_eq!(read, strict(&remove(&example, "MonitoredCall", 0)));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    let finding = findings.iter().next().expect("one finding");
+    let call = "ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit[0]\
+                .MonitoredVehicleJourney.MonitoredCall";
+    assert_eq!(finding.path, format!("{call}.VehicleAtStop"));
+    assert!(matches!(&finding.discarded, Discarded::Element { .. }), "{:?}", finding.discarded);
+    assert_eq!(finding.discarded.path(), call);
+}
 
 #[test]
 fn every_service_has_units_that_are_left_out_whole() {

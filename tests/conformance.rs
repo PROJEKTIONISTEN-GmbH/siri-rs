@@ -245,6 +245,7 @@ fn the_expected_derived_documents_are_covered() {
         "pt/ext_productionTimetable_capabilitiesResponse_filters.xml",
         "pt/ext_productionTimetable_response_interchange.xml",
         "sm/exs_stopMonitoring_capabilitiesResponse_volume.xml",
+        "sm/exs_stopMonitoring_response_included_situation.xml",
         "sm/exs_stopMonitoring_response_rail.xml",
         "sx/exx_situationExchange_capabilityResponse_filters.xml",
         "sx/exx_situationExchange_request_filters.xml",
@@ -258,6 +259,44 @@ fn the_expected_derived_documents_are_covered() {
         .map(|fixture| fixture.name.replace('\\', "/"))
         .collect();
     assert_eq!(present, EXPECTED);
+}
+
+/// The schema puts the situations a delivery is accompanied by ahead of the
+/// delivery. A message built with them anywhere in its list is written in that
+/// order, the order of the other deliveries kept, and valid.
+#[test]
+fn included_situations_are_written_ahead_of_the_deliveries_they_accompany() {
+    use siri_rs::framework::{ServiceDelivery, ServiceDeliveryPayload};
+    use siri_rs::sm::StopMonitoringDelivery;
+    use siri_rs::sx::SituationExchangeDelivery;
+    use siri_rs::Siri;
+
+    let now = chrono::DateTime::parse_from_rfc3339("2004-12-17T09:30:47-05:00").expect("valid instant");
+    let board = |subscription: &str| {
+        ServiceDeliveryPayload::from(StopMonitoringDelivery {
+            subscription_ref: Some(subscription.into()),
+            ..StopMonitoringDelivery::new(now, Vec::new())
+        })
+    };
+    let situations = ServiceDeliveryPayload::IncludedSituationExchangeDelivery(Box::new(
+        SituationExchangeDelivery::new(now, Vec::new()),
+    ));
+    let message = Siri::new(
+        "2.0",
+        ServiceDelivery::new(now, "KUBRICK", vec![board("first"), situations.clone(), board("second")]),
+    );
+
+    let xml = siri_rs::to_string(&message).expect("the message writes");
+
+    let included = xml.find("<IncludedSituationExchangeDelivery").expect("the situations are written");
+    let first = xml.find("<SubscriptionRef>first").expect("the first board is written");
+    let second = xml.find("<SubscriptionRef>second").expect("the second board is written");
+    assert!(included < first && first < second, "{xml}");
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    support::validate(&xml).unwrap_or_else(|complaint| panic!("{xml}\n{complaint}"));
+    let read: Siri = siri_rs::from_str(&xml).expect("what is written reads");
+    let deliveries = &read.payload.as_service_delivery().expect("a delivery").deliveries;
+    assert_eq!(deliveries[0], situations, "read back in the order written");
 }
 
 /// A document rooted at a different message must not be read into the wrong type.

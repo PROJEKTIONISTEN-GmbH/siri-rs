@@ -134,6 +134,153 @@ fn a_timestamp_without_an_offset_is_refused_and_the_refusal_names_the_field() {
     let error = siri_rs::from_str::<Siri>(&xml).expect_err("no offset, no instant");
     let message = error.to_string();
     assert!(message.contains("RequestTimestamp"), "names the field: {message}");
+    assert!(message.contains("time-zone offset"), "says why: {message}");
+}
+
+#[test]
+fn the_end_of_a_day_written_as_hour_24_is_refused_and_the_refusal_says_why() {
+    // XML Schema 1.0 spells midnight at the end of a day `24:00:00`; chrono has no
+    // such hour. The refusal has to say that, not that the input is out of range.
+    let xml = format!(
+        "<Siri {ROOT}><CheckStatusRequest>\
+         <RequestTimestamp>2004-12-17T24:00:00-05:00</RequestTimestamp>\
+         <RequestorRef>EREWHON</RequestorRef>\
+         </CheckStatusRequest></Siri>"
+    );
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    validate(&xml).expect("the schema admits the end of a day as hour 24");
+
+    let message = siri_rs::from_str::<Siri>(&xml).expect_err("hour 24 is not read").to_string();
+    assert!(message.contains("RequestTimestamp"), "names the field: {message}");
+    assert!(message.contains("24:00:00"), "says why: {message}");
+}
+
+#[test]
+fn a_timestamp_that_reads_names_its_instant_as_before() {
+    let xml = format!(
+        "<Siri {ROOT}><CheckStatusRequest>\
+         <RequestTimestamp>2004-12-17T09:30:47.250-05:00</RequestTimestamp>\
+         <RequestorRef>EREWHON</RequestorRef>\
+         </CheckStatusRequest></Siri>"
+    );
+    let siri: Siri = siri_rs::from_str(&xml).expect("a timestamp with an offset reads");
+    let request = siri.payload.as_check_status_request().expect("a check-status request");
+    assert_eq!(
+        request.request_timestamp,
+        DateTime::parse_from_rfc3339("2004-12-17T09:30:47.250-05:00").expect("valid instant")
+    );
+}
+
+/// A heartbeat in the shape every document below varies, with `root` as the root
+/// element's start tag.
+fn heartbeat_under(root: &str, end: &str) -> String {
+    format!(
+        "{root}<HeartbeatNotification>\
+         <RequestTimestamp>2004-12-17T09:30:47-05:00</RequestTimestamp>\
+         <ProducerRef>KUBRICK</ProducerRef>\
+         </HeartbeatNotification>{end}"
+    )
+}
+
+#[test]
+fn a_document_in_another_namespace_or_in_none_is_refused() {
+    for (label, root, end) in [
+        ("another namespace", r#"<Siri xmlns="urn:not-siri" version="2.0">"#, "</Siri>"),
+        ("no namespace", r#"<Siri version="2.0">"#, "</Siri>"),
+        ("another namespace by prefix", r#"<s:Siri xmlns:s="urn:not-siri" version="2.0">"#, "</s:Siri>"),
+    ] {
+        let xml = heartbeat_under(root, end);
+        let error = siri_rs::from_str::<Siri>(&xml).expect_err(label);
+        assert!(
+            matches!(&error, siri_rs::Error::UnexpectedNamespace { element: "Siri", .. }),
+            "{label}: {error}"
+        );
+        #[cfg(feature = "lenient")]
+        assert!(
+            matches!(
+                siri_rs::lenient::from_str(&xml),
+                Err(siri_rs::Error::UnexpectedNamespace { element: "Siri", .. })
+            ),
+            "{label}: the lenient reader refuses it too"
+        );
+    }
+
+    let error = siri_rs::from_str::<Siri>(&heartbeat_under(r#"<Siri xmlns="urn:not-siri">"#, "</Siri>"))
+        .expect_err("another namespace");
+    let message = error.to_string();
+    assert!(message.contains("urn:not-siri") && message.contains(siri_rs::NAMESPACE), "{message}");
+}
+
+#[test]
+fn the_siri_namespace_reads_whether_it_is_the_default_or_bound_to_a_prefix() {
+    let by_default = heartbeat_under(&format!("<Siri {ROOT}>"), "</Siri>");
+    let by_prefix = concat!(
+        r#"<s:Siri xmlns:s="http://www.siri.org.uk/siri" version="2.0"><s:HeartbeatNotification>"#,
+        "<s:RequestTimestamp>2004-12-17T09:30:47-05:00</s:RequestTimestamp>",
+        "<s:ProducerRef>KUBRICK</s:ProducerRef>",
+        "</s:HeartbeatNotification></s:Siri>"
+    );
+    let expected = siri_rs::from_str::<Siri>(&by_default).expect("the default binding reads");
+    assert_eq!(siri_rs::from_str::<Siri>(by_prefix).expect("a prefix binding reads"), expected);
+}
+
+#[test]
+fn nothing_but_comments_and_processing_instructions_may_follow_the_root_element() {
+    let document = heartbeat_under(&format!("<Siri {ROOT}>"), "</Siri>");
+    for tail in ["\n", "\n<!-- delivered at 09:30 -->\n", "<?trace id=\"7\"?>\n"] {
+        let xml = format!("{document}{tail}");
+        siri_rs::from_str::<Siri>(&xml).unwrap_or_else(|e| panic!("{tail:?}: {e}"));
+    }
+    for tail in ["<Siri/>", "<Other/>", "trailing text"] {
+        let xml = format!("{document}{tail}");
+        let error = siri_rs::from_str::<Siri>(&xml).expect_err(tail);
+        assert!(
+            matches!(&error, siri_rs::Error::ContentAfterRoot { offset } if *offset == document.len() as u64),
+            "{tail}: {error}"
+        );
+        #[cfg(feature = "lenient")]
+        assert!(
+            matches!(siri_rs::lenient::from_str(&xml), Err(siri_rs::Error::ContentAfterRoot { .. })),
+            "{tail}: the lenient reader refuses it too"
+        );
+    }
+}
+
+#[test]
+fn a_character_xml_does_not_allow_is_not_written() {
+    let started = now();
+    for value in ["P\u{1}Q", "P\u{1b}Q", "P\u{fffe}Q"] {
+        let heartbeat = siri_rs::framework::HeartbeatNotification::healthy(now(), value, started);
+        let error = siri_rs::to_string(&Siri::new("2.0", heartbeat.clone())).expect_err(value);
+        let illegal = value.chars().nth(1).expect("the second character is the illegal one");
+        assert!(
+            matches!(error, siri_rs::Error::IllegalCharacter { character, .. } if character == illegal),
+            "{value:?}: {error}"
+        );
+        assert!(siri_rs::to_string_pretty(&Siri::new("2.0", heartbeat)).is_err(), "{value:?}");
+    }
+
+    let allowed = siri_rs::framework::HeartbeatNotification::healthy(now(), "P\tQ\nR\u{e9}", started);
+    let xml = siri_rs::to_string(&Siri::new("2.0", allowed)).expect("tab, line feed and letters are characters");
+    assert!(validator_available(), "{VALIDATOR_MISSING}");
+    validate(&xml).expect("and the document is valid");
+}
+
+#[test]
+fn a_character_xml_does_not_allow_is_not_read() {
+    let document = |producer: &str| heartbeat_under(&format!("<Siri {ROOT}>"), "</Siri>").replace("KUBRICK", producer);
+    for (producer, character) in [("P\u{1}Q", '\u{1}'), ("P&#1;Q", '\u{1}'), ("P&#x1F;Q", '\u{1f}'), ("P\u{ffff}Q", '\u{ffff}')] {
+        let xml = document(producer);
+        let error = siri_rs::from_str::<Siri>(&xml).expect_err(producer);
+        let at = xml.find("P").expect("the producer is in the document") as u64 + 1;
+        assert!(
+            matches!(error, siri_rs::Error::IllegalCharacter { character: found, offset } if found == character && offset == at),
+            "{producer:?}: {error}"
+        );
+    }
+    for producer in ["P&#9;Q", "P&#xE9;Q", "P&amp;Q"] {
+        siri_rs::from_str::<Siri>(&document(producer)).unwrap_or_else(|e| panic!("{producer}: {e}"));
+    }
 }
 
 struct Nothing;

@@ -42,6 +42,18 @@ an attribute inside opaque content is the one thing the read path cannot carry
 back (`types::AnyContent` documents why). That document is therefore not derivable
 into a round-tripping fixture yet.
 
+## `sm/exs_stopMonitoring_response_included_situation.xml`
+
+The official `xml/sm/exs_stopMonitoring_response_simple.xml`, with an
+`IncludedSituationExchangeDelivery` ahead of its Stop Monitoring delivery.
+
+Why derived: the schema lets a functional service delivery be accompanied by the
+situations it refers to — any number of `IncludedSituationExchangeDelivery`
+elements before the delivery itself (`SiriServiceDeliveryGroup` in `siri.xsd`) —
+and no official example carries one. The situation is invented for the occasion
+and carries only what the schema requires and a summary; the subscription and the
+producer are the example's.
+
 ## Elements the schema gives a default value
 
 XML Schema lets an element declaration carry a `default` or a `fixed` value; an

@@ -60,6 +60,91 @@ fn the_hubs_own_state_is_not_a_public_field() {
     }
 }
 
+/// The messages that carry an `AccountKey` — a secret, which a request logged with
+/// `{:?}` would otherwise hand to whoever reads the log.
+const KEYED: &[&str] = &[
+    "CapabilitiesRequest",
+    "CheckStatusRequest",
+    "DataReadyNotification",
+    "DataSupplyRequest",
+    "HeartbeatNotification",
+    "LinesRequest",
+    "ProductCategoriesRequest",
+    "ServiceFeaturesRequest",
+    "ServiceRequest",
+    "StopPointsRequest",
+    "SubscriptionRequest",
+    "TerminateSubscriptionRequest",
+    "VehicleFeaturesRequest",
+];
+
+/// Every struct with an `account_key` field is one the test below shows without it.
+#[test]
+fn the_messages_carrying_an_account_key_are_these() {
+    let mut keyed = Vec::new();
+    for path in source_files() {
+        let source = std::fs::read_to_string(&path).expect("readable source");
+        let mut current = None;
+        for line in source.lines() {
+            if let Some(rest) = line.strip_prefix("pub struct ") {
+                current = rest.split(|c: char| !c.is_alphanumeric()).next().map(str::to_owned);
+            }
+            if line.trim_start().starts_with("pub account_key:") {
+                keyed.push(current.clone().unwrap_or_else(|| panic!("{}: a field outside a struct", display(&path))));
+            }
+        }
+    }
+    keyed.sort();
+    assert_eq!(keyed, KEYED);
+}
+
+/// A message's `Debug` output says that it carries a key, never which.
+#[test]
+fn an_account_key_is_not_shown_in_debug_output() {
+    use chrono::DateTime;
+    use siri_rs::framework::{
+        CapabilitiesRequest, CheckStatusRequest, DataReadyNotification, DataSupplyRequest,
+        HeartbeatNotification, LinesRequest, ProductCategoriesRequest, ServiceFeaturesRequest,
+        ServiceRequest, StopPointsRequest, SubscriptionRequest, TerminateSubscriptionRequest,
+        VehicleFeaturesRequest,
+    };
+    use siri_rs::Siri;
+
+    const KEY: &str = "s3cr3t-4cc0unt-k3y";
+    let now = DateTime::parse_from_rfc3339("2004-12-17T09:30:47-05:00").expect("valid instant");
+    macro_rules! keyed {
+        ($message:expr) => {{
+            let mut message = $message;
+            message.account_id = Some("EREWHON-ACCOUNT".into());
+            message.account_key = Some(KEY.into());
+            (stringify!($message), format!("{message:?}"), format!("{:?}", Siri::new("2.0", message)))
+        }};
+    }
+    let shown = [
+        keyed!(CapabilitiesRequest::new(now, "EREWHON", Vec::new())),
+        keyed!(CheckStatusRequest::new(now, "EREWHON")),
+        keyed!(DataReadyNotification::new(now, "KUBRICK")),
+        keyed!(DataSupplyRequest::new(now, "EREWHON")),
+        keyed!(HeartbeatNotification::healthy(now, "KUBRICK", now)),
+        keyed!(LinesRequest::new(now, "EREWHON")),
+        keyed!(ProductCategoriesRequest::new(now, "EREWHON")),
+        keyed!(ServiceFeaturesRequest::new(now, "EREWHON")),
+        keyed!(ServiceRequest::new(now, "EREWHON", Vec::new())),
+        keyed!(StopPointsRequest::new(now, "EREWHON")),
+        keyed!(SubscriptionRequest::new(now, "EREWHON", Vec::new())),
+        keyed!(TerminateSubscriptionRequest::all(now, "EREWHON")),
+        keyed!(VehicleFeaturesRequest::new(now, "EREWHON")),
+    ];
+    assert_eq!(shown.len(), KEYED.len());
+    for (message, alone, enveloped) in shown {
+        for debug in [alone, enveloped] {
+            assert!(!debug.contains(KEY), "{message} shows its key: {debug}");
+            assert!(debug.contains("account_key: Some(<redacted>)"), "{message} says it carries one: {debug}");
+            assert!(debug.contains("EREWHON-ACCOUNT"), "{message} still shows the rest: {debug}");
+        }
+    }
+}
+
 /// The name of a public enum declared on `line`, if one is — `$name` inside a
 /// macro counts, since the macro declares every enum it expands to.
 fn declared_enum(line: &str) -> Option<&str> {
