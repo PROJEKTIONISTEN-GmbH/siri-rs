@@ -177,3 +177,35 @@ macro_rules! siri_ref {
         )*
     };
 }
+
+/// Implements `Debug` for a message that carries an `AccountKey`: every field is
+/// shown as the derived implementation would show it, except the key, of which only
+/// its presence is. The key is a secret, and a message is far more often logged
+/// with `{:?}` than read.
+///
+/// The fields are named in declaration order, those before the key and those after
+/// it, and the struct is destructured with all of them: a field added to the struct
+/// and not here fails to compile rather than going unshown.
+macro_rules! debug_without_account_key {
+    ($name:ident { $($before:ident),* ; account_key ; $($after:ident),* $(,)? }) => {
+        impl ::core::fmt::Debug for $name {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                let Self { $($before,)* account_key, $($after,)* } = self;
+                f.debug_struct(stringify!($name))
+                    $(.field(stringify!($before), $before))*
+                    .field("account_key", &account_key.as_ref().map(|_| $crate::macros::Redacted))
+                    $(.field(stringify!($after), $after))*
+                    .finish()
+            }
+        }
+    };
+}
+
+/// What [`debug_without_account_key`] shows in place of a key.
+pub(crate) struct Redacted;
+
+impl ::core::fmt::Debug for Redacted {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.write_str("<redacted>")
+    }
+}

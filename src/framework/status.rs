@@ -9,7 +9,7 @@ use crate::types::{
 };
 
 /// A request for the current operational status of a service.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct CheckStatusRequest {
     /// Version of SIRI the request conforms to.
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
@@ -42,6 +42,13 @@ pub struct CheckStatusRequest {
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<Extensions>,
 }
+
+debug_without_account_key!(CheckStatusRequest {
+    version, request_timestamp, account_id;
+    account_key;
+    address, requestor_ref, message_identifier, delegator_address, delegator_ref,
+    extensions,
+});
 
 impl CheckStatusRequest {
     /// A status request from `requestor_ref`.
@@ -153,7 +160,7 @@ impl CheckStatusResponse {
 }
 
 /// A producer's unsolicited sign of life.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct HeartbeatNotification {
     /// When the heartbeat was sent.
     #[serde(rename = "RequestTimestamp")]
@@ -206,6 +213,14 @@ pub struct HeartbeatNotification {
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<Extensions>,
 }
+
+debug_without_account_key!(HeartbeatNotification {
+    request_timestamp, account_id;
+    account_key;
+    address, producer_ref, message_identifier, delegator_address, delegator_ref, status,
+    data_ready, error_condition, valid_until, shortest_possible_cycle,
+    service_started_time, extensions,
+});
 
 impl HeartbeatNotification {
     /// A heartbeat saying the service is working normally.

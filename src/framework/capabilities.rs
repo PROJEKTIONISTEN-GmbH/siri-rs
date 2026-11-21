@@ -42,7 +42,7 @@ siri_ref! {
 /// Which services are asked about is decided by the [`payload`](Self::payload):
 /// the schema lists one capability request element per functional service, and a
 /// producer answers only for those that are present.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct CapabilitiesRequest {
     /// Version of SIRI the request conforms to.
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
@@ -72,6 +72,12 @@ pub struct CapabilitiesRequest {
     #[serde(rename = "$value")]
     pub payload: Vec<CapabilitiesRequestPayload>,
 }
+
+debug_without_account_key!(CapabilitiesRequest {
+    version, request_timestamp, account_id;
+    account_key;
+    address, requestor_ref, delegator_address, delegator_ref, payload,
+});
 
 impl CapabilitiesRequest {
     /// A capabilities request from `requestor_ref` covering the given services.

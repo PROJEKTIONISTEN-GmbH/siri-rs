@@ -24,7 +24,7 @@ use crate::types::{
 use crate::vm::VehicleMonitoringSubscriptionRequest;
 
 /// A request to open one or more subscriptions.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct SubscriptionRequest {
     /// When the request was made.
     #[serde(rename = "RequestTimestamp")]
@@ -63,6 +63,13 @@ pub struct SubscriptionRequest {
     #[serde(rename = "$value")]
     pub subscriptions: Vec<SubscriptionRequestPayload>,
 }
+
+debug_without_account_key!(SubscriptionRequest {
+    request_timestamp, account_id;
+    account_key;
+    address, requestor_ref, message_identifier, delegator_address, delegator_ref,
+    consumer_address, subscription_filter_identifier, subscription_context, subscriptions,
+});
 
 impl SubscriptionRequest {
     /// A subscription request from `requestor_ref` carrying the given subscriptions.
@@ -361,7 +368,7 @@ impl StatusResponse {
 }
 
 /// A request to close subscriptions.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct TerminateSubscriptionRequest {
     /// When the request was made.
     #[serde(rename = "RequestTimestamp")]
@@ -400,6 +407,13 @@ pub struct TerminateSubscriptionRequest {
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<Extensions>,
 }
+
+debug_without_account_key!(TerminateSubscriptionRequest {
+    request_timestamp, account_id;
+    account_key;
+    address, requestor_ref, message_identifier, delegator_address, delegator_ref,
+    subscriber_ref, all, subscription_ref, extensions,
+});
 
 /// Which subscriptions a [`TerminateSubscriptionRequest`] closes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

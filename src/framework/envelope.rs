@@ -162,7 +162,7 @@ siri_payload! {
 }
 
 /// A direct request for data, answered by a [`ServiceDelivery`].
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct ServiceRequest {
     /// Defaults the requestor asks the producer to apply to the whole exchange.
     #[serde(rename = "ServiceRequestContext", default, skip_serializing_if = "Option::is_none")]
@@ -195,6 +195,12 @@ pub struct ServiceRequest {
     #[serde(rename = "$value")]
     pub requests: Vec<ServiceRequestPayload>,
 }
+
+debug_without_account_key!(ServiceRequest {
+    service_request_context, request_timestamp, account_id;
+    account_key;
+    address, requestor_ref, message_identifier, delegator_address, delegator_ref, requests,
+});
 
 impl ServiceRequest {
     /// A request from `requestor_ref` carrying the given functional service requests.

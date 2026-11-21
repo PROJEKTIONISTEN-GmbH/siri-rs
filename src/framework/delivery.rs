@@ -11,7 +11,7 @@ use crate::framework::error_condition::{AcknowledgementError, ErrorCondition};
 use crate::types::{EndpointAddress, MessageQualifier, MessageRef, ParticipantRef};
 
 /// A producer telling a consumer that data is waiting to be fetched.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct DataReadyNotification {
     /// When the notification was made.
     #[serde(rename = "RequestTimestamp")]
@@ -38,6 +38,12 @@ pub struct DataReadyNotification {
     #[serde(rename = "DelegatorRef", default, skip_serializing_if = "Option::is_none")]
     pub delegator_ref: Option<ParticipantRef>,
 }
+
+debug_without_account_key!(DataReadyNotification {
+    request_timestamp, account_id;
+    account_key;
+    address, producer_ref, message_identifier, delegator_address, delegator_ref,
+});
 
 impl DataReadyNotification {
     /// A notification from `producer_ref`.
@@ -108,7 +114,7 @@ impl DataReadyAcknowledgement {
 }
 
 /// A consumer fetching the data a producer announced.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct DataSupplyRequest {
     /// When the request was made.
     #[serde(rename = "RequestTimestamp")]
@@ -146,6 +152,13 @@ pub struct DataSupplyRequest {
     )]
     pub all_data: Option<bool>,
 }
+
+debug_without_account_key!(DataSupplyRequest {
+    request_timestamp, account_id;
+    account_key;
+    address, consumer_ref, message_identifier, delegator_address, delegator_ref,
+    notification_ref, all_data,
+});
 
 impl DataSupplyRequest {
     /// A fetch by `consumer_ref` of whatever the producer holds for it.

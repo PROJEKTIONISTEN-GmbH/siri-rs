@@ -27,7 +27,7 @@ use crate::types::{
 /// The optional filters narrow an otherwise unbounded answer. Area, circle and
 /// place are alternatives to each other — see [`StopPointsRequest::scope`] — while
 /// operator and line further restrict whichever of them is used.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct StopPointsRequest {
     /// Version of SIRI the request conforms to.
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
@@ -86,6 +86,13 @@ pub struct StopPointsRequest {
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<Extensions>,
 }
+
+debug_without_account_key!(StopPointsRequest {
+    version, request_timestamp, account_id;
+    account_key;
+    address, requestor_ref, message_identifier, bounding_box, circle, place_ref,
+    operator_ref, line_ref, language, stop_points_detail_level, extensions,
+});
 
 impl StopPointsRequest {
     /// An unfiltered request for every stop the producer serves.
@@ -194,7 +201,7 @@ impl StopPointsDelivery {
 ///
 /// Area, circle, place and line-direction are alternatives to each other — see
 /// [`LinesRequest::scope`] — while operator further restricts whichever is used.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct LinesRequest {
     /// Version of SIRI the request conforms to.
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
@@ -253,6 +260,13 @@ pub struct LinesRequest {
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<Extensions>,
 }
+
+debug_without_account_key!(LinesRequest {
+    version, request_timestamp, account_id;
+    account_key;
+    address, requestor_ref, message_identifier, bounding_box, circle, place_ref,
+    line_direction_ref, operator_ref, language, lines_detail_level, extensions,
+});
 
 impl LinesRequest {
     /// An unfiltered request for every line the producer serves.
@@ -364,7 +378,7 @@ impl LinesDelivery {
 }
 
 /// A request for the service features a producer labels its services with.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct ServiceFeaturesRequest {
     /// Version of SIRI the request conforms to.
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
@@ -391,6 +405,12 @@ pub struct ServiceFeaturesRequest {
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<Extensions>,
 }
+
+debug_without_account_key!(ServiceFeaturesRequest {
+    version, request_timestamp, account_id;
+    account_key;
+    address, requestor_ref, message_identifier, extensions,
+});
 
 impl ServiceFeaturesRequest {
     /// A request for the producer's whole service-feature code list.
@@ -463,7 +483,7 @@ impl ServiceFeaturesDelivery {
 }
 
 /// A request for the vehicle features a producer labels its vehicles with.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct VehicleFeaturesRequest {
     /// Version of SIRI the request conforms to.
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
@@ -498,6 +518,12 @@ pub struct VehicleFeaturesRequest {
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<Extensions>,
 }
+
+debug_without_account_key!(VehicleFeaturesRequest {
+    version, request_timestamp, account_id;
+    account_key;
+    address, requestor_ref, message_identifier, language, extensions,
+});
 
 impl VehicleFeaturesRequest {
     /// A request for the producer's whole vehicle-feature code list.
@@ -573,7 +599,7 @@ impl VehicleFeaturesDelivery {
 }
 
 /// A request for the product categories a producer sorts its services into.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct ProductCategoriesRequest {
     /// Version of SIRI the request conforms to.
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
@@ -608,6 +634,12 @@ pub struct ProductCategoriesRequest {
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
     pub extensions: Option<Extensions>,
 }
+
+debug_without_account_key!(ProductCategoriesRequest {
+    version, request_timestamp, account_id;
+    account_key;
+    address, requestor_ref, message_identifier, language, extensions,
+});
 
 impl ProductCategoriesRequest {
     /// A request for the producer's whole product-category code list.
