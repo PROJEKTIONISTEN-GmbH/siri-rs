@@ -29,7 +29,7 @@
 //! | Connection Monitoring | `MonitoredFeederArrival`, `MonitoredFeederArrivalCancellation`, `WaitProlongedDeparture`, `StoppingPositionChangedDeparture`, `DistributorDepartureCancellation` |
 //! | General Message | `GeneralMessage`, `GeneralMessageCancellation` |
 //! | Facility Monitoring | `FacilityCondition` |
-//! | Situation Exchange | `PtSituationElement`, `RoadSituationElement` |
+//! | Situation Exchange, and the situations another delivery is accompanied by | `PtSituationElement`, `RoadSituationElement` |
 //! | Control Actions | `ControlAction`, `GroupOfControlActions`, `RevokedControlAction`, `DriverMessage`, `VehicleDetecting` |
 //! | every service | the `…Delivery` element itself, while another remains |
 //!

@@ -388,9 +388,30 @@ pub struct ServiceDelivery {
         skip_serializing_if = "Option::is_none"
     )]
     pub more_data: Option<bool>,
-    /// The functional service deliveries.
-    #[serde(rename = "$value")]
+    /// The functional service deliveries. The situations a delivery is accompanied
+    /// by — [`ServiceDeliveryPayload::IncludedSituationExchangeDelivery`] — are
+    /// written ahead of the others, wherever they stand in the list, since the
+    /// schema puts them there.
+    #[serde(rename = "$value", serialize_with = "included_situations_first")]
     pub deliveries: Vec<ServiceDeliveryPayload>,
+}
+
+/// Writes the situations a delivery is accompanied by ahead of every other
+/// delivery, as `SiriServiceDeliveryGroup` orders them, keeping the order within
+/// each.
+fn included_situations_first<S: serde::Serializer>(
+    deliveries: &[ServiceDeliveryPayload],
+    serializer: S,
+) -> Result<S::Ok, S::Error> {
+    let included = |payload: &&ServiceDeliveryPayload| {
+        matches!(payload, ServiceDeliveryPayload::IncludedSituationExchangeDelivery(_))
+    };
+    serializer.collect_seq(
+        deliveries
+            .iter()
+            .filter(included)
+            .chain(deliveries.iter().filter(|payload| !included(payload))),
+    )
 }
 
 impl ServiceDelivery {
@@ -423,6 +444,9 @@ impl ServiceDelivery {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[non_exhaustive]
 pub enum ServiceDeliveryPayload {
+    /// Situations a delivery of another service is accompanied by — the
+    /// disruptions a departure board or a timetable refers to.
+    IncludedSituationExchangeDelivery(Box<SituationExchangeDelivery>),
     /// A planned timetable from the Production Timetable service.
     ProductionTimetableDelivery(Box<ProductionTimetableDelivery>),
     /// A real-time timetable from the Estimated Timetable service.

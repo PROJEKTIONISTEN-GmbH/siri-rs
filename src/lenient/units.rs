@@ -262,6 +262,18 @@ pub(super) const RECORDS: &[Record] = &[
         "RoadSituationElement",
         &["SituationNumber"],
     ),
+    record::<sx::PtSituationElement>(
+        "IncludedSituationExchangeDelivery",
+        SITUATIONS,
+        "PtSituationElement",
+        &["SituationNumber"],
+    ),
+    record::<sx::RoadSituationElement>(
+        "IncludedSituationExchangeDelivery",
+        SITUATIONS,
+        "RoadSituationElement",
+        &["SituationNumber"],
+    ),
     record::<ca::ControlAction>(
         "ControlActionDelivery",
         &[Container {
