@@ -79,14 +79,15 @@ fn a_stop_monitoring_delivery_hands_on_its_cancelled_visits() {
     };
 
     assert_eq!(items.len(), 2, "the visits are the records, as they were");
-    let cancelled: Vec<&str> = delivery
+    let cancelled: Vec<_> = delivery
         .deliveries
         .iter()
         .filter_map(StopMonitoring::delivery_of)
         .flat_map(|board| &board.monitored_stop_visit_cancellation)
-        .map(|cancellation| cancellation.item_ref.as_str())
         .collect();
-    assert_eq!(cancelled.len(), 2, "both withdrawals come along: {cancelled:?}");
+    assert_eq!(cancelled.len(), 2, "both withdrawals come along");
+    assert_eq!(cancelled[0].item_ref.as_ref().map(|item| item.as_str()), Some("SED9843214675429"));
+    assert_eq!(cancelled[1].visit_number, Some(2), "the second is named by its journey and visit");
     assert_eq!(*delivery, *service_delivery(&message), "nothing of the message is lost");
     assert!(outcome.succeeded());
     assert!(reply.is_none(), "the consumer was not asked to confirm deliveries");
@@ -121,7 +122,7 @@ fn every_record_beside_the_published_ones_hands_the_delivery_on_whole() {
         (
             "ServiceException",
             stop_monitoring(&format!(
-                "<ServiceException>{RECORDED}<ServiceStatus>serviceDisrupted</ServiceStatus></ServiceException>"
+                "<ServiceException>{RECORDED}<ServiceStatus>transportTemporarilySuspended</ServiceStatus></ServiceException>"
             )),
         ),
     ] {
@@ -146,8 +147,8 @@ fn every_record_beside_the_published_ones_hands_the_delivery_on_whole() {
          <EstimatedJourneyVersionFrame>{RECORDED}\
          <EstimatedVehicleJourney><LineRef>123</LineRef><DirectionRef>Out</DirectionRef>\
          <DatedVehicleJourneyRef>00008</DatedVehicleJourneyRef></EstimatedVehicleJourney>\
-         <EstimatedServiceJourneyInterchange><InterchangeCode>IC-1</InterchangeCode>\
-         </EstimatedServiceJourneyInterchange>\
+         <EstimatedServiceJourneyInterchange><InterchangeRef>IC-1</InterchangeRef>\
+         <WillNotWait/></EstimatedServiceJourneyInterchange>\
          </EstimatedJourneyVersionFrame></EstimatedTimetableDelivery>"
     ));
     assert!(matches!(event::<EstimatedTimetable>(&interchange), ConsumerEvent::DeliveredWhole { .. }));

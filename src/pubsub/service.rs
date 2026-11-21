@@ -112,10 +112,16 @@ use crate::vm::{
 ///     fn service_delivery(_: ()) -> ServiceDeliveryPayload {
 ///         unimplemented!()
 ///     }
+///     fn delivery_of(_: &ServiceDeliveryPayload) -> Option<&()> {
+///         unimplemented!()
+///     }
 ///     fn items_of(_: &ServiceDeliveryPayload) -> Option<Vec<()>> {
 ///         unimplemented!()
 ///     }
 ///     fn outcome_of(_: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
+///         unimplemented!()
+///     }
+///     fn holds_more_than_items(_: &()) -> bool {
 ///         unimplemented!()
 ///     }
 /// }
@@ -158,12 +164,21 @@ pub trait Service: sealed::Sealed + Sized + Copy + fmt::Debug + Eq {
     /// Wraps a delivery as the element a `ServiceDelivery` carries.
     fn service_delivery(delivery: Self::Delivery) -> ServiceDeliveryPayload;
 
+    /// The delivery inside a `ServiceDelivery` element, when it is this service's.
+    fn delivery_of(payload: &ServiceDeliveryPayload) -> Option<&Self::Delivery>;
+
     /// The records inside a `ServiceDelivery` element, when it is this service's.
     fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>>;
 
     /// What a `ServiceDelivery` element says about itself, when it is this
     /// service's.
     fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome>;
+
+    /// Whether a delivery holds anything [`items_of`](Self::items_of) leaves out: a
+    /// record beside the ones [`Item`](Self::Item) holds — the withdrawal of a
+    /// record delivered earlier, a notice, a road situation, an interchange — or a
+    /// note on the delivery as a whole.
+    fn holds_more_than_items(delivery: &Self::Delivery) -> bool;
 }
 
 /// The seal on [`Service`]: implementable only where this module can see.
@@ -478,20 +493,26 @@ impl Service for SituationExchange {
         ServiceDeliveryPayload::SituationExchangeDelivery(Box::new(delivery))
     }
 
-    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+    fn delivery_of(payload: &ServiceDeliveryPayload) -> Option<&Self::Delivery> {
         match payload {
-            ServiceDeliveryPayload::SituationExchangeDelivery(delivery) => {
-                Some(delivery.pt_situations().to_vec())
-            }
+            ServiceDeliveryPayload::SituationExchangeDelivery(delivery) => Some(delivery),
             _ => None,
         }
     }
 
+    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+        Self::delivery_of(payload).map(|delivery| delivery.pt_situations().to_vec())
+    }
+
     fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
-        match payload {
-            ServiceDeliveryPayload::SituationExchangeDelivery(delivery) => Some(outcome_of!(delivery)),
-            _ => None,
-        }
+        Self::delivery_of(payload).map(|delivery| outcome_of!(delivery))
+    }
+
+    fn holds_more_than_items(delivery: &Self::Delivery) -> bool {
+        delivery
+            .situations
+            .as_ref()
+            .is_some_and(|situations| !situations.road_situation_element.is_empty())
     }
 }
 
@@ -564,20 +585,26 @@ impl Service for EstimatedTimetable {
         ServiceDeliveryPayload::EstimatedTimetableDelivery(Box::new(delivery))
     }
 
-    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+    fn delivery_of(payload: &ServiceDeliveryPayload) -> Option<&Self::Delivery> {
         match payload {
-            ServiceDeliveryPayload::EstimatedTimetableDelivery(delivery) => {
-                Some(delivery.journeys().cloned().collect())
-            }
+            ServiceDeliveryPayload::EstimatedTimetableDelivery(delivery) => Some(delivery),
             _ => None,
         }
     }
 
+    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+        Self::delivery_of(payload).map(|delivery| delivery.journeys().cloned().collect())
+    }
+
     fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
-        match payload {
-            ServiceDeliveryPayload::EstimatedTimetableDelivery(delivery) => Some(outcome_of!(delivery)),
-            _ => None,
-        }
+        Self::delivery_of(payload).map(|delivery| outcome_of!(delivery))
+    }
+
+    fn holds_more_than_items(delivery: &Self::Delivery) -> bool {
+        delivery
+            .estimated_journey_version_frame
+            .iter()
+            .any(|frame| !frame.estimated_service_journey_interchange.is_empty())
     }
 }
 
@@ -647,20 +674,24 @@ impl Service for ProductionTimetable {
         ServiceDeliveryPayload::ProductionTimetableDelivery(Box::new(delivery))
     }
 
-    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+    fn delivery_of(payload: &ServiceDeliveryPayload) -> Option<&Self::Delivery> {
         match payload {
-            ServiceDeliveryPayload::ProductionTimetableDelivery(delivery) => {
-                Some(delivery.dated_timetable_version_frame.clone())
-            }
+            ServiceDeliveryPayload::ProductionTimetableDelivery(delivery) => Some(delivery),
             _ => None,
         }
     }
 
+    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+        Self::delivery_of(payload).map(|delivery| delivery.dated_timetable_version_frame.clone())
+    }
+
     fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
-        match payload {
-            ServiceDeliveryPayload::ProductionTimetableDelivery(delivery) => Some(outcome_of!(delivery)),
-            _ => None,
-        }
+        Self::delivery_of(payload).map(|delivery| outcome_of!(delivery))
+    }
+
+    /// Every record a ProductionTimetableDelivery holds is in its items.
+    fn holds_more_than_items(_delivery: &Self::Delivery) -> bool {
+        false
     }
 }
 
@@ -730,20 +761,23 @@ impl Service for VehicleMonitoring {
         ServiceDeliveryPayload::VehicleMonitoringDelivery(Box::new(delivery))
     }
 
-    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+    fn delivery_of(payload: &ServiceDeliveryPayload) -> Option<&Self::Delivery> {
         match payload {
-            ServiceDeliveryPayload::VehicleMonitoringDelivery(delivery) => {
-                Some(delivery.vehicle_activity.clone())
-            }
+            ServiceDeliveryPayload::VehicleMonitoringDelivery(delivery) => Some(delivery),
             _ => None,
         }
     }
 
+    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+        Self::delivery_of(payload).map(|delivery| delivery.vehicle_activity.clone())
+    }
+
     fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
-        match payload {
-            ServiceDeliveryPayload::VehicleMonitoringDelivery(delivery) => Some(outcome_of!(delivery)),
-            _ => None,
-        }
+        Self::delivery_of(payload).map(|delivery| outcome_of!(delivery))
+    }
+
+    fn holds_more_than_items(delivery: &Self::Delivery) -> bool {
+        !delivery.vehicle_activity_cancellation.is_empty() || !delivery.vehicle_activity_note.is_empty()
     }
 }
 
@@ -813,20 +847,23 @@ impl Service for StopTimetable {
         ServiceDeliveryPayload::StopTimetableDelivery(Box::new(delivery))
     }
 
-    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+    fn delivery_of(payload: &ServiceDeliveryPayload) -> Option<&Self::Delivery> {
         match payload {
-            ServiceDeliveryPayload::StopTimetableDelivery(delivery) => {
-                Some(delivery.timetabled_stop_visit.clone())
-            }
+            ServiceDeliveryPayload::StopTimetableDelivery(delivery) => Some(delivery),
             _ => None,
         }
     }
 
+    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+        Self::delivery_of(payload).map(|delivery| delivery.timetabled_stop_visit.clone())
+    }
+
     fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
-        match payload {
-            ServiceDeliveryPayload::StopTimetableDelivery(delivery) => Some(outcome_of!(delivery)),
-            _ => None,
-        }
+        Self::delivery_of(payload).map(|delivery| outcome_of!(delivery))
+    }
+
+    fn holds_more_than_items(delivery: &Self::Delivery) -> bool {
+        !delivery.timetabled_stop_visit_cancellation.is_empty()
     }
 }
 
@@ -899,20 +936,29 @@ impl Service for StopMonitoring {
         ServiceDeliveryPayload::StopMonitoringDelivery(Box::new(delivery))
     }
 
-    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+    fn delivery_of(payload: &ServiceDeliveryPayload) -> Option<&Self::Delivery> {
         match payload {
-            ServiceDeliveryPayload::StopMonitoringDelivery(delivery) => {
-                Some(delivery.monitored_stop_visit.clone())
-            }
+            ServiceDeliveryPayload::StopMonitoringDelivery(delivery) => Some(delivery),
             _ => None,
         }
     }
 
+    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+        Self::delivery_of(payload).map(|delivery| delivery.monitored_stop_visit.clone())
+    }
+
     fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
-        match payload {
-            ServiceDeliveryPayload::StopMonitoringDelivery(delivery) => Some(outcome_of!(delivery)),
-            _ => None,
-        }
+        Self::delivery_of(payload).map(|delivery| outcome_of!(delivery))
+    }
+
+    fn holds_more_than_items(delivery: &Self::Delivery) -> bool {
+        !delivery.monitored_stop_visit_cancellation.is_empty()
+            || !delivery.stop_line_notice.is_empty()
+            || !delivery.stop_line_notice_cancellation.is_empty()
+            || !delivery.stop_notice.is_empty()
+            || !delivery.stop_notice_cancellation.is_empty()
+            || !delivery.service_exception.is_empty()
+            || !delivery.note.is_empty()
     }
 }
 
@@ -983,20 +1029,23 @@ impl Service for ConnectionTimetable {
         ServiceDeliveryPayload::ConnectionTimetableDelivery(Box::new(delivery))
     }
 
-    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+    fn delivery_of(payload: &ServiceDeliveryPayload) -> Option<&Self::Delivery> {
         match payload {
-            ServiceDeliveryPayload::ConnectionTimetableDelivery(delivery) => {
-                Some(delivery.timetabled_feeder_arrival.clone())
-            }
+            ServiceDeliveryPayload::ConnectionTimetableDelivery(delivery) => Some(delivery),
             _ => None,
         }
     }
 
+    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+        Self::delivery_of(payload).map(|delivery| delivery.timetabled_feeder_arrival.clone())
+    }
+
     fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
-        match payload {
-            ServiceDeliveryPayload::ConnectionTimetableDelivery(delivery) => Some(outcome_of!(delivery)),
-            _ => None,
-        }
+        Self::delivery_of(payload).map(|delivery| outcome_of!(delivery))
+    }
+
+    fn holds_more_than_items(delivery: &Self::Delivery) -> bool {
+        !delivery.timetabled_feeder_arrival_cancellation.is_empty()
     }
 }
 
@@ -1070,20 +1119,23 @@ impl Service for ConnectionMonitoringFeeder {
         ServiceDeliveryPayload::ConnectionMonitoringFeederDelivery(Box::new(delivery))
     }
 
-    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+    fn delivery_of(payload: &ServiceDeliveryPayload) -> Option<&Self::Delivery> {
         match payload {
-            ServiceDeliveryPayload::ConnectionMonitoringFeederDelivery(delivery) => {
-                Some(delivery.monitored_feeder_arrival.clone())
-            }
+            ServiceDeliveryPayload::ConnectionMonitoringFeederDelivery(delivery) => Some(delivery),
             _ => None,
         }
     }
 
+    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+        Self::delivery_of(payload).map(|delivery| delivery.monitored_feeder_arrival.clone())
+    }
+
     fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
-        match payload {
-            ServiceDeliveryPayload::ConnectionMonitoringFeederDelivery(delivery) => Some(outcome_of!(delivery)),
-            _ => None,
-        }
+        Self::delivery_of(payload).map(|delivery| outcome_of!(delivery))
+    }
+
+    fn holds_more_than_items(delivery: &Self::Delivery) -> bool {
+        !delivery.monitored_feeder_arrival_cancellation.is_empty()
     }
 }
 
@@ -1154,20 +1206,23 @@ impl Service for GeneralMessage {
         ServiceDeliveryPayload::GeneralMessageDelivery(Box::new(delivery))
     }
 
-    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+    fn delivery_of(payload: &ServiceDeliveryPayload) -> Option<&Self::Delivery> {
         match payload {
-            ServiceDeliveryPayload::GeneralMessageDelivery(delivery) => {
-                Some(delivery.general_message.clone())
-            }
+            ServiceDeliveryPayload::GeneralMessageDelivery(delivery) => Some(delivery),
             _ => None,
         }
     }
 
+    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+        Self::delivery_of(payload).map(|delivery| delivery.general_message.clone())
+    }
+
     fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
-        match payload {
-            ServiceDeliveryPayload::GeneralMessageDelivery(delivery) => Some(outcome_of!(delivery)),
-            _ => None,
-        }
+        Self::delivery_of(payload).map(|delivery| outcome_of!(delivery))
+    }
+
+    fn holds_more_than_items(delivery: &Self::Delivery) -> bool {
+        !delivery.general_message_cancellation.is_empty()
     }
 }
 
@@ -1237,19 +1292,23 @@ impl Service for FacilityMonitoring {
         ServiceDeliveryPayload::FacilityMonitoringDelivery(Box::new(delivery))
     }
 
-    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+    fn delivery_of(payload: &ServiceDeliveryPayload) -> Option<&Self::Delivery> {
         match payload {
-            ServiceDeliveryPayload::FacilityMonitoringDelivery(delivery) => {
-                Some(delivery.facility_condition.clone())
-            }
+            ServiceDeliveryPayload::FacilityMonitoringDelivery(delivery) => Some(delivery),
             _ => None,
         }
     }
 
+    fn items_of(payload: &ServiceDeliveryPayload) -> Option<Vec<Self::Item>> {
+        Self::delivery_of(payload).map(|delivery| delivery.facility_condition.clone())
+    }
+
     fn outcome_of(payload: &ServiceDeliveryPayload) -> Option<FunctionalDeliveryOutcome> {
-        match payload {
-            ServiceDeliveryPayload::FacilityMonitoringDelivery(delivery) => Some(outcome_of!(delivery)),
-            _ => None,
-        }
+        Self::delivery_of(payload).map(|delivery| outcome_of!(delivery))
+    }
+
+    /// Every record a FacilityMonitoringDelivery holds is in its items.
+    fn holds_more_than_items(_delivery: &Self::Delivery) -> bool {
+        false
     }
 }

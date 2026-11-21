@@ -6,8 +6,8 @@ use chrono::{DateTime, FixedOffset};
 
 use crate::framework::{
     DataReadyAcknowledgement, DataReceivedAcknowledgement, DataSupplyRequest, DeliveryError,
-    ErrorCondition, Siri, SiriPayload, SubscriptionContext, SubscriptionRequest,
-    TerminateSubscriptionRequest,
+    ErrorCondition, ServiceDelivery, ServiceDeliveryPayload, Siri, SiriPayload, StatusError,
+    SubscriptionContext, SubscriptionRequest, TerminateSubscriptionRequest,
 };
 use crate::pubsub::envelope;
 use crate::pubsub::service::{FunctionalDeliveryOutcome, Service, SubscriptionParts};
@@ -43,6 +43,10 @@ pub enum ConsumerEvent<S: Service> {
         fetch: Box<Siri>,
     },
     /// The producer delivered data, or reported that it could not.
+    ///
+    /// A message whose deliveries hold more than these records — a withdrawal, a
+    /// notice, a road situation, situations it is accompanied by — arrives as
+    /// [`ConsumerEvent::DeliveredWhole`] instead.
     Delivered {
         /// The records, flattened across the deliveries of this service in the
         /// message.
@@ -55,10 +59,42 @@ pub enum ConsumerEvent<S: Service> {
         /// Acknowledgement to send back, when the producer asked for confirmation.
         reply: Option<Box<Siri>>,
     },
-    /// The producer reported itself alive.
+    /// The producer delivered data that the records alone do not tell whole.
+    ///
+    /// A delivery may hold, beside the records [`Service::Item`] carries, the
+    /// withdrawal of a record delivered earlier, a notice, a road situation, an
+    /// interchange or a note, and may be accompanied by situations
+    /// ([`IncludedSituationExchangeDelivery`]). With incremental updates a
+    /// withdrawal is the only sign that a departure or a message is gone, so the
+    /// message is handed on as it arrived: `items` are the records `Delivered`
+    /// would carry, `delivery` is everything. [`Service::delivery_of`] picks this
+    /// service's deliveries out of it.
+    ///
+    /// [`IncludedSituationExchangeDelivery`]: crate::framework::ServiceDeliveryPayload::IncludedSituationExchangeDelivery
+    DeliveredWhole {
+        /// The records, flattened across the deliveries of this service in the
+        /// message, as [`ConsumerEvent::Delivered`] carries them.
+        items: Vec<S::Item>,
+        /// The message's `ServiceDelivery`, with every delivery in it.
+        delivery: Box<ServiceDelivery>,
+        /// What the message said about itself, as for
+        /// [`ConsumerEvent::Delivered`].
+        outcome: DeliveryOutcome,
+        /// Acknowledgement to send back, when the producer asked for confirmation.
+        reply: Option<Box<Siri>>,
+    },
+    /// The producer reported itself alive and able to serve.
     Alive {
         /// When the producer's service last started.
         service_started_time: Option<DateTime<FixedOffset>>,
+    },
+    /// The producer reported itself alive but unable to serve: a heartbeat or a
+    /// status answer whose `Status` is false.
+    Unavailable {
+        /// When the producer's service last started.
+        service_started_time: Option<DateTime<FixedOffset>>,
+        /// Why it cannot serve, and when it expects to again, if it said.
+        error_condition: Option<ErrorCondition<StatusError>>,
     },
     /// The producer ended a subscription of its own accord.
     SubscriptionEnded {
@@ -104,8 +140,8 @@ impl DeliveryOutcome {
 ///
 /// Which functional service it speaks is the type parameter, so it has to be named
 /// when a consumer is built: `Consumer::<SituationExchange>::new("MY-APP")`.
-/// Deliveries from another service are reported as
-/// [`ConsumerEvent::Ignored`] rather than misread.
+/// Deliveries of another service in a message are not misread as this one's: they
+/// contribute no records and no outcome.
 #[derive(Debug)]
 pub struct Consumer<S: Service> {
     requestor_ref: ParticipantRef,
@@ -255,6 +291,10 @@ impl<S: Service> Consumer<S> {
                     .filter_map(S::items_of)
                     .flatten()
                     .collect();
+                let holds_more = delivery.deliveries.iter().any(|payload| {
+                    matches!(payload, ServiceDeliveryPayload::IncludedSituationExchangeDelivery(_))
+                        || S::delivery_of(payload).is_some_and(S::holds_more_than_items)
+                });
                 let outcome = DeliveryOutcome {
                     status: delivery.status.unwrap_or(true),
                     error_condition: delivery.error_condition.clone(),
@@ -270,18 +310,31 @@ impl<S: Service> Consumer<S> {
                         ..DataReceivedAcknowledgement::accepted(now, self.requestor_ref.clone())
                     }))
                 });
-                Ok(ConsumerEvent::Delivered {
-                    items,
-                    outcome,
-                    reply,
+                Ok(if holds_more {
+                    ConsumerEvent::DeliveredWhole {
+                        items,
+                        delivery: Box::new(delivery.clone()),
+                        outcome,
+                        reply,
+                    }
+                } else {
+                    ConsumerEvent::Delivered {
+                        items,
+                        outcome,
+                        reply,
+                    }
                 })
             }
-            SiriPayload::HeartbeatNotification(heartbeat) => Ok(ConsumerEvent::Alive {
-                service_started_time: heartbeat.service_started_time,
-            }),
-            SiriPayload::CheckStatusResponse(response) => Ok(ConsumerEvent::Alive {
-                service_started_time: response.service_started_time,
-            }),
+            SiriPayload::HeartbeatNotification(heartbeat) => Ok(status_event(
+                heartbeat.status,
+                heartbeat.service_started_time,
+                &heartbeat.error_condition,
+            )),
+            SiriPayload::CheckStatusResponse(response) => Ok(status_event(
+                response.status,
+                response.service_started_time,
+                &response.error_condition,
+            )),
             SiriPayload::SubscriptionTerminatedNotification(notification) => {
                 self.subscriptions
                     .retain(|held| *held != notification.subscription_ref);
@@ -308,5 +361,22 @@ impl<S: Service> Consumer<S> {
         let id = self.next_message_id;
         self.next_message_id += 1;
         MessageQualifier::new(format!("{}-{id}", self.requestor_ref))
+    }
+}
+
+/// What a heartbeat or a status answer reports: alive where `Status` is true, which
+/// is what the schema takes it to be when absent, and unavailable where it is false.
+fn status_event<S: Service>(
+    status: Option<bool>,
+    service_started_time: Option<DateTime<FixedOffset>>,
+    error_condition: &Option<ErrorCondition<StatusError>>,
+) -> ConsumerEvent<S> {
+    if status.unwrap_or(true) {
+        ConsumerEvent::Alive { service_started_time }
+    } else {
+        ConsumerEvent::Unavailable {
+            service_started_time,
+            error_condition: error_condition.clone(),
+        }
     }
 }
