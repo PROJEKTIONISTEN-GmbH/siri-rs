@@ -506,7 +506,10 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
     /// requires at least one functional-service delivery in every `ServiceDelivery`
     /// (`ServiceDeliveryBodyGroup`), and a delivery with an empty record list is
     /// what it provides for "nothing"; a `ServiceDelivery` with no functional
-    /// delivery at all is not a document the schema accepts.
+    /// delivery at all is not a document the schema accepts. Estimated Timetable
+    /// has no such form — see [`Service::CAN_DELIVER_NOTHING`] — and a fetch has to
+    /// be answered, so its empty delivery is written as the others are: a frame
+    /// without a journey, which the schema, and this crate's reader, refuse.
     fn supply(&mut self, consumer: &ParticipantRef, now: DateTime<FixedOffset>) -> Siri {
         let waiting: Vec<usize> = self
             .subscriptions
@@ -521,9 +524,9 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
 
         let mut deliveries = Vec::with_capacity(waiting.len().max(1));
         for index in waiting {
-            deliveries.push(Svc::service_delivery(
-                self.subscription_delivery(&self.subscriptions[index], now),
-            ));
+            let held = &self.subscriptions[index];
+            let items = self.source.items(&held.request);
+            deliveries.push(Svc::service_delivery(self.subscription_delivery(held, items, now)));
             self.subscriptions[index].state = SubscriptionState::Idle;
         }
         if deliveries.is_empty() {
@@ -538,6 +541,11 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
     }
 
     /// The messages the subscriptions that are owed one have fallen due for.
+    ///
+    /// A subscription to a service whose schema has no form for a delivery of
+    /// nothing ([`Service::CAN_DELIVER_NOTHING`]) is sent nothing while its source
+    /// holds no record for it — neither a delivery nor a notification that one is
+    /// ready — and owes its consumer nothing until the data changes again.
     ///
     /// The subscriptions that are due are noted by position first, and worked
     /// through afterwards, because building a message reads the subscription while
@@ -558,13 +566,24 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
             let message = match self.config.delivery_method {
                 // A method the crate does not know is answered the default way.
                 DeliveryMethod::Direct | DeliveryMethod::Unrecognised(_) => {
-                    let delivery = self.subscription_delivery(&self.subscriptions[index], now);
+                    let items = self.source.items(&self.subscriptions[index].request);
                     self.subscriptions[index].state = SubscriptionState::Idle;
+                    if items.is_empty() && !Svc::CAN_DELIVER_NOTHING {
+                        continue;
+                    }
+                    let delivery = self.subscription_delivery(&self.subscriptions[index], items, now);
                     envelope(ServiceDelivery::new(
                         now,
                         self.config.producer_ref.clone(),
                         vec![Svc::service_delivery(delivery)],
                     ))
+                }
+                DeliveryMethod::Fetched
+                    if !Svc::CAN_DELIVER_NOTHING
+                        && self.source.items(&self.subscriptions[index].request).is_empty() =>
+                {
+                    self.subscriptions[index].state = SubscriptionState::Idle;
+                    continue;
                 }
                 DeliveryMethod::Fetched => {
                     let identifier = self.mint_message_id();
@@ -665,9 +684,10 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
     fn subscription_delivery(
         &self,
         subscription: &Subscription<Svc>,
+        items: Vec<Svc::Item>,
         now: DateTime<FixedOffset>,
     ) -> Svc::Delivery {
-        let mut delivery = self.delivery_for(&subscription.request, now);
+        let mut delivery = Svc::delivery(now, items);
         Svc::attribute(
             &mut delivery,
             subscription.subscriber_ref.clone(),

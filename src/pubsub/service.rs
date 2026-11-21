@@ -90,6 +90,7 @@ use crate::vm::{
 ///     type Request = ();
 ///     type Delivery = ();
 ///     type Item = ();
+///     const CAN_DELIVER_NOTHING: bool = true;
 ///
 ///     fn service_request(_: ()) -> ServiceRequestPayload {
 ///         unimplemented!()
@@ -133,6 +134,12 @@ pub trait Service: sealed::Sealed + Sized + Copy + fmt::Debug + Eq {
     type Delivery;
     /// One record inside a delivery.
     type Item: Clone + fmt::Debug + PartialEq;
+
+    /// Whether the schema has a form for a delivery of this service that carries no
+    /// records. Every service's has but Estimated Timetable's, which needs a journey
+    /// in a version frame; a producer sends no such delivery where it may send
+    /// nothing at all.
+    const CAN_DELIVER_NOTHING: bool;
 
     /// Wraps a request as the element a `ServiceRequest` carries.
     fn service_request(request: Self::Request) -> ServiceRequestPayload;
@@ -431,6 +438,7 @@ impl Service for SituationExchange {
     type Request = SituationExchangeRequest;
     type Delivery = SituationExchangeDelivery;
     type Item = PtSituationElement;
+    const CAN_DELIVER_NOTHING: bool = true;
 
     fn service_request(request: Self::Request) -> ServiceRequestPayload {
         ServiceRequestPayload::SituationExchangeRequest(Box::new(request))
@@ -520,6 +528,7 @@ impl Service for EstimatedTimetable {
     type Request = EstimatedTimetableRequest;
     type Delivery = EstimatedTimetableDelivery;
     type Item = EstimatedVehicleJourney;
+    const CAN_DELIVER_NOTHING: bool = false;
 
     fn service_request(request: Self::Request) -> ServiceRequestPayload {
         ServiceRequestPayload::EstimatedTimetableRequest(Box::new(request))
@@ -612,6 +621,7 @@ impl Service for ProductionTimetable {
     type Request = ProductionTimetableRequest;
     type Delivery = ProductionTimetableDelivery;
     type Item = DatedTimetableVersionFrame;
+    const CAN_DELIVER_NOTHING: bool = true;
 
     fn service_request(request: Self::Request) -> ServiceRequestPayload {
         ServiceRequestPayload::ProductionTimetableRequest(Box::new(request))
@@ -699,6 +709,7 @@ impl Service for VehicleMonitoring {
     type Request = VehicleMonitoringRequest;
     type Delivery = VehicleMonitoringDelivery;
     type Item = VehicleActivity;
+    const CAN_DELIVER_NOTHING: bool = true;
 
     fn service_request(request: Self::Request) -> ServiceRequestPayload {
         ServiceRequestPayload::VehicleMonitoringRequest(Box::new(request))
@@ -785,6 +796,7 @@ impl Service for StopTimetable {
     type Request = StopTimetableRequest;
     type Delivery = StopTimetableDelivery;
     type Item = TimetabledStopVisit;
+    const CAN_DELIVER_NOTHING: bool = true;
 
     fn service_request(request: Self::Request) -> ServiceRequestPayload {
         ServiceRequestPayload::StopTimetableRequest(Box::new(request))
@@ -871,6 +883,7 @@ impl Service for StopMonitoring {
     type Request = StopMonitoringRequest;
     type Delivery = StopMonitoringDelivery;
     type Item = MonitoredStopVisit;
+    const CAN_DELIVER_NOTHING: bool = true;
 
     fn service_request(request: Self::Request) -> ServiceRequestPayload {
         ServiceRequestPayload::StopMonitoringRequest(Box::new(request))
@@ -966,6 +979,7 @@ impl Service for ConnectionTimetable {
     type Request = ConnectionTimetableRequest;
     type Delivery = ConnectionTimetableDelivery;
     type Item = TimetabledFeederArrival;
+    const CAN_DELIVER_NOTHING: bool = true;
 
     fn service_request(request: Self::Request) -> ServiceRequestPayload {
         ServiceRequestPayload::ConnectionTimetableRequest(Box::new(request))
@@ -1053,6 +1067,7 @@ impl Service for ConnectionMonitoringFeeder {
     type Request = ConnectionMonitoringRequest;
     type Delivery = ConnectionMonitoringFeederDelivery;
     type Item = MonitoredFeederArrival;
+    const CAN_DELIVER_NOTHING: bool = true;
 
     fn service_request(request: Self::Request) -> ServiceRequestPayload {
         ServiceRequestPayload::ConnectionMonitoringRequest(Box::new(request))
@@ -1143,6 +1158,7 @@ impl Service for GeneralMessage {
     type Request = GeneralMessageRequest;
     type Delivery = GeneralMessageDelivery;
     type Item = InfoMessage;
+    const CAN_DELIVER_NOTHING: bool = true;
 
     fn service_request(request: Self::Request) -> ServiceRequestPayload {
         ServiceRequestPayload::GeneralMessageRequest(Box::new(request))
@@ -1230,6 +1246,7 @@ impl Service for FacilityMonitoring {
     type Request = FacilityMonitoringRequest;
     type Delivery = FacilityMonitoringDelivery;
     type Item = FacilityCondition;
+    const CAN_DELIVER_NOTHING: bool = true;
 
     fn service_request(request: Self::Request) -> ServiceRequestPayload {
         ServiceRequestPayload::FacilityMonitoringRequest(Box::new(request))
