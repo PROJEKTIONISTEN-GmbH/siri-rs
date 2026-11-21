@@ -186,28 +186,68 @@ pub struct Network {
     )]
     pub vehicle_mode: Option<VehicleModesOfTransport>,
     /// The kind of air service concerned.
-    #[serde(rename = "AirSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AirSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub air_submode: Option<crate::enumerations::AirSubmodesOfTransport>,
     /// The kind of bus service concerned.
-    #[serde(rename = "BusSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "BusSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub bus_submode: Option<crate::enumerations::BusSubmodesOfTransport>,
     /// The kind of coach service concerned.
-    #[serde(rename = "CoachSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "CoachSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub coach_submode: Option<crate::enumerations::CoachSubmodesOfTransport>,
     /// The kind of metro service concerned.
-    #[serde(rename = "MetroSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MetroSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub metro_submode: Option<crate::enumerations::MetroSubmodesOfTransport>,
     /// The kind of rail service concerned.
-    #[serde(rename = "RailSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "RailSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub rail_submode: Option<crate::enumerations::RailSubmodesOfTransport>,
     /// The kind of tram service concerned.
-    #[serde(rename = "TramSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TramSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub tram_submode: Option<crate::enumerations::TramSubmodesOfTransport>,
     /// The kind of water-borne service concerned.
-    #[serde(rename = "WaterSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "WaterSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub water_submode: Option<crate::enumerations::WaterSubmodesOfTransport>,
     /// The kind of cable-drawn service concerned.
-    #[serde(rename = "TelecabinSubmode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TelecabinSubmode",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_unknown",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub telecabin_submode: Option<crate::enumerations::TelecabinSubmodesOfTransport>,
     /// The way of reaching or leaving a stop concerned.
     #[serde(rename = "AccessMode", default, skip_serializing_if = "Option::is_none")]

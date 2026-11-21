@@ -510,7 +510,13 @@ impl AffectedModes {
 /// A network, named rather than merely referenced, together with its mode.
 ///
 /// This is the shape a producer uses to state a default network for a batch of
-/// situations, so that each situation need not repeat it.
+/// situations, so that each situation need not repeat it. No type of this crate
+/// holds one: the network a situation's context names is read into
+/// [`delivery::Network`](crate::sx::delivery::Network), the same schema type.
+#[deprecated(
+    since = "2.3.0",
+    note = "the schema type `sx::delivery::Network` transcribes, held by no field of this crate; use that one"
+)]
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Network {
     /// The network. The schema types this reference as an operator reference,
@@ -597,6 +603,8 @@ pub struct Network {
     pub access_mode: Option<AccessModes>,
 }
 
+// The type's own accessor is deprecated with it, not a use of it to warn about.
+#[allow(deprecated)]
 impl Network {
     /// The submode this network refines its vehicle mode with, if any.
     pub fn pt_submode(&self) -> Option<PtSubmode> {
