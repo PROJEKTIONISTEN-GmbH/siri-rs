@@ -107,7 +107,11 @@ fn main() -> siri_rs::Result<()> {
 ```
 
 Both namespace bindings found in the wild are accepted — the SIRI namespace as the
-document default, or bound to a prefix.
+document default, or bound to a prefix. A root element in another namespace, or in
+none, is refused, and so is what XML itself does not allow: a control character
+(other than tab, line feed and carriage return), whether written as itself or as a
+character reference, and anything after the root element but comments, processing
+instructions and whitespace. A value holding such a character is not written either.
 
 ## Extensions and the rest of the open content
 
@@ -177,7 +181,7 @@ second reader, behind a feature:
 
 ```text
 [dependencies]
-siri-rs = { version = "2.2", features = ["lenient"] }
+siri-rs = { version = "2.3", features = ["lenient"] }
 ```
 
 ```rust
@@ -199,6 +203,12 @@ the lenient reader does differently starts where the strict one fails:
   journey, stop visit, vehicle, facility, message or delivery — is kept. An
   element the schema demands takes its parent with it, up to the unit, which then
   goes whole. Nothing is guessed and nothing is put in a fault's place.
+- **It leaves nothing out that would then read as a value.** An element the
+  schema gives a default — `Cancellation`, `Monitored`, `VehicleAtStop` and some
+  two hundred others — means that default when it is absent: a journey whose
+  `<Cancellation>True</Cancellation>` cannot be read (`xsd:boolean` is lower case)
+  would read as running. Such an element does not go alone; the element around it
+  goes in its place, here the journey.
 - **It reports every element left out.** Each `Finding` names the element that
   could not be read, in the path form the strict reader's errors use, the reason
   the reader gave, and what went for it — an element, or a unit with its
@@ -207,8 +217,9 @@ the lenient reader does differently starts where the strict one fails:
   `findings.by_reason()` groups them, `findings.units()` lists the units.
 - **It is no more lenient than that.** The envelope — `<Siri>`,
   `<ServiceDelivery>` and its own elements — the only delivery, and everything
-  wrong with the document rather than in it (XML that is not well-formed, a root
-  that is not `<Siri>`) fail as they do with the strict reader.
+  wrong with the document rather than in it (XML that is not well-formed, a
+  character XML does not allow, content after the root, a root that is not
+  `<Siri>` in the SIRI namespace) fail as they do with the strict reader.
 
 A document the strict reader accepts reads leniently as it does strictly, with
 no findings and at the same cost: the lenient reading is the strict one until it
@@ -303,6 +314,49 @@ fn subscribe(
 `Consumer::handle` then turns each incoming message into a `ConsumerEvent`: the
 records a delivery carried, the acknowledgement and the fetch request a data-ready
 notification calls for, a heartbeat, a subscription that ended.
+
+A delivery carries more than the records the hub publishes: the withdrawal of a
+record delivered earlier (`MonitoredStopVisitCancellation`,
+`VehicleActivityCancellation`, `GeneralMessageCancellation` and their kind), the
+notices of a departure board, road situations next to public-transport ones, the
+interchanges of an estimated timetable, and the situations a delivery of another
+service is accompanied by (`IncludedSituationExchangeDelivery`). With incremental
+updates a withdrawal is the only sign that a departure is gone. A message that
+holds any of these arrives as `ConsumerEvent::DeliveredWhole` — the records as
+`Delivered` carries them, and the `ServiceDelivery` whole. A consumer written
+for `Delivered` alone therefore does not take the message for one without
+withdrawals: it lands in the wildcard arm that a match on the non-exhaustive
+event has. Here `show`, `withdraw` and `report` stand for the application's own:
+
+```rust
+use chrono::{DateTime, FixedOffset};
+use siri_rs::pubsub::{Consumer, ConsumerEvent, Service, StopMonitoring};
+
+fn board(
+    consumer: &mut Consumer<StopMonitoring>,
+    message: &siri_rs::Siri,
+    now: DateTime<FixedOffset>,
+) -> siri_rs::Result<()> {
+    match consumer.handle(message, now)? {
+        ConsumerEvent::Delivered { items, .. } => show(&items),
+        ConsumerEvent::DeliveredWhole { items, delivery, .. } => {
+            show(&items);
+            for board in delivery.deliveries.iter().filter_map(StopMonitoring::delivery_of) {
+                for cancelled in &board.monitored_stop_visit_cancellation {
+                    withdraw(cancelled);
+                }
+            }
+        }
+        ConsumerEvent::Unavailable { error_condition, .. } => report(error_condition),
+        _ => {}
+    }
+    Ok(())
+}
+```
+
+A heartbeat or a status answer whose `Status` is false — the producer is up but
+cannot serve — arrives as `ConsumerEvent::Unavailable`, with the error condition
+it gave, rather than as `Alive`.
 
 Which service the two speak is decided once. A producer takes it from its source —
 implementing `SituationSource`, `StopMonitoringSource`, `FacilityMonitoringSource`
@@ -505,10 +559,29 @@ better read here than discovered:
   error code — fails the document when it names an alternative the crate does not
   know. Both follow from how `serde` treats the two shapes.
 - **Estimated Timetable cannot deliver nothing.** The schema makes a version frame
-  mandatory in the delivery and a journey mandatory in the frame, so a producer of
-  that service whose source matches no journey builds a document the schema
-  rejects. A test records this rather than hides it; the other nine services can
-  say "nothing" validly.
+  mandatory in the delivery and a journey mandatory in the frame, so there is no
+  valid document saying "no journeys". A subscription whose source holds none is
+  therefore sent nothing — no delivery, no data-ready notification — until it
+  holds one. A request or a fetch has to be answered, and there the producer
+  writes the delivery with an empty frame, which the schema rejects and this
+  crate's own reader, strict or lenient, refuses with
+  `missing field EstimatedVehicleJourney`. Tests record both; the other nine
+  services can say "nothing" validly.
+- **A timestamp without a time-zone offset is not read, nor one at `24:00:00`.**
+  XML Schema allows both: `2026-03-04T07:50:00` and the end of a day as hour 24.
+  The first names no instant, and the crate does not guess the zone its producer
+  meant; the second is an hour chrono does not have, and the same instant is
+  `00:00:00` of the next day. Either fails the field with an error saying so —
+  the whole document when read strictly, the unit around it when read leniently.
+- **Namespaces below the root are not checked.** The root element has to be in
+  the SIRI namespace; inside, an element is matched by its local name, so an
+  element of another vocabulary that shares a SIRI element's name where the
+  schema expects that element is read as it, and the order the schema's sequences
+  prescribe is not enforced on reading. Both follow from how `serde` reads.
+- **Facilities of a train formation are not modelled.** `Facilities` on
+  `TrainElement`, `Train` and `CompoundTrain` (schema 2.2) has no field, so it is
+  dropped when read and not written back. The structs are exhaustive; the field
+  comes with the next major release.
 - **The schema has no form for a subscription request that mixes services**, though
   the reader accepts one; the producer answers it entry by entry.
 - **It takes a while to compile, and the library is large.** Building the library

@@ -180,7 +180,9 @@ async fn receive(State(state): State<Receiving>, body: String) -> Response {
         }
     };
     match event {
-        ConsumerEvent::Delivered { items, .. } => {
+        // A delivery that also withdraws vehicles arrives whole; the vehicles still
+        // running are its items either way.
+        ConsumerEvent::Delivered { items, .. } | ConsumerEvent::DeliveredWhole { items, .. } => {
             let _ = state.delivered.send(items);
             StatusCode::NO_CONTENT.into_response()
         }

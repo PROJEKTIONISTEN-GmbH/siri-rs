@@ -1,5 +1,106 @@
 # Changelog
 
+## 2.3.0 — 2026-11-21
+
+A review of 2.2.0 found that what arrives was not always handed on, that the
+lenient reader could read a value no producer sent, and that a document outside
+SIRI's namespace or outside XML was read as SIRI. Everything here is additive in
+the API; four changes of behaviour are listed under *Changed*, with what to do.
+
+### Added
+
+- **`ConsumerEvent::DeliveredWhole`.** A delivery carries more than the records
+  the hub publishes: the withdrawal of a record delivered earlier
+  (`MonitoredStopVisitCancellation`, `VehicleActivityCancellation`,
+  `TimetabledStopVisitCancellation`, `GeneralMessageCancellation`, the feeder
+  arrival cancellations), the notices and service exceptions of a departure
+  board, road situations, the interchanges of an estimated timetable, a note on
+  the delivery, and the situations a delivery is accompanied by. `Delivered`
+  passed on the records alone, so a consumer of incremental updates kept
+  showing a departure its producer had withdrawn. A message that holds any of
+  these now arrives as `DeliveredWhole`, with the records `Delivered` would carry
+  and the `ServiceDelivery` whole.
+- **`ConsumerEvent::Unavailable`.** A heartbeat or a status answer whose `Status`
+  is false arrived as `Alive`; it now arrives as `Unavailable`, with the error
+  condition the producer gave — `ServiceNotAvailableError` and its expected
+  restart time, or `OtherError`.
+- **`Service::delivery_of`, `Service::holds_more_than_items` and
+  `Service::CAN_DELIVER_NOTHING`.** The trait is sealed, so these are not breaking.
+  `delivery_of` picks a service's own deliveries out of a `ServiceDelivery`.
+- **`ServiceDeliveryPayload::IncludedSituationExchangeDelivery`.** Schema 2.2
+  lets situations accompany a delivery of another service, ahead of it. Such a
+  document was refused whole by the strict reader and lost its situations in the
+  lenient one; it now reads, is written with the situations ahead of the other
+  deliveries wherever they stand in the list, and reads leniently situation by
+  situation. A derived example document covers it.
+- **`Error::UnexpectedNamespace`, `Error::ContentAfterRoot` and
+  `Error::IllegalCharacter`**, for the refusals below. `Error` is
+  non-exhaustive, so these are not breaking either.
+
+### Changed
+
+- **A root element outside the SIRI namespace is refused**, whether in another
+  namespace or in none (`Error::UnexpectedNamespace`); it was read as SIRI.
+  A producer that writes `<Siri>` without `xmlns="http://www.siri.org.uk/siri"`
+  writes no SIRI document, and is now told so.
+- **What XML does not allow is refused.** A control character other than tab,
+  line feed and carriage return, U+FFFE or U+FFFF, written as itself or as a
+  character reference, fails reading and writing alike
+  (`Error::IllegalCharacter`): such a value was written, and every conforming
+  reader would have refused the document. Anything after the root element but
+  comments, processing instructions and whitespace — a second root, text — fails
+  reading (`Error::ContentAfterRoot`); it was ignored.
+- **The lenient reader leaves out no element that would then read as a value.**
+  An element the schema gives a default — `Cancellation`, `Monitored`,
+  `VehicleAtStop` and some two hundred others — means that default when absent,
+  so leaving one out alone made `<Cancellation>True</Cancellation>` read as a
+  journey that runs. The element around it is left out instead, by the same
+  rules as for any other: here the journey. The finding still names the element
+  at fault.
+- **An Estimated Timetable subscription is sent nothing while its source holds
+  no journey** — no delivery, no data-ready notification — since the schema has
+  no form for such a delivery and this crate's own reader refused the one the
+  producer wrote. A request or a fetch is still answered with the empty frame;
+  there is no valid answer to give.
+
+### Fixed
+
+- An empty submode element of the network a situation's context names —
+  `<BusSubmode/>` and the seven others — read as an unrecognised empty token; it
+  reads as `unknown`, the value the schema declares. The test that holds every
+  field to the declared values missed these eight because their types are
+  written with their path; it no longer does.
+- A timestamp without a time-zone offset, or at `24:00:00`, is still refused, and
+  now the error says why instead of chrono's "premature end of input" and "input
+  is out of range".
+- `Debug` output of the thirteen messages that carry an `AccountKey` shows that
+  a key is present, never the key itself. A request logged with `{:?}` no longer
+  hands the secret to whoever reads the log.
+
+### Deprecated
+
+- `sx::affects::Network`, a second transcription of the schema type
+  `sx::delivery::Network` transcribes, held by no field of this crate.
+
+### Known limitations
+
+- `Facilities` of `TrainElement`, `Train` and `CompoundTrain` is not modelled
+  and is dropped when read; the structs are exhaustive, so the field waits for
+  the next major release.
+- Below the root, an element is matched by its local name: a foreign element
+  that shares a SIRI element's name where the schema expects that element is
+  read as it, and the order of the schema's sequences is not enforced.
+
+### Upgrading from 2.2
+
+- A `match` on `ConsumerEvent` that handles `Delivered` should handle
+  `DeliveredWhole` too: `Delivered { items, outcome, reply }` and
+  `DeliveredWhole { items, outcome, reply, .. }` bind the same names, so one
+  or-pattern serves both where the extra records do not matter. A monitor that
+  watches `Alive` should treat `Unavailable` as the outage it is.
+- A program that reads documents without the SIRI namespace declaration has to
+  have its producer declare it.
+
 ## 2.2.0 — 2026-09-26
 
 ### Added

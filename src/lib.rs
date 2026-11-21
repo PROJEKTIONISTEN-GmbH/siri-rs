@@ -128,7 +128,9 @@
 //!   an `InitialTerminationTime` against now, a `ValidUntil` against the next
 //!   poll. Every timestamp is therefore a [`chrono::DateTime<FixedOffset>`], and
 //!   a document that leaves the offset out is refused with an error naming the
-//!   field. The one place the official examples do leave it out — the validity
+//!   field and saying so. `24:00:00`, the end of a day, is refused the same way:
+//!   chrono has no such hour, and the same instant is `00:00:00` of the next day.
+//!   The one place the official examples do leave it out — the validity
 //!   period of a Production Timetable, which is a period in the timetable's own
 //!   zone — is a [`types::Timestamp`], which keeps the lexical form and offers the
 //!   instant only when the document gave one.

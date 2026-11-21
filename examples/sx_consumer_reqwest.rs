@@ -189,7 +189,10 @@ async fn receive(State(state): State<Receiving>, body: String) -> Response {
             tokio::spawn(fetch_the_data(state.clone(), *fetch));
             answer_with(&reply)
         }
-        ConsumerEvent::Delivered { items: situations, reply, .. } => {
+        // A delivery that also carries road situations arrives whole; the situations
+        // this consumer follows are its items either way.
+        ConsumerEvent::Delivered { items: situations, reply, .. }
+        | ConsumerEvent::DeliveredWhole { items: situations, reply, .. } => {
             let _ = state.delivered.send(situations);
             match reply {
                 Some(reply) => answer_with(&reply),
@@ -205,6 +208,10 @@ async fn receive(State(state): State<Receiving>, body: String) -> Response {
                     .map(|started| started.to_rfc3339())
                     .unwrap_or_else(|| "an unstated time".to_owned())
             );
+            StatusCode::NO_CONTENT.into_response()
+        }
+        ConsumerEvent::Unavailable { error_condition, .. } => {
+            println!("the producer cannot serve: {error_condition:?}");
             StatusCode::NO_CONTENT.into_response()
         }
         ConsumerEvent::SubscriptionEnded { subscription_ref } => {
@@ -225,7 +232,10 @@ async fn fetch_the_data(state: Receiving, fetch: Siri) {
         }
     };
     match interpret(&state.consumer, &delivery) {
-        Ok(ConsumerEvent::Delivered { items: situations, reply, .. }) => {
+        Ok(
+            ConsumerEvent::Delivered { items: situations, reply, .. }
+            | ConsumerEvent::DeliveredWhole { items: situations, reply, .. },
+        ) => {
             let _ = state.delivered.send(situations);
             // A producer that asked for confirmation gets it as a fresh request, since
             // this delivery arrived as an answer rather than as a push.

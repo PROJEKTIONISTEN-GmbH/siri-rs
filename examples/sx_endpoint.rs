@@ -97,7 +97,9 @@ fn main() -> siri_rs::Result<()> {
             .expect("a data supply request is always answered");
         show("producer → consumer", &delivery)?;
 
-        if let ConsumerEvent::Delivered { items: situations, .. } = consumer.handle(&delivery, now)? {
+        if let ConsumerEvent::Delivered { items: situations, .. }
+        | ConsumerEvent::DeliveredWhole { items: situations, .. } = consumer.handle(&delivery, now)?
+        {
             for situation in situations {
                 println!(
                     "  {} — {}",

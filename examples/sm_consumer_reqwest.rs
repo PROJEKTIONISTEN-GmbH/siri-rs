@@ -27,7 +27,8 @@ use axum::Router;
 use chrono::{Duration, Utc};
 use tokio::sync::mpsc;
 
-use siri_rs::pubsub::{Consumer, ConsumerEvent, StopMonitoring};
+use siri_rs::framework::ServiceDelivery;
+use siri_rs::pubsub::{Consumer, ConsumerEvent, Service, StopMonitoring};
 use siri_rs::sm::{MonitoredStopVisit, StopMonitoringRequest};
 use siri_rs::Siri;
 
@@ -77,6 +78,11 @@ async fn main() -> Result<(), Failure> {
         ConsumerEvent::Delivered { items, .. } => {
             println!("the board at {KROEPCKE}, as it stands:");
             print_board(&items);
+        }
+        ConsumerEvent::DeliveredWhole { items, delivery, .. } => {
+            println!("the board at {KROEPCKE}, as it stands:");
+            print_board(&items);
+            print_withdrawn(&delivery);
         }
         other => return Err(format!("expected a delivery, got {other:?}").into()),
     }
@@ -234,11 +240,33 @@ async fn receive(State(state): State<Receiving>, body: String) -> Response {
             let _ = state.delivered.send(items);
             StatusCode::NO_CONTENT.into_response()
         }
+        // A board that withdraws visits arrives whole: with changes only, a
+        // withdrawal is the one sign that a departure is gone.
+        ConsumerEvent::DeliveredWhole { items, delivery, .. } => {
+            print_withdrawn(&delivery);
+            let _ = state.delivered.send(items);
+            StatusCode::NO_CONTENT.into_response()
+        }
         ConsumerEvent::SubscriptionEnded { subscription_ref } => {
             println!("the producer ended subscription {subscription_ref}");
             StatusCode::NO_CONTENT.into_response()
         }
         _ => StatusCode::NO_CONTENT.into_response(),
+    }
+}
+
+/// Prints the visits a delivery withdraws from the board.
+fn print_withdrawn(delivery: &ServiceDelivery) {
+    let withdrawn = delivery
+        .deliveries
+        .iter()
+        .filter_map(StopMonitoring::delivery_of)
+        .flat_map(|board| &board.monitored_stop_visit_cancellation);
+    for cancellation in withdrawn {
+        match &cancellation.item_ref {
+            Some(visit) => println!("  withdrawn: {visit}"),
+            None => println!("  withdrawn: a visit named by its journey"),
+        }
     }
 }
 
