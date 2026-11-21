@@ -20,7 +20,7 @@ pub struct ConnectionMonitoringRequest {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Identifier the requestor puts on this request.
     #[serde(rename = "MessageIdentifier", default, skip_serializing_if = "Option::is_none")]
@@ -133,7 +133,7 @@ pub struct ConnectingJourneyFilter {
     #[serde(rename = "VisitNumber", default, skip_serializing_if = "Option::is_none")]
     pub visit_number: Option<u64>,
     /// When the timetable has the feeder arriving.
-    #[serde(rename = "TimetabledArrivalTime")]
+    #[serde(rename = "TimetabledArrivalTime", deserialize_with = "crate::xml::date_time::required")]
     pub timetabled_arrival_time: DateTime<FixedOffset>,
 }
 
@@ -161,10 +161,20 @@ pub struct ConnectingTimeFilter {
     #[serde(rename = "DirectionRef")]
     pub direction_ref: DirectionRef,
     /// The earliest arrival the requestor is interested in.
-    #[serde(rename = "EarliestArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "EarliestArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub earliest_arrival_time: Option<DateTime<FixedOffset>>,
     /// The latest arrival the requestor is interested in.
-    #[serde(rename = "LatestArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "LatestArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub latest_arrival_time: Option<DateTime<FixedOffset>>,
 }
 
@@ -190,7 +200,10 @@ pub struct ConnectionMonitoringSubscriptionRequest {
     #[serde(rename = "SubscriptionIdentifier")]
     pub subscription_identifier: SubscriptionQualifier,
     /// When the subscription lapses unless renewed.
-    #[serde(rename = "InitialTerminationTime")]
+    #[serde(
+        rename = "InitialTerminationTime",
+        deserialize_with = "crate::xml::date_time::required"
+    )]
     pub initial_termination_time: DateTime<FixedOffset>,
     /// Whether this replaces an existing subscription with the same identifier.
     #[serde(rename = "SubscriptionRenewal", default, skip_serializing_if = "Option::is_none")]

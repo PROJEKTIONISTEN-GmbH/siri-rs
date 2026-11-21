@@ -15,7 +15,7 @@ pub struct ConnectionTimetableRequest {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Identifier the requestor puts on this request.
     #[serde(rename = "MessageIdentifier", default, skip_serializing_if = "Option::is_none")]
@@ -90,7 +90,10 @@ pub struct ConnectionTimetableSubscriptionRequest {
     #[serde(rename = "SubscriptionIdentifier")]
     pub subscription_identifier: SubscriptionQualifier,
     /// When the subscription lapses unless renewed.
-    #[serde(rename = "InitialTerminationTime")]
+    #[serde(
+        rename = "InitialTerminationTime",
+        deserialize_with = "crate::xml::date_time::required"
+    )]
     pub initial_termination_time: DateTime<FixedOffset>,
     /// Whether this replaces an existing subscription with the same identifier.
     #[serde(rename = "SubscriptionRenewal", default, skip_serializing_if = "Option::is_none")]

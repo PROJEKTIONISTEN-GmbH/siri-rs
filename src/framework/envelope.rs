@@ -168,7 +168,7 @@ pub struct ServiceRequest {
     #[serde(rename = "ServiceRequestContext", default, skip_serializing_if = "Option::is_none")]
     pub service_request_context: Option<ServiceRequestContext>,
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Account the requestor authenticates as.
     #[serde(rename = "AccountId", default, skip_serializing_if = "Option::is_none")]
@@ -349,7 +349,7 @@ pub struct ServiceDelivery {
     #[serde(rename = "@srsName", default, skip_serializing_if = "Option::is_none")]
     pub srs_name: Option<String>,
     /// When the delivery was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Who produced the data.
     #[serde(rename = "ProducerRef", default, skip_serializing_if = "Option::is_none")]

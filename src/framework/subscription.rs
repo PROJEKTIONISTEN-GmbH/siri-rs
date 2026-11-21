@@ -27,7 +27,7 @@ use crate::vm::VehicleMonitoringSubscriptionRequest;
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct SubscriptionRequest {
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Account the subscriber authenticates as.
     #[serde(rename = "AccountId", default, skip_serializing_if = "Option::is_none")]
@@ -231,7 +231,7 @@ impl SubscriptionContext {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SubscriptionResponse {
     /// When the response was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Address of the responder.
     #[serde(rename = "Address", default, skip_serializing_if = "Option::is_none")]
@@ -255,7 +255,12 @@ pub struct SubscriptionResponse {
     #[serde(rename = "SubscriptionManagerAddress", default, skip_serializing_if = "Option::is_none")]
     pub subscription_manager_address: Option<EndpointAddress>,
     /// When the producer's service last started.
-    #[serde(rename = "ServiceStartedTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ServiceStartedTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub service_started_time: Option<DateTime<FixedOffset>>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -293,7 +298,7 @@ impl SubscriptionResponse {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StatusResponse {
     /// When this status was determined.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// The request this status answers.
     #[serde(rename = "RequestMessageRef", default, skip_serializing_if = "Option::is_none")]
@@ -319,7 +324,12 @@ pub struct StatusResponse {
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
     pub error_condition: Option<ErrorCondition<ServiceRequestError>>,
     /// How long the producer guarantees this answer.
-    #[serde(rename = "ValidUntil", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntil",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until: Option<DateTime<FixedOffset>>,
     /// The shortest interval at which the producer will send updates.
     #[serde(rename = "ShortestPossibleCycle", default, skip_serializing_if = "Option::is_none")]
@@ -371,7 +381,7 @@ impl StatusResponse {
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct TerminateSubscriptionRequest {
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Account the requestor authenticates as.
     #[serde(rename = "AccountId", default, skip_serializing_if = "Option::is_none")]
@@ -477,7 +487,7 @@ impl TerminateSubscriptionRequest {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TerminateSubscriptionResponse {
     /// When the response was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Address of the responder.
     #[serde(rename = "Address", default, skip_serializing_if = "Option::is_none")]
@@ -522,7 +532,12 @@ impl TerminateSubscriptionResponse {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TerminationResponseStatus {
     /// When this status was determined.
-    #[serde(rename = "ResponseTimestamp", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ResponseTimestamp",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub response_timestamp: Option<DateTime<FixedOffset>>,
     /// The request this status answers.
     #[serde(rename = "RequestMessageRef", default, skip_serializing_if = "Option::is_none")]
@@ -584,7 +599,7 @@ impl TerminationResponseStatus {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct SubscriptionTerminatedNotification {
     /// When the notification was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Who ended the subscription.
     #[serde(rename = "ProducerRef", default, skip_serializing_if = "Option::is_none")]

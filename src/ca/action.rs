@@ -40,7 +40,7 @@ pub struct ControlAction {
     #[serde(rename = "ItemIdentifier", default, skip_serializing_if = "Option::is_none")]
     pub item_identifier: Option<ItemIdentifier>,
     /// When the action was decided.
-    #[serde(rename = "CreationTime")]
+    #[serde(rename = "CreationTime", deserialize_with = "crate::xml::date_time::required")]
     pub creation_time: DateTime<FixedOffset>,
     /// The set of related actions this one belongs to.
     #[serde(rename = "GroupOfControlActionRef", default, skip_serializing_if = "Option::is_none")]
@@ -55,13 +55,23 @@ pub struct ControlAction {
     #[serde(rename = "Version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<i64>,
     /// When that version was fixed, after which it cannot change again.
-    #[serde(rename = "VersionedAtTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VersionedAtTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub versioned_at_time: Option<DateTime<FixedOffset>>,
     /// Why the action was taken.
     #[serde(rename = "Reason", default, skip_serializing_if = "Option::is_none")]
     pub reason: Option<ControlActionReason>,
     /// The official time the action counts as taken from, for penalty decisions.
-    #[serde(rename = "RegistrationDateTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "RegistrationDateTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub registration_date_time: Option<DateTime<FixedOffset>>,
     /// Who reported what led to the action.
     #[serde(rename = "SourceNote", default, skip_serializing_if = "Option::is_none")]
@@ -549,7 +559,10 @@ pub struct JourneyStart {
     #[serde(rename = "PointInJourneyPattern")]
     pub point_in_journey_pattern: PointInJourneyPatternRef,
     /// When it is to leave there.
-    #[serde(rename = "AimedDepartureDateTime")]
+    #[serde(
+        rename = "AimedDepartureDateTime",
+        deserialize_with = "crate::xml::date_time::required"
+    )]
     pub aimed_departure_date_time: DateTime<FixedOffset>,
 }
 
@@ -573,7 +586,7 @@ pub struct JourneyEnd {
     #[serde(rename = "PointInJourneyPattern")]
     pub point_in_journey_pattern: PointInJourneyPatternRef,
     /// The latest it is to arrive there.
-    #[serde(rename = "AimedLatestDateTime")]
+    #[serde(rename = "AimedLatestDateTime", deserialize_with = "crate::xml::date_time::required")]
     pub aimed_latest_date_time: DateTime<FixedOffset>,
 }
 
@@ -597,10 +610,20 @@ pub struct MiddleCall {
     #[serde(rename = "PointInJourneyPattern")]
     pub point_in_journey_pattern: PointInJourneyPatternRef,
     /// When the vehicle is to arrive.
-    #[serde(rename = "AimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_arrival_time: Option<DateTime<FixedOffset>>,
     /// When it is to leave.
-    #[serde(rename = "AimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_departure_time: Option<DateTime<FixedOffset>>,
 }
 
@@ -1020,10 +1043,10 @@ impl StopRefs {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StopPointStatusTimeScope {
     /// When the change starts.
-    #[serde(rename = "FromDateTime")]
+    #[serde(rename = "FromDateTime", deserialize_with = "crate::xml::date_time::required")]
     pub from_date_time: DateTime<FixedOffset>,
     /// When it ends.
-    #[serde(rename = "UptoDateTime")]
+    #[serde(rename = "UptoDateTime", deserialize_with = "crate::xml::date_time::required")]
     pub upto_date_time: DateTime<FixedOffset>,
     /// The time of day it starts at, as an `xsd:time`.
     #[serde(rename = "FromTimeOffset", default, skip_serializing_if = "Option::is_none")]
@@ -1145,6 +1168,7 @@ pub struct ModifiedConnection {
     #[serde(
         rename = "WaitForFeederUntilDateTime",
         default,
+        deserialize_with = "crate::xml::date_time::optional",
         skip_serializing_if = "Option::is_none"
     )]
     pub wait_for_feeder_until_date_time: Option<DateTime<FixedOffset>>,

@@ -303,7 +303,12 @@ pub struct DatedCall {
     #[serde(rename = "CallNote", default, skip_serializing_if = "Vec::is_empty")]
     pub call_note: Vec<NaturalLanguageString>,
     /// When the vehicle is planned to arrive.
-    #[serde(rename = "AimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_arrival_time: Option<DateTime<FixedOffset>>,
     /// The platform the vehicle is planned to arrive at, one name per language.
     #[serde(rename = "ArrivalPlatformName", default, skip_serializing_if = "Vec::is_empty")]
@@ -326,7 +331,12 @@ pub struct DatedCall {
     #[serde(rename = "ArrivalOperatorRefs", default, skip_serializing_if = "Vec::is_empty")]
     pub arrival_operator_refs: Vec<OperatorRef>,
     /// When the vehicle is planned to leave.
-    #[serde(rename = "AimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_departure_time: Option<DateTime<FixedOffset>>,
     /// The platform the vehicle is planned to leave from, one name per language.
     #[serde(rename = "DeparturePlatformName", default, skip_serializing_if = "Vec::is_empty")]
@@ -349,7 +359,12 @@ pub struct DatedCall {
     #[serde(rename = "DepartureOperatorRefs", default, skip_serializing_if = "Vec::is_empty")]
     pub departure_operator_refs: Vec<OperatorRef>,
     /// When passengers must be aboard by.
-    #[serde(rename = "AimedLatestPassengerAccessTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedLatestPassengerAccessTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_latest_passenger_access_time: Option<DateTime<FixedOffset>>,
     /// The planned interval between vehicles on a headway service.
     #[serde(rename = "AimedHeadwayInterval", default, skip_serializing_if = "Option::is_none")]
@@ -575,7 +590,12 @@ pub struct ServiceJourneyInterchange {
     #[serde(rename = "FeederStopOrder", default, skip_serializing_if = "Option::is_none")]
     pub feeder_stop_order: Option<u64>,
     /// When the feeder is planned to arrive.
-    #[serde(rename = "AimedArrivalTimeOfFeeder", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedArrivalTimeOfFeeder",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_arrival_time_of_feeder: Option<DateTime<FixedOffset>>,
     /// The run passengers leave on.
     #[serde(rename = "DistributorRef")]
@@ -590,7 +610,12 @@ pub struct ServiceJourneyInterchange {
     #[serde(rename = "DistributorStopOrder", default, skip_serializing_if = "Option::is_none")]
     pub distributor_stop_order: Option<u64>,
     /// When the distributor is planned to leave.
-    #[serde(rename = "AimedDepartureTimeOfDistributor", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedDepartureTimeOfDistributor",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_departure_time_of_distributor: Option<DateTime<FixedOffset>>,
     /// Whether passengers may stay in their seats.
     #[serde(
@@ -661,13 +686,23 @@ pub struct FromServiceJourneyInterchange {
     #[serde(rename = "FeederStopOrder", default, skip_serializing_if = "Option::is_none")]
     pub feeder_stop_order: Option<u64>,
     /// When the feeder is planned to arrive.
-    #[serde(rename = "AimedArrivalTimeOfFeeder", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedArrivalTimeOfFeeder",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_arrival_time_of_feeder: Option<DateTime<FixedOffset>>,
     /// Where the onward stop comes in the onward run.
     #[serde(rename = "DistributorStopOrder", default, skip_serializing_if = "Option::is_none")]
     pub distributor_stop_order: Option<u64>,
     /// When the onward service is planned to leave.
-    #[serde(rename = "AimedDepartureTimeOfDistributor", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedDepartureTimeOfDistributor",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_departure_time_of_distributor: Option<DateTime<FixedOffset>>,
     /// Whether passengers may stay in their seats.
     #[serde(
@@ -729,7 +764,12 @@ pub struct ToServiceJourneyInterchange {
     #[serde(rename = "FeederStopOrder", default, skip_serializing_if = "Option::is_none")]
     pub feeder_stop_order: Option<u64>,
     /// When the feeder is planned to arrive.
-    #[serde(rename = "AimedArrivalTimeOfFeeder", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedArrivalTimeOfFeeder",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_arrival_time_of_feeder: Option<DateTime<FixedOffset>>,
     /// The run passengers leave on.
     #[serde(rename = "DistributorRef")]
@@ -744,7 +784,12 @@ pub struct ToServiceJourneyInterchange {
     #[serde(rename = "DistributorStopOrder", default, skip_serializing_if = "Option::is_none")]
     pub distributor_stop_order: Option<u64>,
     /// When the distributor is planned to leave.
-    #[serde(rename = "AimedDepartureTimeOfDistributor", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedDepartureTimeOfDistributor",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_departure_time_of_distributor: Option<DateTime<FixedOffset>>,
     /// Whether passengers may stay in their seats.
     #[serde(
@@ -818,7 +863,12 @@ pub struct RemovedServiceJourneyInterchange {
     #[serde(rename = "FeederStopOrder", default, skip_serializing_if = "Option::is_none")]
     pub feeder_stop_order: Option<u64>,
     /// When the feeder was planned to arrive.
-    #[serde(rename = "AimedArrivalTimeOfFeeder", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedArrivalTimeOfFeeder",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_arrival_time_of_feeder: Option<DateTime<FixedOffset>>,
     /// The run passengers would have left on.
     #[serde(rename = "DistributorRef")]
@@ -833,7 +883,12 @@ pub struct RemovedServiceJourneyInterchange {
     #[serde(rename = "DistributorStopOrder", default, skip_serializing_if = "Option::is_none")]
     pub distributor_stop_order: Option<u64>,
     /// When the distributor was planned to leave.
-    #[serde(rename = "AimedDepartureTimeOfDistributor", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedDepartureTimeOfDistributor",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_departure_time_of_distributor: Option<DateTime<FixedOffset>>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]

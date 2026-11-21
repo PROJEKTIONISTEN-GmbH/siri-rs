@@ -21,7 +21,7 @@ pub struct ControlActionCapabilitiesResponse {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the response was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// The capability request this answers.
     #[serde(rename = "RequestMessageRef", default, skip_serializing_if = "Option::is_none")]

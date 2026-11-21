@@ -48,7 +48,7 @@ pub struct CapabilitiesRequest {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Account the requestor authenticates as.
     #[serde(rename = "AccountId", default, skip_serializing_if = "Option::is_none")]
@@ -142,7 +142,7 @@ pub struct ServiceCapabilitiesRequest {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Identifier the requestor puts on this message.
     #[serde(rename = "MessageIdentifier", default, skip_serializing_if = "Option::is_none")]
@@ -185,7 +185,7 @@ pub struct CapabilitiesResponse {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the response was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Who answered.
     #[serde(rename = "ProducerRef", default, skip_serializing_if = "Option::is_none")]
@@ -331,7 +331,7 @@ pub struct SituationExchangeCapabilitiesResponse {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the response was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// The capability request this answers.
     #[serde(rename = "RequestMessageRef", default, skip_serializing_if = "Option::is_none")]

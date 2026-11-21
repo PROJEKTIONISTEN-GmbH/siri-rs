@@ -33,7 +33,7 @@ pub struct StopPointsRequest {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Account the requestor authenticates as.
     #[serde(rename = "AccountId", default, skip_serializing_if = "Option::is_none")]
@@ -151,7 +151,7 @@ pub struct StopPointsDelivery {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the delivery was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Whether the request was processed successfully.
     #[serde(
@@ -165,7 +165,12 @@ pub struct StopPointsDelivery {
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
     pub error_condition: Option<ErrorCondition<ServiceRequestError>>,
     /// End of the producer's data horizon.
-    #[serde(rename = "ValidUntil", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntil",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until: Option<DateTime<FixedOffset>>,
     /// The shortest interval at which the producer will send updates.
     #[serde(rename = "ShortestPossibleCycle", default, skip_serializing_if = "Option::is_none")]
@@ -207,7 +212,7 @@ pub struct LinesRequest {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Account the requestor authenticates as.
     #[serde(rename = "AccountId", default, skip_serializing_if = "Option::is_none")]
@@ -331,7 +336,7 @@ pub struct LinesDelivery {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the delivery was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Whether the request was processed successfully.
     #[serde(
@@ -345,7 +350,12 @@ pub struct LinesDelivery {
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
     pub error_condition: Option<ErrorCondition<ServiceRequestError>>,
     /// End of the producer's data horizon.
-    #[serde(rename = "ValidUntil", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntil",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until: Option<DateTime<FixedOffset>>,
     /// The shortest interval at which the producer will send updates.
     #[serde(rename = "ShortestPossibleCycle", default, skip_serializing_if = "Option::is_none")]
@@ -384,7 +394,7 @@ pub struct ServiceFeaturesRequest {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Account the requestor authenticates as.
     #[serde(rename = "AccountId", default, skip_serializing_if = "Option::is_none")]
@@ -438,7 +448,7 @@ pub struct ServiceFeaturesDelivery {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the delivery was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Whether the request was processed successfully.
     #[serde(
@@ -452,7 +462,12 @@ pub struct ServiceFeaturesDelivery {
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
     pub error_condition: Option<ErrorCondition<ServiceRequestError>>,
     /// End of the producer's data horizon.
-    #[serde(rename = "ValidUntil", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntil",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until: Option<DateTime<FixedOffset>>,
     /// The shortest interval at which the producer will send updates.
     #[serde(rename = "ShortestPossibleCycle", default, skip_serializing_if = "Option::is_none")]
@@ -489,7 +504,7 @@ pub struct VehicleFeaturesRequest {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Account the requestor authenticates as.
     #[serde(rename = "AccountId", default, skip_serializing_if = "Option::is_none")]
@@ -552,7 +567,7 @@ pub struct VehicleFeaturesDelivery {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the delivery was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Whether the request was processed successfully.
     #[serde(
@@ -566,7 +581,12 @@ pub struct VehicleFeaturesDelivery {
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
     pub error_condition: Option<ErrorCondition<ServiceRequestError>>,
     /// End of the producer's data horizon.
-    #[serde(rename = "ValidUntil", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntil",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until: Option<DateTime<FixedOffset>>,
     /// The shortest interval at which the producer will send updates.
     #[serde(rename = "ShortestPossibleCycle", default, skip_serializing_if = "Option::is_none")]
@@ -605,7 +625,7 @@ pub struct ProductCategoriesRequest {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Account the requestor authenticates as.
     #[serde(rename = "AccountId", default, skip_serializing_if = "Option::is_none")]
@@ -668,7 +688,7 @@ pub struct ProductCategoriesDelivery {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the delivery was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Whether the request was processed successfully.
     #[serde(
@@ -682,7 +702,12 @@ pub struct ProductCategoriesDelivery {
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
     pub error_condition: Option<ErrorCondition<ServiceRequestError>>,
     /// End of the producer's data horizon.
-    #[serde(rename = "ValidUntil", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntil",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until: Option<DateTime<FixedOffset>>,
     /// The shortest interval at which the producer will send updates.
     #[serde(rename = "ShortestPossibleCycle", default, skip_serializing_if = "Option::is_none")]

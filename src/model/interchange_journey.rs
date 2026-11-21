@@ -132,10 +132,20 @@ pub struct InterchangeJourney {
     )]
     pub headway_service: Option<bool>,
     /// When the journey is planned to leave its origin.
-    #[serde(rename = "OriginAimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "OriginAimedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub origin_aimed_departure_time: Option<DateTime<FixedOffset>>,
     /// When it is planned to reach its destination.
-    #[serde(rename = "DestinationAimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DestinationAimedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub destination_aimed_arrival_time: Option<DateTime<FixedOffset>>,
     /// Whether this is the first or the last journey of the day on the line.
     #[serde(
@@ -190,7 +200,12 @@ pub struct InterchangeJourney {
     )]
     pub monitored: Option<bool>,
     /// When the journey is planned to leave the interchange stop.
-    #[serde(rename = "AimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_departure_time: Option<DateTime<FixedOffset>>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]

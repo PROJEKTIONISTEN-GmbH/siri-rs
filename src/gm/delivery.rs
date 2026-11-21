@@ -24,7 +24,7 @@ pub struct GeneralMessageDelivery {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the delivery was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// The request this delivery answers.
     #[serde(rename = "RequestMessageRef", default, skip_serializing_if = "Option::is_none")]
@@ -56,7 +56,12 @@ pub struct GeneralMessageDelivery {
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
     pub error_condition: Option<ErrorCondition<ServiceRequestError>>,
     /// How long this delivery holds.
-    #[serde(rename = "ValidUntil", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntil",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until: Option<DateTime<FixedOffset>>,
     /// The shortest interval at which the producer will send updates.
     #[serde(rename = "ShortestPossibleCycle", default, skip_serializing_if = "Option::is_none")]
@@ -112,7 +117,7 @@ pub struct InfoMessage {
     #[serde(rename = "@formatRef", default, skip_serializing_if = "Option::is_none")]
     pub format_ref: Option<String>,
     /// When the producer last knew this to be true.
-    #[serde(rename = "RecordedAtTime")]
+    #[serde(rename = "RecordedAtTime", deserialize_with = "crate::xml::date_time::required")]
     pub recorded_at_time: DateTime<FixedOffset>,
     /// The producer's identifier for this record, so that it can be superseded.
     #[serde(rename = "ItemIdentifier", default, skip_serializing_if = "Option::is_none")]
@@ -127,7 +132,12 @@ pub struct InfoMessage {
     #[serde(rename = "InfoChannelRef", default, skip_serializing_if = "Option::is_none")]
     pub info_channel_ref: Option<InfoChannelRef>,
     /// How long the message may be shown.
-    #[serde(rename = "ValidUntilTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntilTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until_time: Option<DateTime<FixedOffset>>,
     /// The situation the message is about.
     #[serde(rename = "SituationRef", default, skip_serializing_if = "Option::is_none")]
@@ -166,7 +176,7 @@ impl InfoMessage {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct InfoMessageCancellation {
     /// When the withdrawal was decided.
-    #[serde(rename = "RecordedAtTime")]
+    #[serde(rename = "RecordedAtTime", deserialize_with = "crate::xml::date_time::required")]
     pub recorded_at_time: DateTime<FixedOffset>,
     /// The record being withdrawn.
     #[serde(rename = "ItemRef", default, skip_serializing_if = "Option::is_none")]

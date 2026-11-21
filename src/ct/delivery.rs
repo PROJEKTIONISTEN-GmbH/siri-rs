@@ -27,7 +27,7 @@ pub struct ConnectionTimetableDelivery {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the delivery was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// The request this delivery answers.
     #[serde(rename = "RequestMessageRef", default, skip_serializing_if = "Option::is_none")]
@@ -59,7 +59,12 @@ pub struct ConnectionTimetableDelivery {
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
     pub error_condition: Option<ErrorCondition<ServiceRequestError>>,
     /// How long this delivery holds.
-    #[serde(rename = "ValidUntil", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntil",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until: Option<DateTime<FixedOffset>>,
     /// The shortest interval at which the producer will send updates.
     #[serde(rename = "ShortestPossibleCycle", default, skip_serializing_if = "Option::is_none")]
@@ -113,13 +118,18 @@ impl ConnectionTimetableDelivery {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TimetabledFeederArrival {
     /// When the producer last knew this to be true.
-    #[serde(rename = "RecordedAtTime")]
+    #[serde(rename = "RecordedAtTime", deserialize_with = "crate::xml::date_time::required")]
     pub recorded_at_time: DateTime<FixedOffset>,
     /// The producer's identifier for this record, so that it can be superseded.
     #[serde(rename = "ItemIdentifier", default, skip_serializing_if = "Option::is_none")]
     pub item_identifier: Option<ItemIdentifier>,
     /// How long the record may be relied on.
-    #[serde(rename = "ValidUntilTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntilTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until_time: Option<DateTime<FixedOffset>>,
     /// The planned interchange this arrival belongs to.
     #[serde(rename = "InterchangeRef", default, skip_serializing_if = "Option::is_none")]
@@ -143,7 +153,7 @@ pub struct TimetabledFeederArrival {
     #[serde(rename = "FeederJourney")]
     pub feeder_journey: InterchangeJourney,
     /// When it is planned to arrive.
-    #[serde(rename = "AimedArrivalTime")]
+    #[serde(rename = "AimedArrivalTime", deserialize_with = "crate::xml::date_time::required")]
     pub aimed_arrival_time: DateTime<FixedOffset>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -179,7 +189,7 @@ impl TimetabledFeederArrival {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TimetabledFeederArrivalCancellation {
     /// When the withdrawal was decided.
-    #[serde(rename = "RecordedAtTime")]
+    #[serde(rename = "RecordedAtTime", deserialize_with = "crate::xml::date_time::required")]
     pub recorded_at_time: DateTime<FixedOffset>,
     /// The record being withdrawn.
     #[serde(rename = "ItemRef", default, skip_serializing_if = "Option::is_none")]

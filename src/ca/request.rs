@@ -19,7 +19,7 @@ pub struct ControlActionRequest {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Identifier the requestor puts on this request.
     #[serde(rename = "MessageIdentifier", default, skip_serializing_if = "Option::is_none")]
@@ -28,7 +28,12 @@ pub struct ControlActionRequest {
     #[serde(rename = "PreviewInterval", default, skip_serializing_if = "Option::is_none")]
     pub preview_interval: Option<Duration>,
     /// When that look-ahead window starts, if not now.
-    #[serde(rename = "StartTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StartTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub start_time: Option<DateTime<FixedOffset>>,
     /// Only this operator's actions.
     #[serde(rename = "OperatorRef", default, skip_serializing_if = "Option::is_none")]
@@ -147,7 +152,7 @@ pub struct ControlActionMultipleRequest {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Identifier the requestor puts on this request.
     #[serde(rename = "MessageIdentifier", default, skip_serializing_if = "Option::is_none")]
@@ -182,7 +187,12 @@ pub struct ControlActionFilter {
     #[serde(rename = "PreviewInterval", default, skip_serializing_if = "Option::is_none")]
     pub preview_interval: Option<Duration>,
     /// When that look-ahead window starts, if not now.
-    #[serde(rename = "StartTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StartTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub start_time: Option<DateTime<FixedOffset>>,
     /// Only this operator's actions.
     #[serde(rename = "OperatorRef", default, skip_serializing_if = "Option::is_none")]
@@ -271,7 +281,10 @@ pub struct ControlActionSubscriptionRequest {
     #[serde(rename = "SubscriptionIdentifier")]
     pub subscription_identifier: SubscriptionQualifier,
     /// When the subscription lapses unless renewed.
-    #[serde(rename = "InitialTerminationTime")]
+    #[serde(
+        rename = "InitialTerminationTime",
+        deserialize_with = "crate::xml::date_time::required"
+    )]
     pub initial_termination_time: DateTime<FixedOffset>,
     /// Whether this replaces an existing subscription with the same identifier.
     #[serde(rename = "SubscriptionRenewal", default, skip_serializing_if = "Option::is_none")]

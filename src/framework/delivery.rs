@@ -14,7 +14,7 @@ use crate::types::{EndpointAddress, MessageQualifier, MessageRef, ParticipantRef
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct DataReadyNotification {
     /// When the notification was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Account the producer authenticates as.
     #[serde(rename = "AccountId", default, skip_serializing_if = "Option::is_none")]
@@ -68,7 +68,7 @@ impl DataReadyNotification {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DataReadyAcknowledgement {
     /// When the acknowledgement was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Who acknowledges.
     #[serde(rename = "ConsumerRef", default, skip_serializing_if = "Option::is_none")]
@@ -117,7 +117,7 @@ impl DataReadyAcknowledgement {
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct DataSupplyRequest {
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Account the consumer authenticates as.
     #[serde(rename = "AccountId", default, skip_serializing_if = "Option::is_none")]
@@ -188,7 +188,7 @@ impl DataSupplyRequest {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct DataReceivedAcknowledgement {
     /// When the acknowledgement was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Who acknowledges.
     #[serde(rename = "ConsumerRef", default, skip_serializing_if = "Option::is_none")]

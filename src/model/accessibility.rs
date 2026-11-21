@@ -289,10 +289,22 @@ impl AccessibilityLimitation {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ValidityCondition {
     /// The instant the condition starts to hold.
-    #[serde(rename = "ifopt:FromDateTime", alias = "FromDateTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ifopt:FromDateTime",
+        alias = "FromDateTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub from_date_time: Option<DateTime<FixedOffset>>,
     /// The instant the condition stops holding.
-    #[serde(rename = "ifopt:ToDateTime", alias = "ToDateTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ifopt:ToDateTime",
+        alias = "ToDateTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub to_date_time: Option<DateTime<FixedOffset>>,
     /// The kind of day the condition applies on, in the producer's own vocabulary.
     #[serde(rename = "ifopt:DayType", alias = "DayType", default, skip_serializing_if = "Option::is_none")]

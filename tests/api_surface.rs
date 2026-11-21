@@ -145,6 +145,67 @@ fn an_account_key_is_not_shown_in_debug_output() {
     }
 }
 
+/// Every field that reads an `xsd:dateTime` reads it through the crate's own reader,
+/// which says why a timestamp without an offset, or at hour 24, is not read; a field
+/// that read it plainly would fail such a document in chrono's words alone.
+#[test]
+fn every_timestamp_field_says_why_a_timestamp_does_not_read() {
+    let mut fields = 0;
+    let mut plain = Vec::new();
+    for path in source_files() {
+        let source = std::fs::read_to_string(&path).expect("readable source");
+        let lines: Vec<&str> = source.lines().collect();
+        for (number, line) in lines.iter().enumerate() {
+            let declaration = line.trim();
+            // A macro that declares its fields as `name: Type => "Element"` wraps
+            // them in `Option`, so they read as optional.
+            let reader = if declaration.contains(": DateTime<FixedOffset> =>")
+                || declaration.contains(": Option<DateTime<FixedOffset>>,")
+            {
+                "optional"
+            } else if declaration.contains(": DateTime<FixedOffset>,") {
+                "required"
+            } else {
+                continue;
+            };
+            let attributes = attributes_above(&lines, number);
+            if !attributes.iter().any(|attribute| attribute.contains("serde")) {
+                continue;
+            }
+            fields += 1;
+            let wanted = format!("deserialize_with = \"crate::xml::date_time::{reader}\"");
+            if !attributes.iter().any(|attribute| attribute.contains(&wanted)) {
+                plain.push(format!("{}:{}: {declaration}", display(&path), number + 1));
+            }
+        }
+    }
+    assert!(fields > 250, "the scan found only {fields} timestamp fields");
+    assert!(plain.is_empty(), "{} timestamp fields read plainly:\n{}", plain.len(), plain.join("\n"));
+}
+
+/// The attribute lines above the field declared on line `field`, doc comments
+/// skipped, an attribute written over several lines included whole.
+fn attributes_above<'a>(lines: &[&'a str], field: usize) -> Vec<&'a str> {
+    let mut found = Vec::new();
+    let mut inside = false;
+    for line in lines[..field].iter().rev().map(|line| line.trim()) {
+        if inside {
+            found.push(line);
+            inside = !line.starts_with("#[");
+        } else if line.starts_with("//") {
+            continue;
+        } else if line.starts_with("#[") && line.ends_with(']') {
+            found.push(line);
+        } else if line == ")]" {
+            found.push(line);
+            inside = true;
+        } else {
+            break;
+        }
+    }
+    found
+}
+
 /// The name of a public enum declared on `line`, if one is — `$name` inside a
 /// macro counts, since the macro declares every enum it expands to.
 fn declared_enum(line: &str) -> Option<&str> {

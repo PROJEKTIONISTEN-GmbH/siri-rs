@@ -31,7 +31,10 @@ macro_rules! connection_monitoring_delivery {
             #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
             pub version: Option<String>,
             /// When the delivery was made.
-            #[serde(rename = "ResponseTimestamp")]
+            #[serde(
+                rename = "ResponseTimestamp",
+                deserialize_with = "crate::xml::date_time::required"
+            )]
             pub response_timestamp: DateTime<FixedOffset>,
             /// The request this delivery answers.
             #[serde(rename = "RequestMessageRef", default, skip_serializing_if = "Option::is_none")]
@@ -63,7 +66,12 @@ macro_rules! connection_monitoring_delivery {
             #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
             pub error_condition: Option<ErrorCondition<ServiceRequestError>>,
             /// How long this delivery holds.
-            #[serde(rename = "ValidUntil", default, skip_serializing_if = "Option::is_none")]
+            #[serde(
+                rename = "ValidUntil",
+                default,
+                deserialize_with = "crate::xml::date_time::optional",
+                skip_serializing_if = "Option::is_none"
+            )]
             pub valid_until: Option<DateTime<FixedOffset>>,
             /// The shortest interval at which the producer will send updates.
             #[serde(rename = "ShortestPossibleCycle", default, skip_serializing_if = "Option::is_none")]
@@ -145,13 +153,18 @@ connection_monitoring_delivery! {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MonitoredFeederArrival {
     /// When the producer last knew this to be true.
-    #[serde(rename = "RecordedAtTime")]
+    #[serde(rename = "RecordedAtTime", deserialize_with = "crate::xml::date_time::required")]
     pub recorded_at_time: DateTime<FixedOffset>,
     /// The producer's identifier for this record, so that it can be superseded.
     #[serde(rename = "ItemIdentifier", default, skip_serializing_if = "Option::is_none")]
     pub item_identifier: Option<ItemIdentifier>,
     /// How long the record may be relied on.
-    #[serde(rename = "ValidUntilTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntilTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until_time: Option<DateTime<FixedOffset>>,
     /// The planned interchange this arrival belongs to.
     #[serde(rename = "InterchangeRef", default, skip_serializing_if = "Option::is_none")]
@@ -189,16 +202,31 @@ pub struct MonitoredFeederArrival {
     #[serde(rename = "NumberOfTransferPassengers", default, skip_serializing_if = "Option::is_none")]
     pub number_of_transfer_passengers: Option<u64>,
     /// When the feeder was planned to arrive.
-    #[serde(rename = "AimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_arrival_time: Option<DateTime<FixedOffset>>,
     /// When it is now expected to arrive.
-    #[serde(rename = "ExpectedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExpectedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub expected_arrival_time: Option<DateTime<FixedOffset>>,
     /// The platform it arrives at.
     #[serde(rename = "ArrivalPlatformName", default, skip_serializing_if = "Option::is_none")]
     pub arrival_platform_name: Option<NaturalLanguageString>,
     /// By when the distributor has to decide whether to wait.
-    #[serde(rename = "SuggestedWaitDecisionTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "SuggestedWaitDecisionTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub suggested_wait_decision_time: Option<DateTime<FixedOffset>>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -239,13 +267,18 @@ impl MonitoredFeederArrival {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MonitoredFeederArrivalCancellation {
     /// When the withdrawal was decided.
-    #[serde(rename = "RecordedAtTime")]
+    #[serde(rename = "RecordedAtTime", deserialize_with = "crate::xml::date_time::required")]
     pub recorded_at_time: DateTime<FixedOffset>,
     /// The producer's identifier for this withdrawal.
     #[serde(rename = "ItemIdentifier", default, skip_serializing_if = "Option::is_none")]
     pub item_identifier: Option<ItemIdentifier>,
     /// How long the withdrawal may be relied on.
-    #[serde(rename = "ValidUntilTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntilTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until_time: Option<DateTime<FixedOffset>>,
     /// The planned interchange the arrival belonged to.
     #[serde(rename = "InterchangeRef", default, skip_serializing_if = "Option::is_none")]
@@ -368,7 +401,10 @@ macro_rules! distributor_item {
         #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
         pub struct $name {
             /// When the producer last knew this to be true.
-            #[serde(rename = "RecordedAtTime")]
+            #[serde(
+                rename = "RecordedAtTime",
+                deserialize_with = "crate::xml::date_time::required"
+            )]
             pub recorded_at_time: DateTime<FixedOffset>,
             /// The planned interchange this departure belongs to.
             #[serde(rename = "InterchangeRef", default, skip_serializing_if = "Option::is_none")]
@@ -425,7 +461,12 @@ distributor_item! {
     /// A departure being held so that passengers off a late feeder can catch it.
     WaitProlongedDeparture {
         /// When the departure is now expected to leave.
-        #[serde(rename = "ExpectedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+        #[serde(
+            rename = "ExpectedDepartureTime",
+            default,
+            deserialize_with = "crate::xml::date_time::optional",
+            skip_serializing_if = "Option::is_none"
+        )]
         expected_departure_time: Option<DateTime<FixedOffset>>,
     }
 }

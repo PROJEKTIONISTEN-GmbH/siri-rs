@@ -38,7 +38,7 @@ pub use crate::model::{SituationFullRef, SituationNumber, SituationRef};
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct PtSituationElement {
     /// When the situation record was created.
-    #[serde(rename = "CreationTime")]
+    #[serde(rename = "CreationTime", deserialize_with = "crate::xml::date_time::required")]
     pub creation_time: DateTime<FixedOffset>,
     /// Country of the participant that raised the situation, giving the namespace
     /// its participant reference is unique in.
@@ -68,7 +68,12 @@ pub struct PtSituationElement {
     #[serde(rename = "Source")]
     pub source: SituationSource,
     /// When the record was frozen. A versioned record accepts no further change.
-    #[serde(rename = "VersionedAtTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VersionedAtTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub versioned_at_time: Option<DateTime<FixedOffset>>,
     /// Whether the report has been confirmed by a second party.
     #[serde(rename = "Verification", default, skip_serializing_if = "Option::is_none")]
@@ -331,7 +336,7 @@ impl PtSituationElement {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RoadSituationElement {
     /// When the situation record was created.
-    #[serde(rename = "CreationTime")]
+    #[serde(rename = "CreationTime", deserialize_with = "crate::xml::date_time::required")]
     pub creation_time: DateTime<FixedOffset>,
     /// Country of the participant that raised the situation.
     #[serde(rename = "CountryRef", default, skip_serializing_if = "Option::is_none")]
@@ -359,7 +364,12 @@ pub struct RoadSituationElement {
     #[serde(rename = "Source")]
     pub source: SituationSource,
     /// When the record was frozen. A versioned record accepts no further change.
-    #[serde(rename = "VersionedAtTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VersionedAtTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub versioned_at_time: Option<DateTime<FixedOffset>>,
     /// Whether the report has been confirmed by a second party.
     #[serde(rename = "Verification", default, skip_serializing_if = "Option::is_none")]
@@ -646,7 +656,7 @@ impl References {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RelatedSituation {
     /// When the association was made.
-    #[serde(rename = "CreationTime")]
+    #[serde(rename = "CreationTime", deserialize_with = "crate::xml::date_time::required")]
     pub creation_time: DateTime<FixedOffset>,
     /// Country of the participant that raised the referenced situation.
     #[serde(rename = "CountryRef", default, skip_serializing_if = "Option::is_none")]
@@ -741,7 +751,12 @@ pub struct SituationSource {
     #[serde(rename = "SourceRole", default, skip_serializing_if = "Option::is_none")]
     pub source_role: Option<String>,
     /// When the message was communicated, if not when the record was created.
-    #[serde(rename = "TimeOfCommunication", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TimeOfCommunication",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub time_of_communication: Option<DateTime<FixedOffset>>,
     /// The situation's identifier in the external system it came from.
     #[serde(rename = "ExternalCode", default, skip_serializing_if = "Option::is_none")]

@@ -51,7 +51,12 @@ use crate::types::{
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct EstimatedVehicleJourney {
     /// When the producer last knew this to be true.
-    #[serde(rename = "RecordedAtTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "RecordedAtTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub recorded_at_time: Option<DateTime<FixedOffset>>,
     /// The line the journey runs on.
     #[serde(rename = "LineRef")]
@@ -182,10 +187,20 @@ pub struct EstimatedVehicleJourney {
     )]
     pub headway_service: Option<bool>,
     /// When the journey is planned to leave its origin.
-    #[serde(rename = "OriginAimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "OriginAimedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub origin_aimed_departure_time: Option<DateTime<FixedOffset>>,
     /// When it is planned to reach its destination.
-    #[serde(rename = "DestinationAimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DestinationAimedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub destination_aimed_arrival_time: Option<DateTime<FixedOffset>>,
     /// Whether this is the first or the last journey of the day on the line.
     #[serde(
@@ -266,7 +281,12 @@ pub struct EstimatedVehicleJourney {
     #[serde(rename = "VehicleLocation", default, skip_serializing_if = "Option::is_none")]
     pub vehicle_location: Option<Location>,
     /// When the position was taken.
-    #[serde(rename = "LocationRecordedAtTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "LocationRecordedAtTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub location_recorded_at_time: Option<DateTime<FixedOffset>>,
     /// Which way the vehicle is pointing, in degrees from north.
     #[serde(rename = "Bearing", default, skip_serializing_if = "Option::is_none")]
@@ -644,13 +664,28 @@ pub struct EstimatedCall {
     #[serde(rename = "ControlActionRef", default, skip_serializing_if = "Option::is_none")]
     pub control_action_ref: Option<ControlActionRef>,
     /// When the vehicle is planned to arrive.
-    #[serde(rename = "AimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_arrival_time: Option<DateTime<FixedOffset>>,
     /// When it is now expected to arrive.
-    #[serde(rename = "ExpectedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExpectedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub expected_arrival_time: Option<DateTime<FixedOffset>>,
     /// The latest it could still arrive.
-    #[serde(rename = "LatestExpectedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "LatestExpectedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub latest_expected_arrival_time: Option<DateTime<FixedOffset>>,
     /// How much confidence to put in the expected arrival.
     #[serde(rename = "ExpectedArrivalPredictionQuality", default, skip_serializing_if = "Option::is_none")]
@@ -691,16 +726,36 @@ pub struct EstimatedCall {
     #[serde(rename = "ArrivalOperatorRefs", default, skip_serializing_if = "Vec::is_empty")]
     pub arrival_operator_refs: Vec<OperatorRef>,
     /// When the vehicle is planned to leave.
-    #[serde(rename = "AimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_departure_time: Option<DateTime<FixedOffset>>,
     /// When it is now expected to leave.
-    #[serde(rename = "ExpectedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExpectedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub expected_departure_time: Option<DateTime<FixedOffset>>,
     /// A working estimate of the departure, pending a firmer one.
-    #[serde(rename = "ProvisionalExpectedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ProvisionalExpectedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub provisional_expected_departure_time: Option<DateTime<FixedOffset>>,
     /// The earliest the vehicle will leave, whatever else happens.
-    #[serde(rename = "EarliestExpectedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "EarliestExpectedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub earliest_expected_departure_time: Option<DateTime<FixedOffset>>,
     /// How much confidence to put in the expected departure.
     #[serde(rename = "ExpectedDeparturePredictionQuality", default, skip_serializing_if = "Option::is_none")]
@@ -709,10 +764,20 @@ pub struct EstimatedCall {
     #[serde(rename = "DeparturePredictionUnknown", default, skip_serializing_if = "Option::is_none")]
     pub departure_prediction_unknown: Option<Empty>,
     /// When passengers must be aboard by, as planned.
-    #[serde(rename = "AimedLatestPassengerAccessTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedLatestPassengerAccessTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_latest_passenger_access_time: Option<DateTime<FixedOffset>>,
     /// When passengers must be aboard by, as now expected.
-    #[serde(rename = "ExpectedLatestPassengerAccessTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExpectedLatestPassengerAccessTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub expected_latest_passenger_access_time: Option<DateTime<FixedOffset>>,
     /// How the departure stands against the timetable.
     #[serde(rename = "DepartureStatus", default, skip_serializing_if = "Option::is_none")]
@@ -964,13 +1029,28 @@ pub struct RecordedCall {
     #[serde(rename = "ControlActionRef", default, skip_serializing_if = "Option::is_none")]
     pub control_action_ref: Option<ControlActionRef>,
     /// When the vehicle was planned to arrive.
-    #[serde(rename = "AimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_arrival_time: Option<DateTime<FixedOffset>>,
     /// When it was last expected to arrive.
-    #[serde(rename = "ExpectedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExpectedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub expected_arrival_time: Option<DateTime<FixedOffset>>,
     /// When it did arrive.
-    #[serde(rename = "ActualArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActualArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub actual_arrival_time: Option<DateTime<FixedOffset>>,
     /// How the arrival stood against the timetable.
     #[serde(rename = "ArrivalStatus", default, skip_serializing_if = "Option::is_none")]
@@ -1005,10 +1085,20 @@ pub struct RecordedCall {
     #[serde(rename = "ArrivalOperatorRefs", default, skip_serializing_if = "Vec::is_empty")]
     pub arrival_operator_refs: Vec<OperatorRef>,
     /// When the vehicle was planned to leave.
-    #[serde(rename = "AimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_departure_time: Option<DateTime<FixedOffset>>,
     /// When it was last expected to leave.
-    #[serde(rename = "ExpectedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExpectedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub expected_departure_time: Option<DateTime<FixedOffset>>,
     /// The platform the vehicle left from, one name per language.
     ///
@@ -1019,7 +1109,12 @@ pub struct RecordedCall {
     #[serde(rename = "DeparturePlatformName", default, skip_serializing_if = "Vec::is_empty")]
     pub departure_platform_name: Vec<NaturalLanguageString>,
     /// When it did leave.
-    #[serde(rename = "ActualDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActualDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub actual_departure_time: Option<DateTime<FixedOffset>>,
     /// How the departure stood against the timetable.
     #[serde(rename = "DepartureStatus", default, skip_serializing_if = "Option::is_none")]
@@ -1099,7 +1194,12 @@ pub struct EstimatedServiceJourneyInterchange {
     #[serde(rename = "FeederStopOrder", default, skip_serializing_if = "Option::is_none")]
     pub feeder_stop_order: Option<u64>,
     /// When the feeder is planned to arrive.
-    #[serde(rename = "AimedArrivalTimeOfFeeder", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedArrivalTimeOfFeeder",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_arrival_time_of_feeder: Option<DateTime<FixedOffset>>,
     /// The journey passengers leave on.
     #[serde(rename = "DistributorJourneyRef", default, skip_serializing_if = "Option::is_none")]
@@ -1114,7 +1214,12 @@ pub struct EstimatedServiceJourneyInterchange {
     #[serde(rename = "DistributorStopOrder", default, skip_serializing_if = "Option::is_none")]
     pub distributor_stop_order: Option<u64>,
     /// When the distributor is planned to leave.
-    #[serde(rename = "AimedDepartureTimeOfDistributor", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedDepartureTimeOfDistributor",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_departure_time_of_distributor: Option<DateTime<FixedOffset>>,
     /// Whether passengers may stay in their seats.
     #[serde(
@@ -1150,10 +1255,20 @@ pub struct EstimatedServiceJourneyInterchange {
     #[serde(rename = "WillWait", default, skip_serializing_if = "Option::is_none")]
     pub will_wait: Option<WillWait>,
     /// When the feeder is now expected to arrive.
-    #[serde(rename = "ExpectedArrivalTimeOfFeeder", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExpectedArrivalTimeOfFeeder",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub expected_arrival_time_of_feeder: Option<DateTime<FixedOffset>>,
     /// When the distributor is now expected to leave.
-    #[serde(rename = "ExpectedDepartureTimeOfDistributor", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExpectedDepartureTimeOfDistributor",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub expected_departure_time_of_distributor: Option<DateTime<FixedOffset>>,
     /// Whether the connection is being watched.
     #[serde(rename = "ConnectionMonitoring", default, skip_serializing_if = "Option::is_none")]
@@ -1185,7 +1300,7 @@ pub struct EstimatedServiceJourneyInterchange {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct WillWait {
     /// The latest the distributor will leave.
-    #[serde(rename = "WaitUntilTime")]
+    #[serde(rename = "WaitUntilTime", deserialize_with = "crate::xml::date_time::required")]
     pub wait_until_time: DateTime<FixedOffset>,
     /// Whether the driver has confirmed the wait.
     ///

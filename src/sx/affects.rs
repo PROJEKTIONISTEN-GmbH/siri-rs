@@ -1404,10 +1404,20 @@ pub struct AffectedVehicleJourney {
     #[serde(rename = "Route", default, skip_serializing_if = "Vec::is_empty")]
     pub route: Vec<AffectedRoute>,
     /// The journey's timetabled departure from its origin.
-    #[serde(rename = "OriginAimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "OriginAimedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub origin_aimed_departure_time: Option<DateTime<FixedOffset>>,
     /// The journey's timetabled arrival at its destination.
-    #[serde(rename = "DestinationAimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DestinationAimedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub destination_aimed_arrival_time: Option<DateTime<FixedOffset>>,
     /// The origin as shown on displays at the destination, useful for identifying
     /// the journey to a passenger.
@@ -1689,13 +1699,28 @@ pub struct AffectedCall {
     #[serde(rename = "DestinationDisplay", default, skip_serializing_if = "Vec::is_empty")]
     pub destination_display: Vec<NaturalLanguageString>,
     /// When the vehicle is timetabled to arrive.
-    #[serde(rename = "AimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_arrival_time: Option<DateTime<FixedOffset>>,
     /// When the vehicle actually arrived.
-    #[serde(rename = "ActualArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActualArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub actual_arrival_time: Option<DateTime<FixedOffset>>,
     /// When the vehicle is now expected to arrive.
-    #[serde(rename = "ExpectedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExpectedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub expected_arrival_time: Option<DateTime<FixedOffset>>,
     /// How the arrival compares with the timetable, e.g. early, delayed or
     /// cancelled.
@@ -1713,13 +1738,28 @@ pub struct AffectedCall {
     )]
     pub arrival_boarding_activity: Option<ArrivalBoardingActivity>,
     /// When the vehicle is timetabled to depart.
-    #[serde(rename = "AimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_departure_time: Option<DateTime<FixedOffset>>,
     /// When the vehicle actually departed.
-    #[serde(rename = "ActualDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActualDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub actual_departure_time: Option<DateTime<FixedOffset>>,
     /// When the vehicle is now expected to depart.
-    #[serde(rename = "ExpectedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExpectedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub expected_departure_time: Option<DateTime<FixedOffset>>,
     /// How the departure compares with the timetable.
     #[serde(rename = "DepartureStatus", default, skip_serializing_if = "Option::is_none")]

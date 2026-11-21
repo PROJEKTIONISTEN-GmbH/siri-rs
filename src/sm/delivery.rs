@@ -27,7 +27,7 @@ pub struct StopMonitoringDelivery {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the delivery was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// The request this delivery answers.
     #[serde(rename = "RequestMessageRef", default, skip_serializing_if = "Option::is_none")]
@@ -59,7 +59,12 @@ pub struct StopMonitoringDelivery {
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
     pub error_condition: Option<ErrorCondition<ServiceRequestError>>,
     /// How long this delivery holds.
-    #[serde(rename = "ValidUntil", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntil",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until: Option<DateTime<FixedOffset>>,
     /// The shortest interval at which the producer will send updates.
     #[serde(rename = "ShortestPossibleCycle", default, skip_serializing_if = "Option::is_none")]
@@ -141,13 +146,18 @@ impl StopMonitoringDelivery {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MonitoredStopVisit {
     /// When the producer last knew this to be true.
-    #[serde(rename = "RecordedAtTime")]
+    #[serde(rename = "RecordedAtTime", deserialize_with = "crate::xml::date_time::required")]
     pub recorded_at_time: DateTime<FixedOffset>,
     /// The producer's identifier for this record, so that it can be superseded.
     #[serde(rename = "ItemIdentifier", default, skip_serializing_if = "Option::is_none")]
     pub item_identifier: Option<ItemIdentifier>,
     /// How long the record may be relied on.
-    #[serde(rename = "ValidUntilTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntilTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until_time: Option<DateTime<FixedOffset>>,
     /// The monitoring point the visit is at.
     #[serde(rename = "MonitoringRef", default, skip_serializing_if = "Option::is_none")]
@@ -196,7 +206,7 @@ impl MonitoredStopVisit {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct MonitoredStopVisitCancellation {
     /// When the withdrawal was decided.
-    #[serde(rename = "RecordedAtTime")]
+    #[serde(rename = "RecordedAtTime", deserialize_with = "crate::xml::date_time::required")]
     pub recorded_at_time: DateTime<FixedOffset>,
     /// The record being withdrawn.
     #[serde(rename = "ItemRef", default, skip_serializing_if = "Option::is_none")]
@@ -294,7 +304,7 @@ impl MonitoredStopVisitCancellation {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StopLineNotice {
     /// When the notice was raised.
-    #[serde(rename = "RecordedAtTime")]
+    #[serde(rename = "RecordedAtTime", deserialize_with = "crate::xml::date_time::required")]
     pub recorded_at_time: DateTime<FixedOffset>,
     /// The producer's identifier for this notice, so that it can be withdrawn.
     #[serde(rename = "ItemIdentifier", default, skip_serializing_if = "Option::is_none")]
@@ -363,7 +373,7 @@ pub struct DeliveryVariant {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StopLineNoticeCancellation {
     /// When the withdrawal was decided.
-    #[serde(rename = "RecordedAtTime")]
+    #[serde(rename = "RecordedAtTime", deserialize_with = "crate::xml::date_time::required")]
     pub recorded_at_time: DateTime<FixedOffset>,
     /// The notice being withdrawn.
     #[serde(rename = "ItemRef", default, skip_serializing_if = "Option::is_none")]
@@ -386,7 +396,7 @@ pub struct StopLineNoticeCancellation {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StopNotice {
     /// When the notice was raised.
-    #[serde(rename = "RecordedAtTime")]
+    #[serde(rename = "RecordedAtTime", deserialize_with = "crate::xml::date_time::required")]
     pub recorded_at_time: DateTime<FixedOffset>,
     /// The producer's identifier for this notice, so that it can be withdrawn.
     #[serde(rename = "ItemIdentifier")]
@@ -412,7 +422,7 @@ pub struct StopNotice {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct StopNoticeCancellation {
     /// When the withdrawal was decided.
-    #[serde(rename = "RecordedAtTime")]
+    #[serde(rename = "RecordedAtTime", deserialize_with = "crate::xml::date_time::required")]
     pub recorded_at_time: DateTime<FixedOffset>,
     /// The notice being withdrawn.
     #[serde(rename = "ItemRef")]
@@ -424,7 +434,12 @@ pub struct StopNoticeCancellation {
     #[serde(rename = "StopPointRef", default, skip_serializing_if = "Option::is_none")]
     pub stop_point_ref: Option<StopPointRef>,
     /// When the withdrawal takes effect, if not at once.
-    #[serde(rename = "AppliesFromTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AppliesFromTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub applies_from_time: Option<DateTime<FixedOffset>>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -438,7 +453,7 @@ pub struct StopNoticeCancellation {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ServiceException {
     /// When the producer last knew this to be true.
-    #[serde(rename = "RecordedAtTime")]
+    #[serde(rename = "RecordedAtTime", deserialize_with = "crate::xml::date_time::required")]
     pub recorded_at_time: DateTime<FixedOffset>,
     /// The line the exception is about, when it is about one line.
     #[serde(rename = "LineRef", default, skip_serializing_if = "Option::is_none")]

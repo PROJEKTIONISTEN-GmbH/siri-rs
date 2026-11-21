@@ -21,6 +21,7 @@
 //! ```
 
 mod characters;
+pub(crate) mod date_time;
 pub(crate) mod defaulted;
 pub mod namespace;
 pub(crate) mod schema_default;

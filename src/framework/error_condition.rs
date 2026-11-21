@@ -86,6 +86,7 @@ error_payload! {
     /// The service is temporarily out of operation.
     ServiceNotAvailableError {
         /// When the service expects to be available again.
+        #[serde(deserialize_with = "crate::xml::date_time::optional")]
         expected_restart_time: DateTime<FixedOffset> => "ExpectedRestartTime"
     }
 }

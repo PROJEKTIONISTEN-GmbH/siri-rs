@@ -233,10 +233,10 @@ impl PublishAtScope {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct ClosedTimestampRange {
     /// The inclusive start of the period.
-    #[serde(rename = "StartTime")]
+    #[serde(rename = "StartTime", deserialize_with = "crate::xml::date_time::required")]
     pub start_time: DateTime<FixedOffset>,
     /// The inclusive end of the period.
-    #[serde(rename = "EndTime")]
+    #[serde(rename = "EndTime", deserialize_with = "crate::xml::date_time::required")]
     pub end_time: DateTime<FixedOffset>,
 }
 
@@ -696,7 +696,7 @@ pub struct PassengerInformationAction {
     ///
     /// This is the time recorded by the system that originated the text, not by any
     /// hub that passed it on, and it moves with every update.
-    #[serde(rename = "RecordedAtTime")]
+    #[serde(rename = "RecordedAtTime", deserialize_with = "crate::xml::date_time::required")]
     pub recorded_at_time: DateTime<FixedOffset>,
     /// The version of this wording, increasing with every update. Absent means it
     /// shares the version of the situation that carries it.

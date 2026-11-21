@@ -15,7 +15,7 @@ pub struct CheckStatusRequest {
     #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
     /// When the request was made.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Account the requestor authenticates as.
     #[serde(rename = "AccountId", default, skip_serializing_if = "Option::is_none")]
@@ -75,7 +75,7 @@ impl CheckStatusRequest {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CheckStatusResponse {
     /// When the response was made.
-    #[serde(rename = "ResponseTimestamp")]
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub response_timestamp: DateTime<FixedOffset>,
     /// Who answered.
     #[serde(rename = "ProducerRef", default, skip_serializing_if = "Option::is_none")]
@@ -110,7 +110,12 @@ pub struct CheckStatusResponse {
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
     pub error_condition: Option<ErrorCondition<StatusError>>,
     /// How long this answer holds.
-    #[serde(rename = "ValidUntil", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntil",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until: Option<DateTime<FixedOffset>>,
     /// The shortest interval at which the producer will accept requests.
     #[serde(rename = "ShortestPossibleCycle", default, skip_serializing_if = "Option::is_none")]
@@ -119,7 +124,12 @@ pub struct CheckStatusResponse {
     ///
     /// A restart invalidates the producer's subscriptions, so a consumer that sees
     /// this move forward re-subscribes.
-    #[serde(rename = "ServiceStartedTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ServiceStartedTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub service_started_time: Option<DateTime<FixedOffset>>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -163,7 +173,7 @@ impl CheckStatusResponse {
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct HeartbeatNotification {
     /// When the heartbeat was sent.
-    #[serde(rename = "RequestTimestamp")]
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
     pub request_timestamp: DateTime<FixedOffset>,
     /// Account the producer authenticates as.
     #[serde(rename = "AccountId", default, skip_serializing_if = "Option::is_none")]
@@ -201,13 +211,23 @@ pub struct HeartbeatNotification {
     #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
     pub error_condition: Option<ErrorCondition<StatusError>>,
     /// How long this heartbeat holds; a consumer that sees it lapse re-checks.
-    #[serde(rename = "ValidUntil", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ValidUntil",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub valid_until: Option<DateTime<FixedOffset>>,
     /// The shortest interval at which the producer will accept requests.
     #[serde(rename = "ShortestPossibleCycle", default, skip_serializing_if = "Option::is_none")]
     pub shortest_possible_cycle: Option<Duration>,
     /// When the producer's service last started.
-    #[serde(rename = "ServiceStartedTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ServiceStartedTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub service_started_time: Option<DateTime<FixedOffset>>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]

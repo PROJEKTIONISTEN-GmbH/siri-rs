@@ -132,10 +132,20 @@ pub struct TargetedVehicleJourney {
     )]
     pub headway_service: Option<bool>,
     /// When the journey is planned to leave its origin.
-    #[serde(rename = "OriginAimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "OriginAimedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub origin_aimed_departure_time: Option<DateTime<FixedOffset>>,
     /// When it is planned to reach its destination.
-    #[serde(rename = "DestinationAimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DestinationAimedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub destination_aimed_arrival_time: Option<DateTime<FixedOffset>>,
     /// Whether this is the first or the last journey of the day on the line.
     #[serde(
@@ -226,7 +236,12 @@ pub struct TargetedCall {
     #[serde(rename = "VehicleFeatureRef", default, skip_serializing_if = "Vec::is_empty")]
     pub vehicle_feature_ref: Vec<VehicleFeatureRef>,
     /// When the vehicle is planned to arrive.
-    #[serde(rename = "AimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_arrival_time: Option<DateTime<FixedOffset>>,
     /// The platform the vehicle is planned to arrive at, one name per language.
     #[serde(rename = "ArrivalPlatformName", default, skip_serializing_if = "Vec::is_empty")]
@@ -249,7 +264,12 @@ pub struct TargetedCall {
     #[serde(rename = "ArrivalOperatorRefs", default, skip_serializing_if = "Vec::is_empty")]
     pub arrival_operator_refs: Vec<OperatorRef>,
     /// When the vehicle is planned to leave.
-    #[serde(rename = "AimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_departure_time: Option<DateTime<FixedOffset>>,
     /// The platform the vehicle is planned to leave from, one name per language.
     #[serde(rename = "DeparturePlatformName", default, skip_serializing_if = "Vec::is_empty")]
@@ -272,7 +292,12 @@ pub struct TargetedCall {
     #[serde(rename = "DepartureOperatorRefs", default, skip_serializing_if = "Vec::is_empty")]
     pub departure_operator_refs: Vec<OperatorRef>,
     /// When passengers must be aboard by.
-    #[serde(rename = "AimedLatestPassengerAccessTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedLatestPassengerAccessTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_latest_passenger_access_time: Option<DateTime<FixedOffset>>,
     /// The planned interval between vehicles on a headway service.
     #[serde(rename = "AimedHeadwayInterval", default, skip_serializing_if = "Option::is_none")]

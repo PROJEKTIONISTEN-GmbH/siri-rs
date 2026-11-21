@@ -153,10 +153,20 @@ pub struct PredictionQuality {
     )]
     pub percentile: Option<f64>,
     /// The earliest time within that share.
-    #[serde(rename = "LowerTimeLimit", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "LowerTimeLimit",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub lower_time_limit: Option<DateTime<FixedOffset>>,
     /// The latest time within that share.
-    #[serde(rename = "HigherTimeLimit", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "HigherTimeLimit",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub higher_time_limit: Option<DateTime<FixedOffset>>,
 }
 
@@ -197,10 +207,20 @@ pub struct JourneyPartInfo {
     #[serde(rename = "ToStopPointRef", default, skip_serializing_if = "Option::is_none")]
     pub to_stop_point_ref: Option<StopPointRef>,
     /// When this part starts.
-    #[serde(rename = "StartTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StartTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub start_time: Option<DateTime<FixedOffset>>,
     /// When this part ends.
-    #[serde(rename = "EndTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "EndTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub end_time: Option<DateTime<FixedOffset>>,
 }
 
@@ -245,13 +265,13 @@ pub struct DatedVehicleJourneyIndirectRef {
     #[serde(rename = "OriginRef")]
     pub origin_ref: StopPointRef,
     /// When it is planned to leave there.
-    #[serde(rename = "AimedDepartureTime")]
+    #[serde(rename = "AimedDepartureTime", deserialize_with = "crate::xml::date_time::required")]
     pub aimed_departure_time: DateTime<FixedOffset>,
     /// Where it ends.
     #[serde(rename = "DestinationRef")]
     pub destination_ref: StopPointRef,
     /// When it is planned to arrive there.
-    #[serde(rename = "AimedArrivalTime")]
+    #[serde(rename = "AimedArrivalTime", deserialize_with = "crate::xml::date_time::required")]
     pub aimed_arrival_time: DateTime<FixedOffset>,
 }
 
@@ -357,10 +377,20 @@ pub struct RelatedCall {
     #[serde(rename = "StopPointName", default, skip_serializing_if = "Vec::is_empty")]
     pub stop_point_name: Vec<NaturalLanguageString>,
     /// When the vehicle is planned to leave.
-    #[serde(rename = "AimedDepartureTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedDepartureTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_departure_time: Option<DateTime<FixedOffset>>,
     /// When it is planned to arrive.
-    #[serde(rename = "AimedArrivalTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedArrivalTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_arrival_time: Option<DateTime<FixedOffset>>,
 }
 

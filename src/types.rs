@@ -502,10 +502,15 @@ impl ClosedTimestampRange {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HalfOpenTimestampOutputRange {
     /// The inclusive start of the period.
-    #[serde(rename = "StartTime")]
+    #[serde(rename = "StartTime", deserialize_with = "crate::xml::date_time::required")]
     pub start_time: DateTime<FixedOffset>,
     /// The inclusive end of the period, if it is known.
-    #[serde(rename = "EndTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "EndTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub end_time: Option<DateTime<FixedOffset>>,
     /// How to read an absent end: as short term, long term, or simply unknown.
     #[serde(
@@ -545,10 +550,15 @@ impl HalfOpenTimestampOutputRange {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct HalfOpenTimestampInputRange {
     /// The inclusive start of the period.
-    #[serde(rename = "StartTime")]
+    #[serde(rename = "StartTime", deserialize_with = "crate::xml::date_time::required")]
     pub start_time: DateTime<FixedOffset>,
     /// The inclusive end of the period, if it is bounded.
-    #[serde(rename = "EndTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "EndTime",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub end_time: Option<DateTime<FixedOffset>>,
     /// How exactly the end is to be taken; the default is to the second.
     #[serde(
