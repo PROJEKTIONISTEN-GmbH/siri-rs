@@ -39,6 +39,12 @@
 //! * where the schema leaves the element **optional** (`minOccurs="0"`), the
 //!   element alone is left out and the unit kept — an empty `AimedArrivalTime`
 //!   costs the timestamp, not the stop visit;
+//! * where the schema gives the element a **value** (`default` or `fixed`), it is
+//!   not left out alone, optional or not: a reader takes an absent `Cancellation`
+//!   for a journey that runs and an absent `VehicleAtStop` for a vehicle that is
+//!   not there, which is not what the producer said. The element around it goes
+//!   in its place, by the rules here — a `Cancellation` that cannot be read costs
+//!   its journey;
 //! * where the element is **mandatory**, its parent cannot be read without it,
 //!   and the same rule applies to the parent, up to the unit — an empty
 //!   `RecordedAtTime` costs the stop visit. The rule is applied by reading, not

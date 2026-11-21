@@ -18,6 +18,7 @@ use super::units::{Record, DELIVERY_IDENTIFIERS, RECORDS, SERVICE_DELIVERY_FIELD
 use super::{Discarded, Finding, Findings};
 use crate::framework::ServiceDeliveryPayload;
 use crate::xml;
+use crate::xml::schema_default::DECLARED;
 use crate::{Error, Result};
 
 /// The unit a fragment is, and what may be found inside it.
@@ -161,10 +162,10 @@ struct Target {
 }
 
 impl Target {
-    /// Where in `text` the fault at `path` is, as far as the text can say; the
-    /// fragment's root when the path names nothing below it.
-    fn of(text: &str, path: &serde_path_to_error::Path, scope: &Scope<'_>) -> Self {
-        match document::locate(text, &document::steps(path)) {
+    /// Where in `text` the element `steps` lead to is, as far as the text can say;
+    /// the fragment's root when they name nothing below it.
+    fn of(text: &str, steps: &[Step], scope: &Scope<'_>) -> Self {
+        match document::locate(text, steps) {
             Some(located) => {
                 let name = located.steps.last().map(|step| step.name.clone()).unwrap_or_default();
                 Self {
@@ -186,6 +187,14 @@ impl Target {
             },
         }
     }
+
+    /// Whether the element reads as a value when it is absent: the schema declares
+    /// one for it, and a reader takes an absent `Cancellation` for a journey that
+    /// runs. Such an element cannot be left out on its own without the document
+    /// saying what its producer did not.
+    fn means_a_value_when_absent(&self) -> bool {
+        !self.is_root && DECLARED.binary_search(&self.name.as_str()).is_ok()
+    }
 }
 
 /// Reads `text` as a `T`, taking out what does not read until it reads or nothing
@@ -204,7 +213,14 @@ pub(super) fn fragment<T: DeserializeOwned>(
             Err(fault) => fault,
         };
         let reason = fault.source.to_string();
-        let target = Target::of(text, &fault.path, scope);
+        let steps = document::steps(&fault.path);
+        let at_fault = Target::of(text, &steps, scope);
+        let fault_path = at_fault.path.clone();
+        let target = if at_fault.means_a_value_when_absent() {
+            Target::of(text, &steps[..at_fault.steps.len() - 1], scope)
+        } else {
+            at_fault
+        };
 
         if let Some(field) = named_field(&reason, "duplicate field") {
             if leave_out_the_interrupted_run(text, &target, field, scope, findings) {
@@ -226,7 +242,7 @@ pub(super) fn fragment<T: DeserializeOwned>(
             }
             _ => Chain {
                 finding: findings.push(Finding {
-                    path: target.path.clone(),
+                    path: fault_path,
                     reason,
                     discarded,
                 }),

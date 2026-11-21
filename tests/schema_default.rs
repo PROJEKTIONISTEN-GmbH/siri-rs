@@ -407,6 +407,24 @@ use super::defaulted::Defaulted;
         by_value.len(),
     );
 
+    let elements: BTreeSet<&str> = declarations.iter().map(|d| d.element.as_str()).collect();
+    let _ = write!(
+        out,
+        "
+/// The {} elements the schema declares a value for, by name. A reader takes such
+/// an element left out of a document for its declared value — an absent
+/// `Cancellation` for a journey that runs — so the lenient reader, which leaves out
+/// what it cannot read, does not leave out one of these on its own.
+#[cfg_attr(not(feature = \"lenient\"), allow(dead_code))]
+pub(crate) const DECLARED: &[&str] = &[
+",
+        elements.len()
+    );
+    for element in &elements {
+        let _ = writeln!(out, "    {element:?},");
+    }
+    out.push_str("];\n");
+
     for ((class, value), rows) in &by_value {
         let name = function_name(*class, value);
         let _ = write!(
