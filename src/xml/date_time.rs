@@ -39,10 +39,12 @@ impl Visitor<'_> for Timestamp {
     }
 
     fn visit_str<E: de::Error>(self, value: &str) -> Result<Self::Value, E> {
-        value.parse().map_err(|refused: chrono::ParseError| match unread_form(value) {
-            Some(reason) => E::custom(format_args!("{value:?} {reason}")),
-            None => E::custom(refused),
-        })
+        value
+            .parse()
+            .map_err(|refused: chrono::ParseError| match unread_form(value) {
+                Some(reason) => E::custom(format_args!("{value:?} {reason}")),
+                None => E::custom(refused),
+            })
     }
 }
 
@@ -74,7 +76,12 @@ fn is_date(date: &str) -> bool {
     let (Some(day), Some(month), Some(year)) = (parts.next(), parts.next(), parts.next()) else {
         return false;
     };
-    year.len() >= 4 && month.len() == 2 && day.len() == 2 && all_digits(year) && all_digits(month) && all_digits(day)
+    year.len() >= 4
+        && month.len() == 2
+        && day.len() == 2
+        && all_digits(year)
+        && all_digits(month)
+        && all_digits(day)
 }
 
 /// The clock time and the zone after it — `Z`, `+hh:mm`, `-hh:mm` or nothing.
@@ -92,7 +99,9 @@ fn is_clock(clock: &str) -> bool {
     bytes.len() == 8
         && bytes[2] == b':'
         && bytes[5] == b':'
-        && [&whole[0..2], &whole[3..5], &whole[6..8]].iter().all(|part| all_digits(part))
+        && [&whole[0..2], &whole[3..5], &whole[6..8]]
+            .iter()
+            .all(|part| all_digits(part))
         && !fraction.is_empty()
         && all_digits(fraction)
 }
@@ -113,21 +122,46 @@ mod tests {
 
     #[test]
     fn the_forms_not_read_are_named_and_no_others() {
-        for value in ["2004-12-17T09:30:47", "2004-12-17T09:30:47.250", "-0044-03-15T12:00:00"] {
-            assert!(unread_form(value).is_some_and(|reason| reason.contains("time-zone offset")), "{value}");
+        for value in [
+            "2004-12-17T09:30:47",
+            "2004-12-17T09:30:47.250",
+            "-0044-03-15T12:00:00",
+        ] {
+            assert!(
+                unread_form(value).is_some_and(|reason| reason.contains("time-zone offset")),
+                "{value}"
+            );
         }
-        for value in ["2004-12-17T24:00:00", "2004-12-17T24:00:00.000Z", "2004-12-17T24:00:00+01:00"] {
-            assert!(unread_form(value).is_some_and(|reason| reason.contains("24:00:00")), "{value}");
+        for value in [
+            "2004-12-17T24:00:00",
+            "2004-12-17T24:00:00.000Z",
+            "2004-12-17T24:00:00+01:00",
+        ] {
+            assert!(
+                unread_form(value).is_some_and(|reason| reason.contains("24:00:00")),
+                "{value}"
+            );
         }
         // Not a form XML Schema allows, or one with a zone: chrono's words say it.
-        for value in ["", "2004-12-17", "2004-12-17T09:30", "17.12.2004 09:30", "2004-12-17T09:30:47+01"] {
+        for value in [
+            "",
+            "2004-12-17",
+            "2004-12-17T09:30",
+            "17.12.2004 09:30",
+            "2004-12-17T09:30:47+01",
+        ] {
             assert_eq!(unread_form(value), None, "{value}");
         }
     }
 
     #[test]
     fn a_timestamp_with_an_offset_reads_as_chrono_reads_it() {
-        let read: DateTime<FixedOffset> = Timestamp.visit_str::<de::value::Error>("2004-12-17T09:30:47.5-05:00").unwrap();
-        assert_eq!(read, DateTime::parse_from_rfc3339("2004-12-17T09:30:47.5-05:00").unwrap());
+        let read: DateTime<FixedOffset> = Timestamp
+            .visit_str::<de::value::Error>("2004-12-17T09:30:47.5-05:00")
+            .unwrap();
+        assert_eq!(
+            read,
+            DateTime::parse_from_rfc3339("2004-12-17T09:30:47.5-05:00").unwrap()
+        );
     }
 }

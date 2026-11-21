@@ -28,7 +28,8 @@ use support::{validate, validator_available, VALIDATOR_MISSING};
 /// The official example at `name` under `tests/fixtures`, read.
 fn fixture(name: &str) -> Siri {
     let path = support::fixtures_dir().join(name);
-    let xml = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
+    let xml = std::fs::read_to_string(&path)
+        .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
     siri_rs::from_str(&xml).unwrap_or_else(|e| panic!("{name} reads: {e}"))
 }
 
@@ -58,7 +59,10 @@ fn event<S: Service>(message: &Siri) -> ConsumerEvent<S> {
 }
 
 fn service_delivery(message: &Siri) -> &ServiceDelivery {
-    message.payload.as_service_delivery().expect("the message is a delivery")
+    message
+        .payload
+        .as_service_delivery()
+        .expect("the message is a delivery")
 }
 
 fn now() -> DateTime<FixedOffset> {
@@ -73,7 +77,12 @@ const RECORDED: &str = "<RecordedAtTime>2004-12-17T09:30:47-05:00</RecordedAtTim
 fn a_stop_monitoring_delivery_hands_on_its_cancelled_visits() {
     let message = fixture("xml/sm/exs_stopMonitoring_response.xml");
 
-    let ConsumerEvent::DeliveredWhole { items, delivery, outcome, reply } = event::<StopMonitoring>(&message)
+    let ConsumerEvent::DeliveredWhole {
+        items,
+        delivery,
+        outcome,
+        reply,
+    } = event::<StopMonitoring>(&message)
     else {
         panic!("a delivery that withdraws visits is handed on whole");
     };
@@ -86,11 +95,25 @@ fn a_stop_monitoring_delivery_hands_on_its_cancelled_visits() {
         .flat_map(|board| &board.monitored_stop_visit_cancellation)
         .collect();
     assert_eq!(cancelled.len(), 2, "both withdrawals come along");
-    assert_eq!(cancelled[0].item_ref.as_ref().map(|item| item.as_str()), Some("SED9843214675429"));
-    assert_eq!(cancelled[1].visit_number, Some(2), "the second is named by its journey and visit");
-    assert_eq!(*delivery, *service_delivery(&message), "nothing of the message is lost");
+    assert_eq!(
+        cancelled[0].item_ref.as_ref().map(|item| item.as_str()),
+        Some("SED9843214675429")
+    );
+    assert_eq!(
+        cancelled[1].visit_number,
+        Some(2),
+        "the second is named by its journey and visit"
+    );
+    assert_eq!(
+        *delivery,
+        *service_delivery(&message),
+        "nothing of the message is lost"
+    );
     assert!(outcome.succeeded());
-    assert!(reply.is_none(), "the consumer was not asked to confirm deliveries");
+    assert!(
+        reply.is_none(),
+        "the consumer was not asked to confirm deliveries"
+    );
 }
 
 /// Every record a delivery may carry beside the ones the hub publishes, for every
@@ -139,7 +162,10 @@ fn every_record_beside_the_published_ones_hands_the_delivery_on_whole() {
          <LineRef>123</LineRef><DirectionRef>Out</DirectionRef></TimetabledStopVisitCancellation>\
          </StopTimetableDelivery>"
     ));
-    assert!(matches!(event::<StopTimetable>(&withdrawn_visit), ConsumerEvent::DeliveredWhole { .. }));
+    assert!(matches!(
+        event::<StopTimetable>(&withdrawn_visit),
+        ConsumerEvent::DeliveredWhole { .. }
+    ));
 
     let interchange = delivered(&format!(
         "<EstimatedTimetableDelivery version=\"2.0\">\
@@ -151,17 +177,38 @@ fn every_record_beside_the_published_ones_hands_the_delivery_on_whole() {
          <WillNotWait/></EstimatedServiceJourneyInterchange>\
          </EstimatedJourneyVersionFrame></EstimatedTimetableDelivery>"
     ));
-    assert!(matches!(event::<EstimatedTimetable>(&interchange), ConsumerEvent::DeliveredWhole { .. }));
+    assert!(matches!(
+        event::<EstimatedTimetable>(&interchange),
+        ConsumerEvent::DeliveredWhole { .. }
+    ));
 
     let official = [
-        ("xml/vm/exv_vehicleMonitoring_response.xml", whole::<VehicleMonitoring> as fn(&Siri) -> bool),
-        ("xml/ct/exc_connectionTimetable_response.xml", whole::<ConnectionTimetable>),
-        ("xml/cm/exc_connectionMonitoringFeeder_response.xml", whole::<ConnectionMonitoringFeeder>),
-        ("xml/gm/exm_generalMessage_response.xml", whole::<GeneralMessage>),
-        ("xml/sx/exx_situationExchange_response.xml", whole::<SituationExchange>),
+        (
+            "xml/vm/exv_vehicleMonitoring_response.xml",
+            whole::<VehicleMonitoring> as fn(&Siri) -> bool,
+        ),
+        (
+            "xml/ct/exc_connectionTimetable_response.xml",
+            whole::<ConnectionTimetable>,
+        ),
+        (
+            "xml/cm/exc_connectionMonitoringFeeder_response.xml",
+            whole::<ConnectionMonitoringFeeder>,
+        ),
+        (
+            "xml/gm/exm_generalMessage_response.xml",
+            whole::<GeneralMessage>,
+        ),
+        (
+            "xml/sx/exx_situationExchange_response.xml",
+            whole::<SituationExchange>,
+        ),
     ];
     for (name, handed_on_whole) in official {
-        assert!(handed_on_whole(&fixture(name)), "{name} carries a withdrawal or a road situation");
+        assert!(
+            handed_on_whole(&fixture(name)),
+            "{name} carries a withdrawal or a road situation"
+        );
     }
 }
 
@@ -192,15 +239,27 @@ fn a_delivery_of_published_records_alone_is_delivered_as_before() {
     };
     assert_eq!(items.len(), 2);
     assert!(
-        matches!(event::<StopMonitoring>(&board), ConsumerEvent::DeliveredWhole { .. }),
+        matches!(
+            event::<StopMonitoring>(&board),
+            ConsumerEvent::DeliveredWhole { .. }
+        ),
         "the notice the official board carries is a record of its own"
     );
 
     for (name, delivered_as_before) in [
-        ("xml/pt/ext_productionTimetable_response.xml", delivered_as_before::<ProductionTimetable> as fn(&Siri) -> bool),
-        ("xml/fm/exf_facilityMonitoring_response.xml", delivered_as_before::<FacilityMonitoring>),
+        (
+            "xml/pt/ext_productionTimetable_response.xml",
+            delivered_as_before::<ProductionTimetable> as fn(&Siri) -> bool,
+        ),
+        (
+            "xml/fm/exf_facilityMonitoring_response.xml",
+            delivered_as_before::<FacilityMonitoring>,
+        ),
     ] {
-        assert!(delivered_as_before(&fixture(name)), "{name}: its records are the published ones");
+        assert!(
+            delivered_as_before(&fixture(name)),
+            "{name}: its records are the published ones"
+        );
     }
 }
 
@@ -213,7 +272,10 @@ fn delivered_as_before<S: Service>(message: &Siri) -> bool {
 fn the_situations_a_delivery_comes_with_are_handed_on() {
     let message = fixture("derived/sm/exs_stopMonitoring_response_included_situation.xml");
 
-    let ConsumerEvent::DeliveredWhole { items, delivery, .. } = event::<StopMonitoring>(&message) else {
+    let ConsumerEvent::DeliveredWhole {
+        items, delivery, ..
+    } = event::<StopMonitoring>(&message)
+    else {
         panic!("a delivery accompanied by situations is handed on whole");
     };
 
@@ -236,11 +298,13 @@ fn the_situations_a_delivery_comes_with_are_handed_on() {
 #[test]
 fn a_heartbeat_reporting_an_outage_is_not_alive() {
     let started = now() - chrono::Duration::hours(2);
-    let outage = ErrorCondition::new(StatusError::ServiceNotAvailableError(ServiceNotAvailableError {
-        error_text: Some("timetable server restarting".into()),
-        expected_restart_time: Some(now() + chrono::Duration::minutes(5)),
-        ..ServiceNotAvailableError::default()
-    }));
+    let outage = ErrorCondition::new(StatusError::ServiceNotAvailableError(
+        ServiceNotAvailableError {
+            error_text: Some("timetable server restarting".into()),
+            expected_restart_time: Some(now() + chrono::Duration::minutes(5)),
+            ..ServiceNotAvailableError::default()
+        },
+    ));
     let heartbeat = Siri::new(
         PROTOCOL_VERSION,
         HeartbeatNotification {
@@ -280,7 +344,13 @@ fn a_heartbeat_reporting_no_outage_is_alive() {
     let started = now() - chrono::Duration::hours(2);
     let healthy = HeartbeatNotification::healthy(now(), "KUBRICK", started);
     for status in [None, Some(true)] {
-        let message = Siri::new(PROTOCOL_VERSION, HeartbeatNotification { status, ..healthy.clone() });
+        let message = Siri::new(
+            PROTOCOL_VERSION,
+            HeartbeatNotification {
+                status,
+                ..healthy.clone()
+            },
+        );
         assert_eq!(
             event::<SituationExchange>(&message),
             ConsumerEvent::Alive {
