@@ -235,7 +235,7 @@ fn nothing_but_comments_and_processing_instructions_may_follow_the_root_element(
         let xml = format!("{document}{tail}");
         let error = siri_rs::from_str::<Siri>(&xml).expect_err(tail);
         assert!(
-            matches!(&error, siri_rs::Error::ContentAfterRoot { offset } if *offset == document.len() as u64),
+            matches!(&error, siri_rs::Error::ContentAfterRoot { offset: Some(offset) } if *offset == document.len() as u64),
             "{tail}: {error}"
         );
         #[cfg(feature = "lenient")]
@@ -260,10 +260,11 @@ fn a_character_xml_does_not_allow_is_not_written() {
         assert!(siri_rs::to_string_pretty(&Siri::new("2.0", heartbeat)).is_err(), "{value:?}");
     }
 
-    let allowed = siri_rs::framework::HeartbeatNotification::healthy(now(), "P\tQ\nR\u{e9}", started);
-    let xml = siri_rs::to_string(&Siri::new("2.0", allowed)).expect("tab, line feed and letters are characters");
-    assert!(validator_available(), "{VALIDATOR_MISSING}");
-    validate(&xml).expect("and the document is valid");
+    for allowed in ["P\tQ\r\nR", "P\u{e9}\u{fffd}\u{10ffff}"] {
+        let heartbeat = siri_rs::framework::HeartbeatNotification::healthy(now(), allowed, started);
+        let xml = siri_rs::to_string(&Siri::new("2.0", heartbeat)).expect("XML allows these characters");
+        assert!(xml.contains(allowed), "written as they are: {xml}");
+    }
 }
 
 #[test]
@@ -272,7 +273,7 @@ fn a_character_xml_does_not_allow_is_not_read() {
     for (producer, character) in [("P\u{1}Q", '\u{1}'), ("P&#1;Q", '\u{1}'), ("P&#x1F;Q", '\u{1f}'), ("P\u{ffff}Q", '\u{ffff}')] {
         let xml = document(producer);
         let error = siri_rs::from_str::<Siri>(&xml).expect_err(producer);
-        let at = xml.find("P").expect("the producer is in the document") as u64 + 1;
+        let at = xml.find(producer).expect("the producer is in the document") as u64 + 1;
         assert!(
             matches!(error, siri_rs::Error::IllegalCharacter { character: found, offset } if found == character && offset == at),
             "{producer:?}: {error}"

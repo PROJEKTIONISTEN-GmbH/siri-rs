@@ -37,6 +37,36 @@ pub enum Error {
         /// Element name actually found (without namespace prefix).
         found: String,
     },
+    /// The document's root element is not in the SIRI namespace.
+    ///
+    /// Every SIRI message is a global element of `http://www.siri.org.uk/siri`; a
+    /// `<Siri>` in another namespace, or in none, is another vocabulary's element of
+    /// the same name.
+    UnexpectedNamespace {
+        /// The root element's local name.
+        element: &'static str,
+        /// The namespace it is in, empty for none.
+        found: String,
+    },
+    /// The document goes on after its root element with something other than
+    /// comments, processing instructions and whitespace — a second root element,
+    /// or text — which XML does not allow.
+    ContentAfterRoot {
+        /// Where that begins, in bytes. `None` when the document was rewritten
+        /// before it was read, as for [`Error::Deserialize`].
+        offset: Option<u64>,
+    },
+    /// A character XML 1.0 does not allow — a control character other than tab,
+    /// line feed and carriage return, or U+FFFE or U+FFFF — stands in the document
+    /// read, written as itself or as a character reference, or in a value to be
+    /// written.
+    IllegalCharacter {
+        /// The character.
+        character: char,
+        /// Where it stands in the document, in bytes: in the text read, or in the
+        /// text being written.
+        offset: u64,
+    },
     /// A lexical value did not match the XML Schema datatype it is declared as.
     InvalidValue {
         /// The XML Schema datatype the value was read as, e.g. `xsd:duration`.
@@ -90,6 +120,23 @@ impl fmt::Display for Error {
             Error::UnexpectedRoot { expected, found } => {
                 write!(f, "expected root element <{expected}>, found <{found}>")
             }
+            Error::UnexpectedNamespace { element, found } if found.is_empty() => {
+                write!(f, "<{element}> is in no namespace, not in {}", crate::NAMESPACE)
+            }
+            Error::UnexpectedNamespace { element, found } => {
+                write!(f, "<{element}> is in the namespace {found}, not in {}", crate::NAMESPACE)
+            }
+            Error::ContentAfterRoot { offset: Some(offset) } => {
+                write!(f, "the document goes on after its root element (byte {offset})")
+            }
+            Error::ContentAfterRoot { offset: None } => {
+                write!(f, "the document goes on after its root element")
+            }
+            Error::IllegalCharacter { character, offset } => write!(
+                f,
+                "U+{:04X} is not a character XML 1.0 allows (byte {offset})",
+                u32::from(*character)
+            ),
             Error::InvalidValue { datatype, value } => {
                 write!(f, "{value:?} is not a valid {datatype}")
             }
@@ -110,6 +157,9 @@ impl std::error::Error for Error {
             Error::Deserialize { source, .. } => Some(source),
             Error::Serialize(e) => Some(e),
             Error::UnexpectedRoot { .. }
+            | Error::UnexpectedNamespace { .. }
+            | Error::ContentAfterRoot { .. }
+            | Error::IllegalCharacter { .. }
             | Error::InvalidValue { .. }
             | Error::UnexpectedMessage { .. }
             | Error::MissingElement { .. } => None,

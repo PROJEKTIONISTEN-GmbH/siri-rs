@@ -67,8 +67,9 @@
 //! `ResponseTimestamp` and `ProducerRef` — is read strictly: a fault there fails
 //! the document with the error [`crate::from_str`] would give. So does a fault
 //! in the only delivery, and so does everything that is not a fault *in* the
-//! document but *of* it: XML that is not well-formed, a root element that is not
-//! `<Siri>`, and a document in a namespace that is not SIRI's.
+//! document but *of* it: XML that is not well-formed — a character XML 1.0 does
+//! not allow, content after the root element —, a root element that is not
+//! `<Siri>`, and a root element in a namespace that is not SIRI's.
 //!
 //! # Paths
 //!
@@ -159,17 +160,19 @@ use crate::Result;
 /// itself.
 pub fn from_str(xml: &str) -> Result<(Siri, Findings)> {
     let text = xml::prepare::<Siri>(xml)?;
-    let fault = match xml::read::<Siri>(&text) {
-        Ok(siri) => return Ok((siri, Findings::default())),
+    let offsets_apply = matches!(text, Cow::Borrowed(_));
+    let fault = match xml::read_whole::<Siri>(&text) {
+        Ok((siri, false)) => return Ok((siri, Findings::default())),
+        Ok((_, true)) => return Err(xml::content_after_root(&text, offsets_apply)),
         Err(fault) => fault,
     };
     if !document::within_a_delivery(&fault.path) {
-        return Err(fault.into_error(matches!(text, Cow::Borrowed(_))));
+        return Err(fault.into_error(offsets_apply));
     }
     let mut document = text.into_owned();
     let mut findings = Findings::default();
     repair::deliveries(&mut document, &mut findings)?;
-    let siri = xml::read::<Siri>(&document).map_err(|fault| fault.into_error(false))?;
+    let siri = xml::read_document::<Siri>(&document, false)?;
     Ok((siri, findings))
 }
 

@@ -586,24 +586,21 @@ fn what_is_wrong_with_the_document_rather_than_in_it_is_the_ordinary_error() {
     let unclosed = example.trim_end().trim_end_matches("</Siri>").to_string();
     let wrong_root = example.replacen("<Siri ", "<Sirius ", 1).replacen("</Siri>", "</Sirius>", 1);
     let no_payload = r#"<Siri xmlns="http://www.siri.org.uk/siri" version="2.0"></Siri>"#.to_string();
+    let wrong_namespace = example.replacen("http://www.siri.org.uk/siri", "http://example.org/not-siri", 1);
+    let second_root = format!("{}<Siri/>", example.trim_end());
+    let control_character = example.replacen("KUBRICK", "KUB\u{7}RICK", 1);
     for (label, document) in [
         ("not well-formed", unclosed),
         ("wrong root", wrong_root),
         ("no payload", no_payload),
+        ("wrong namespace", wrong_namespace),
+        ("second root", second_root),
+        ("control character", control_character),
     ] {
         let strict_error = siri_rs::from_str::<Siri>(&document).expect_err(label);
         let lenient_error = lenient::from_str(&document).expect_err(label);
         assert_eq!(lenient_error.to_string(), strict_error.to_string(), "{label}");
     }
-
-    // The strict reader does not check the namespace a document binds by default,
-    // and reads one bound to a foreign namespace as SIRI; the lenient reader is
-    // no stricter than it. What the two do with such a document is the same.
-    let wrong_namespace = example.replacen("http://www.siri.org.uk/siri", "http://example.org/not-siri", 1);
-    let strictly = strict(&wrong_namespace);
-    let (leniently, findings) = lenient(&wrong_namespace);
-    assert_eq!(leniently, strictly);
-    assert!(findings.is_empty());
 }
 
 /// The record elements a document holds, by the element they sit in — the units
