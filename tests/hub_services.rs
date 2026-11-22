@@ -19,19 +19,18 @@ use siri_rs::ct::{ConnectionTimetableRequest, TimetabledFeederArrival};
 use siri_rs::enumerations::{DeliveryMethod, FacilityStatus as Availability};
 use siri_rs::et::EstimatedTimetableRequest;
 use siri_rs::fm::FacilityMonitoringRequest;
+use siri_rs::framework::ServiceDelivery;
 use siri_rs::gm::{GeneralMessageRequest, InfoMessage};
 use siri_rs::model::{
-    EstimatedVehicleJourney, FacilityCondition, FacilityStatus, InterchangeJourney,
-    MonitoredVehicleJourney, TargetedVehicleJourney,
+    EstimatedVehicleJourney, FacilityCondition, FacilityStatus, InterchangeJourney, MonitoredVehicleJourney,
+    TargetedVehicleJourney,
 };
-use siri_rs::framework::ServiceDelivery;
 use siri_rs::pubsub::{
-    ConnectionMonitoringFeeder, ConnectionMonitoringFeederSource, ConnectionTimetable,
-    ConnectionTimetableSource, Consumer, ConsumerEvent, EstimatedTimetable,
-    EstimatedTimetableSource, FacilityMonitoring, FacilityMonitoringSource, GeneralMessage,
-    GeneralMessageSource, Producer, ProducerConfig, ProductionTimetable, Service,
-    SituationExchange, Source, StopMonitoring, StopMonitoringSource, StopTimetable,
-    StopTimetableSource, SubscriptionState, VehicleMonitoring, PROTOCOL_VERSION,
+    ConnectionMonitoringFeeder, ConnectionMonitoringFeederSource, ConnectionTimetable, ConnectionTimetableSource,
+    Consumer, ConsumerEvent, EstimatedTimetable, EstimatedTimetableSource, FacilityMonitoring,
+    FacilityMonitoringSource, GeneralMessage, GeneralMessageSource, Producer, ProducerConfig, ProductionTimetable,
+    Service, SituationExchange, Source, StopMonitoring, StopMonitoringSource, StopTimetable, StopTimetableSource,
+    SubscriptionState, VehicleMonitoring, PROTOCOL_VERSION,
 };
 use siri_rs::sm::{MonitoredStopVisit, StopMonitoringRequest};
 use siri_rs::st::{StopTimetableRequest, TimetabledStopVisit};
@@ -94,18 +93,11 @@ fn the_hub_carries_a_connection_monitoring_subscription() {
             expected_arrival_time: Some(now() + Duration::minutes(14)),
             ..MonitoredFeederArrival::new(now(), "CL-Kroepcke", InterchangeJourney::new("10", "OUT"))
         }]),
-        ConnectionMonitoringRequest::for_line(
-            now(),
-            "CL-Kroepcke",
-            ConnectingTimeFilter::new("10", "OUT"),
-        ),
+        ConnectionMonitoringRequest::for_line(now(), "CL-Kroepcke", ConnectingTimeFilter::new("10", "OUT")),
     );
 
     assert_eq!(arrivals.len(), 1);
-    assert_eq!(
-        arrivals[0].expected_arrival_time,
-        Some(now() + Duration::minutes(14))
-    );
+    assert_eq!(arrivals[0].expected_arrival_time, Some(now() + Duration::minutes(14)));
 }
 
 #[test]
@@ -150,15 +142,42 @@ fn the_hub_carries_a_facility_monitoring_subscription() {
 fn a_delivery_carrying_no_records_is_valid_for_every_service_that_can_say_so() {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     let empty = [
-        ("ProductionTimetable", ProductionTimetable::service_delivery(ProductionTimetable::delivery(now(), Vec::new()))),
-        ("StopTimetable", StopTimetable::service_delivery(StopTimetable::delivery(now(), Vec::new()))),
-        ("StopMonitoring", StopMonitoring::service_delivery(StopMonitoring::delivery(now(), Vec::new()))),
-        ("VehicleMonitoring", VehicleMonitoring::service_delivery(VehicleMonitoring::delivery(now(), Vec::new()))),
-        ("ConnectionTimetable", ConnectionTimetable::service_delivery(ConnectionTimetable::delivery(now(), Vec::new()))),
-        ("ConnectionMonitoringFeeder", ConnectionMonitoringFeeder::service_delivery(ConnectionMonitoringFeeder::delivery(now(), Vec::new()))),
-        ("GeneralMessage", GeneralMessage::service_delivery(GeneralMessage::delivery(now(), Vec::new()))),
-        ("FacilityMonitoring", FacilityMonitoring::service_delivery(FacilityMonitoring::delivery(now(), Vec::new()))),
-        ("SituationExchange", SituationExchange::service_delivery(SituationExchange::delivery(now(), Vec::new()))),
+        (
+            "ProductionTimetable",
+            ProductionTimetable::service_delivery(ProductionTimetable::delivery(now(), Vec::new())),
+        ),
+        (
+            "StopTimetable",
+            StopTimetable::service_delivery(StopTimetable::delivery(now(), Vec::new())),
+        ),
+        (
+            "StopMonitoring",
+            StopMonitoring::service_delivery(StopMonitoring::delivery(now(), Vec::new())),
+        ),
+        (
+            "VehicleMonitoring",
+            VehicleMonitoring::service_delivery(VehicleMonitoring::delivery(now(), Vec::new())),
+        ),
+        (
+            "ConnectionTimetable",
+            ConnectionTimetable::service_delivery(ConnectionTimetable::delivery(now(), Vec::new())),
+        ),
+        (
+            "ConnectionMonitoringFeeder",
+            ConnectionMonitoringFeeder::service_delivery(ConnectionMonitoringFeeder::delivery(now(), Vec::new())),
+        ),
+        (
+            "GeneralMessage",
+            GeneralMessage::service_delivery(GeneralMessage::delivery(now(), Vec::new())),
+        ),
+        (
+            "FacilityMonitoring",
+            FacilityMonitoring::service_delivery(FacilityMonitoring::delivery(now(), Vec::new())),
+        ),
+        (
+            "SituationExchange",
+            SituationExchange::service_delivery(SituationExchange::delivery(now(), Vec::new())),
+        ),
     ];
     for (service, payload) in empty {
         let message = Siri::new(
@@ -219,7 +238,10 @@ fn the_strict_reader_refuses_a_frame_without_a_journey() {
     let Err(siri_rs::Error::Deserialize { path, offset, source }) = siri_rs::from_str::<Siri>(&xml) else {
         panic!("the strict reader refuses a frame without a journey:\n{xml}");
     };
-    assert_eq!(path, "ServiceDelivery.EstimatedTimetableDelivery[0].EstimatedJourneyVersionFrame[0]");
+    assert_eq!(
+        path,
+        "ServiceDelivery.EstimatedTimetableDelivery[0].EstimatedJourneyVersionFrame[0]"
+    );
     assert_eq!(source.to_string(), "missing field `EstimatedVehicleJourney`");
     // The reader notices the missing journey at the frame's end tag, having
     // already looked one event further: past the delivery's end tag.
@@ -257,12 +279,23 @@ fn an_estimated_timetable_subscription_is_sent_nothing_while_there_is_no_journey
             producer.poll(now()).is_empty(),
             "fetched {fetched}: nothing is sent while the source holds no journey"
         );
-        assert_eq!(producer.subscriptions()[0].state(), &SubscriptionState::Idle, "nothing is owed");
+        assert_eq!(
+            producer.subscriptions()[0].state(),
+            &SubscriptionState::Idle,
+            "nothing is owed"
+        );
 
-        producer.source_mut().0.push(EstimatedVehicleJourney::dated("10", "OUT", "10-0815"));
+        producer
+            .source_mut()
+            .0
+            .push(EstimatedVehicleJourney::dated("10", "OUT", "10-0815"));
         producer.data_changed();
         let outbound = producer.poll(now());
-        assert_eq!(outbound.len(), 1, "fetched {fetched}: the journey is announced or delivered");
+        assert_eq!(
+            outbound.len(),
+            1,
+            "fetched {fetched}: the journey is announced or delivered"
+        );
         let delivered = if fetched {
             let ConsumerEvent::DataReady { fetch, .. } = consumer
                 .handle(&valid(&outbound[0].message), now())

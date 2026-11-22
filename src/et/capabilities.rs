@@ -4,9 +4,9 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::framework::{
-    CapabilityRequestPolicy, ConnectionCapabilityAccessControl, ConnectionServicePermission,
-    ErrorCondition, GeneralInteractionCapability, PermissionVersionRef, ServiceRequestError,
-    SubscriptionPolicyCapability, TransportDescription,
+    CapabilityRequestPolicy, ConnectionCapabilityAccessControl, ConnectionServicePermission, ErrorCondition,
+    GeneralInteractionCapability, PermissionVersionRef, ServiceRequestError, SubscriptionPolicyCapability,
+    TransportDescription,
 };
 use crate::types::{Duration, EndpointAddress, Extensions, MessageRef, ParticipantRef};
 use crate::xml::SiriRoot;
@@ -64,10 +64,7 @@ pub struct EstimatedTimetableCapabilitiesResponse {
 
 impl EstimatedTimetableCapabilitiesResponse {
     /// A successful answer describing the given capabilities.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        capabilities: EstimatedTimetableServiceCapabilities,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, capabilities: EstimatedTimetableServiceCapabilities) -> Self {
         Self {
             version: None,
             response_timestamp,

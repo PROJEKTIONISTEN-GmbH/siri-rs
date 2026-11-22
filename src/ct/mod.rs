@@ -16,11 +16,8 @@ pub mod delivery;
 pub mod request;
 
 pub use capabilities::{
-    ConnectionTimetableCapabilitiesResponse, ConnectionTimetablePermissions,
-    ConnectionTimetableRequestPolicy, ConnectionTimetableServiceCapabilities,
-    ConnectionTimetableTopicFiltering,
+    ConnectionTimetableCapabilitiesResponse, ConnectionTimetablePermissions, ConnectionTimetableRequestPolicy,
+    ConnectionTimetableServiceCapabilities, ConnectionTimetableTopicFiltering,
 };
-pub use delivery::{
-    ConnectionTimetableDelivery, TimetabledFeederArrival, TimetabledFeederArrivalCancellation,
-};
+pub use delivery::{ConnectionTimetableDelivery, TimetabledFeederArrival, TimetabledFeederArrivalCancellation};
 pub use request::{ConnectionTimetableRequest, ConnectionTimetableSubscriptionRequest};

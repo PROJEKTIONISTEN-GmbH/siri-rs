@@ -5,13 +5,11 @@ use serde::{Deserialize, Serialize};
 
 use crate::enumerations::VehicleMonitoringDetail;
 use crate::framework::{
-    CoordinateFormat, ErrorCondition, GeneralInteractionCapability, GeneralPermissions,
-    LinePermissions, OperatorPermissions, PermissionScope, PermissionVersionRef,
-    ServiceRequestError, SubscriptionPolicyCapability, TransportDescription,
+    CoordinateFormat, ErrorCondition, GeneralInteractionCapability, GeneralPermissions, LinePermissions,
+    OperatorPermissions, PermissionScope, PermissionVersionRef, ServiceRequestError, SubscriptionPolicyCapability,
+    TransportDescription,
 };
-use crate::types::{
-    DefaultedBoolean, Duration, EndpointAddress, Extensions, MessageRef, ParticipantRef,
-};
+use crate::types::{DefaultedBoolean, Duration, EndpointAddress, Extensions, MessageRef, ParticipantRef};
 use crate::xml::SiriRoot;
 
 use super::VehicleMonitoringRef;
@@ -69,10 +67,7 @@ pub struct VehicleMonitoringCapabilitiesResponse {
 
 impl VehicleMonitoringCapabilitiesResponse {
     /// A successful answer describing the given capabilities.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        capabilities: VehicleMonitoringServiceCapabilities,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, capabilities: VehicleMonitoringServiceCapabilities) -> Self {
         Self {
             version: None,
             response_timestamp,

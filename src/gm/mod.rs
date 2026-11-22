@@ -16,9 +16,8 @@ pub mod request;
 
 pub use capabilities::{
     GeneralMessageAccessControl, GeneralMessageCapabilitiesResponse, GeneralMessagePermissions,
-    GeneralMessageServiceCapabilities, GeneralMessageServicePermission,
-    GeneralMessageTopicFiltering, InfoChannelPermission, InfoChannelPermissionItem,
-    InfoChannelPermissions,
+    GeneralMessageServiceCapabilities, GeneralMessageServicePermission, GeneralMessageTopicFiltering,
+    InfoChannelPermission, InfoChannelPermissionItem, InfoChannelPermissions,
 };
 pub use delivery::{GeneralMessageDelivery, InfoMessage, InfoMessageCancellation};
 pub use request::{GeneralMessageRequest, GeneralMessageSubscriptionRequest};

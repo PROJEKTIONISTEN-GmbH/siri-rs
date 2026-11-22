@@ -41,10 +41,20 @@ pub struct PassengerAccessibilityNeeds {
     #[serde(rename = "@xmlns:acsb", default = "acsb_namespace")]
     pub acsb_namespace: String,
     /// The individual needs.
-    #[serde(rename = "acsb:UserNeed", alias = "UserNeed", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "acsb:UserNeed",
+        alias = "UserNeed",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub user_need: Vec<UserNeed>,
     /// Whether the passenger travels with someone assisting them.
-    #[serde(rename = "acsb:AccompaniedByCarer", alias = "AccompaniedByCarer", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:AccompaniedByCarer",
+        alias = "AccompaniedByCarer",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub accompanied_by_carer: Option<bool>,
 }
 
@@ -79,13 +89,28 @@ pub struct UserNeed {
     pub need: UserNeedKind,
     /// Whether the need is being excluded rather than included; absent means the
     /// need is included.
-    #[serde(rename = "acsb:Excluded", alias = "Excluded", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:Excluded",
+        alias = "Excluded",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub excluded: Option<bool>,
     /// How important this need is relative to the passenger's other needs.
-    #[serde(rename = "acsb:NeedRanking", alias = "NeedRanking", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:NeedRanking",
+        alias = "NeedRanking",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub need_ranking: Option<i64>,
     /// Implementation-defined content.
-    #[serde(rename = "acsb:Extensions", alias = "Extensions", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:Extensions",
+        alias = "Extensions",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub extensions: Option<Extensions>,
 }
 
@@ -201,13 +226,28 @@ pub struct AccessibilityAssessment {
     #[serde(rename = "acsb:MobilityImpairedAccess", alias = "MobilityImpairedAccess")]
     pub mobility_impaired_access: bool,
     /// The specific limitations, where they are known in detail.
-    #[serde(rename = "acsb:Limitations", alias = "Limitations", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:Limitations",
+        alias = "Limitations",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub limitations: Option<AccessibilityLimitations>,
     /// Judgements against individual passenger needs.
-    #[serde(rename = "acsb:Suitabilities", alias = "Suitabilities", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:Suitabilities",
+        alias = "Suitabilities",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub suitabilities: Option<AssessmentSuitabilities>,
     /// Implementation-defined content.
-    #[serde(rename = "ifopt:Extensions", alias = "Extensions", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ifopt:Extensions",
+        alias = "Extensions",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub extensions: Option<Extensions>,
 }
 
@@ -240,31 +280,71 @@ pub struct AccessibilityLimitations {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct AccessibilityLimitation {
     /// Identifier of this limitation within the document.
-    #[serde(rename = "acsb:LimitationId", alias = "LimitationId", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:LimitationId",
+        alias = "LimitationId",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub limitation_id: Option<String>,
     /// When this limitation applies, if it is not permanent.
-    #[serde(rename = "acsb:ValidityCondition", alias = "ValidityCondition", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:ValidityCondition",
+        alias = "ValidityCondition",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub validity_condition: Option<ValidityCondition>,
     /// Whether a wheelchair user can get through.
     #[serde(rename = "acsb:WheelchairAccess", alias = "WheelchairAccess")]
     pub wheelchair_access: Accessibility,
     /// Whether the route avoids steps.
-    #[serde(rename = "acsb:StepFreeAccess", alias = "StepFreeAccess", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:StepFreeAccess",
+        alias = "StepFreeAccess",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub step_free_access: Option<Accessibility>,
     /// Whether the route avoids escalators.
-    #[serde(rename = "acsb:EscalatorFreeAccess", alias = "EscalatorFreeAccess", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:EscalatorFreeAccess",
+        alias = "EscalatorFreeAccess",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub escalator_free_access: Option<Accessibility>,
     /// Whether the route avoids lifts.
-    #[serde(rename = "acsb:LiftFreeAccess", alias = "LiftFreeAccess", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:LiftFreeAccess",
+        alias = "LiftFreeAccess",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub lift_free_access: Option<Accessibility>,
     /// Whether announcements are made audibly.
-    #[serde(rename = "acsb:AudibleSignalsAvailable", alias = "AudibleSignalsAvailable", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:AudibleSignalsAvailable",
+        alias = "AudibleSignalsAvailable",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub audible_signals_available: Option<Accessibility>,
     /// Whether information is shown visually.
-    #[serde(rename = "acsb:VisualSignsAvailable", alias = "VisualSignsAvailable", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:VisualSignsAvailable",
+        alias = "VisualSignsAvailable",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub visual_signs_available: Option<Accessibility>,
     /// Implementation-defined content.
-    #[serde(rename = "ifopt:Extensions", alias = "Extensions", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ifopt:Extensions",
+        alias = "Extensions",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub extensions: Option<Extensions>,
 }
 
@@ -307,10 +387,20 @@ pub struct ValidityCondition {
     )]
     pub to_date_time: Option<DateTime<FixedOffset>>,
     /// The kind of day the condition applies on, in the producer's own vocabulary.
-    #[serde(rename = "ifopt:DayType", alias = "DayType", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ifopt:DayType",
+        alias = "DayType",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub day_type: Option<String>,
     /// The times of day the condition applies at.
-    #[serde(rename = "ifopt:Timebands", alias = "Timebands", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "ifopt:Timebands",
+        alias = "Timebands",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub timebands: Vec<Timebands>,
 }
 
@@ -329,7 +419,12 @@ pub struct Timeband {
     #[serde(rename = "ifopt:StartTime", alias = "StartTime")]
     pub start_time: String,
     /// When the band ends, as an `xsd:time`.
-    #[serde(rename = "ifopt:EndTime", alias = "EndTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ifopt:EndTime",
+        alias = "EndTime",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub end_time: Option<String>,
 }
 
@@ -389,10 +484,7 @@ mod tests {
                 "<acsb:MobilityNeed>wheelchair</acsb:MobilityNeed></acsb:UserNeed></Suitability>"
             )
         );
-        assert_eq!(
-            quick_xml::de::from_str::<Suitability>(&xml).unwrap(),
-            suitability
-        );
+        assert_eq!(quick_xml::de::from_str::<Suitability>(&xml).unwrap(), suitability);
     }
 
     #[test]
@@ -401,20 +493,20 @@ mod tests {
         assessment.limitations = Some(AccessibilityLimitations {
             accessibility_limitation: vec![AccessibilityLimitation {
                 validity_condition: Some(ValidityCondition {
-                    from_date_time: Some(
-                        DateTime::parse_from_rfc3339("2004-12-17T09:30:47-05:00").unwrap(),
-                    ),
+                    from_date_time: Some(DateTime::parse_from_rfc3339("2004-12-17T09:30:47-05:00").unwrap()),
                     ..ValidityCondition::default()
                 }),
                 ..AccessibilityLimitation::new(Accessibility::False)
             }],
         });
 
-        let xml =
-            quick_xml::se::to_string_with_root("AccessibilityAssessment", &assessment).unwrap();
+        let xml = quick_xml::se::to_string_with_root("AccessibilityAssessment", &assessment).unwrap();
         assert!(xml.contains(r#"xmlns:acsb="http://www.ifopt.org.uk/acsb""#), "{xml}");
         assert!(xml.contains(r#"xmlns:ifopt="http://www.ifopt.org.uk/ifopt""#), "{xml}");
-        assert!(xml.contains("<acsb:WheelchairAccess>false</acsb:WheelchairAccess>"), "{xml}");
+        assert!(
+            xml.contains("<acsb:WheelchairAccess>false</acsb:WheelchairAccess>"),
+            "{xml}"
+        );
         assert!(xml.contains("<ifopt:FromDateTime>"), "{xml}");
 
         assert_eq!(

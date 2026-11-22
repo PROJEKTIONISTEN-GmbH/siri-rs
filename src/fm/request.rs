@@ -4,13 +4,10 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::model::{
-    ConnectionLinkRef, FacilityRef, FeatureRef, FramedVehicleJourneyRef, InterchangeRef, LineRef,
-    SiteRef, StopPlaceComponentRef, StopPlaceRef, StopPointRef, UserNeed, VehicleJourneyRef,
-    VehicleRef,
+    ConnectionLinkRef, FacilityRef, FeatureRef, FramedVehicleJourneyRef, InterchangeRef, LineRef, SiteRef,
+    StopPlaceComponentRef, StopPlaceRef, StopPointRef, UserNeed, VehicleJourneyRef, VehicleRef,
 };
-use crate::types::{
-    Duration, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier,
-};
+use crate::types::{Duration, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier};
 
 /// A request for the state of the facilities at a place or on a service.
 ///
@@ -135,10 +132,7 @@ impl FacilityMonitoringRequest {
     }
 
     /// A request for the facilities at one stop.
-    pub fn at_stop(
-        request_timestamp: DateTime<FixedOffset>,
-        stop_point_ref: impl Into<StopPointRef>,
-    ) -> Self {
+    pub fn at_stop(request_timestamp: DateTime<FixedOffset>, stop_point_ref: impl Into<StopPointRef>) -> Self {
         Self {
             stop_point_ref: Some(stop_point_ref.into()),
             ..Self::new(request_timestamp)
@@ -235,8 +229,8 @@ mod tests {
             ..FacilityMonitoringRequest::at_stop(timestamp(), "PLACE98765")
         };
 
-        let xml = quick_xml::se::to_string_with_root("FacilityMonitoringRequest", &request)
-            .expect("request serialises");
+        let xml =
+            quick_xml::se::to_string_with_root("FacilityMonitoringRequest", &request).expect("request serialises");
         let preview = xml.find("<PreviewInterval>").expect("the window is written");
         let stop = xml.find("<StopPointRef>").expect("the stop is written");
         let maximum = xml
@@ -244,8 +238,7 @@ mod tests {
             .expect("the policy is written");
         assert!(preview < stop && stop < maximum, "{xml}");
 
-        let read: FacilityMonitoringRequest =
-            quick_xml::de::from_str(&xml).expect("request round-trips");
+        let read: FacilityMonitoringRequest = quick_xml::de::from_str(&xml).expect("request round-trips");
         assert_eq!(read, request);
     }
 
@@ -259,12 +252,14 @@ mod tests {
             ..FacilityMonitoringRequest::new(timestamp())
         };
 
-        let xml = quick_xml::se::to_string_with_root("FacilityMonitoringRequest", &request)
-            .expect("request serialises");
-        assert!(xml.contains("<acsb:MobilityNeed>wheelchair</acsb:MobilityNeed>"), "{xml}");
+        let xml =
+            quick_xml::se::to_string_with_root("FacilityMonitoringRequest", &request).expect("request serialises");
+        assert!(
+            xml.contains("<acsb:MobilityNeed>wheelchair</acsb:MobilityNeed>"),
+            "{xml}"
+        );
 
-        let read: FacilityMonitoringRequest =
-            quick_xml::de::from_str(&xml).expect("request round-trips");
+        let read: FacilityMonitoringRequest = quick_xml::de::from_str(&xml).expect("request round-trips");
         assert_eq!(read, request);
     }
 }

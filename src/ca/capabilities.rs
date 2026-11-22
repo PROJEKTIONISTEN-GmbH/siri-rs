@@ -4,9 +4,9 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::framework::{
-    CoordinateFormat, ErrorCondition, GeneralInteractionCapability, GeneralPermissions,
-    LinePermissions, MonitoringCapabilityAccessControl, OperatorPermissions, PermissionScope,
-    PermissionVersionRef, ServiceRequestError, SubscriptionPolicyCapability, TransportDescription,
+    CoordinateFormat, ErrorCondition, GeneralInteractionCapability, GeneralPermissions, LinePermissions,
+    MonitoringCapabilityAccessControl, OperatorPermissions, PermissionScope, PermissionVersionRef, ServiceRequestError,
+    SubscriptionPolicyCapability, TransportDescription,
 };
 use crate::types::{Duration, Empty, EndpointAddress, Extensions, MessageRef, ParticipantRef};
 use crate::xml::SiriRoot;
@@ -51,7 +51,11 @@ pub struct ControlActionCapabilitiesResponse {
     )]
     pub control_action_service_capabilities: Option<ControlActionServiceCapabilities>,
     /// What participants are allowed to see.
-    #[serde(rename = "ControlActionPermissions", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ControlActionPermissions",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub control_action_permissions: Option<ControlActionPermissions>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -60,10 +64,7 @@ pub struct ControlActionCapabilitiesResponse {
 
 impl ControlActionCapabilitiesResponse {
     /// A successful answer describing the given capabilities.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        capabilities: ControlActionServiceCapabilities,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, capabilities: ControlActionServiceCapabilities) -> Self {
         Self {
             version: None,
             response_timestamp,

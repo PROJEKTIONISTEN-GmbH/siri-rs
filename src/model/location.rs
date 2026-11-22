@@ -156,7 +156,12 @@ pub struct FlexibleArea {
     #[serde(rename = "CircularArea", default, skip_serializing_if = "Option::is_none")]
     pub circular_area: Option<CircularArea>,
     /// The area as a GML polygon.
-    #[serde(rename = "gml:Polygon", alias = "Polygon", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "gml:Polygon",
+        alias = "Polygon",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub polygon: Option<Polygon>,
 }
 
@@ -234,10 +239,20 @@ pub struct Polygon {
     #[serde(rename = "@srsName", default, skip_serializing_if = "Option::is_none")]
     pub srs_name: Option<String>,
     /// The outer boundary.
-    #[serde(rename = "gml:exterior", alias = "exterior", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "gml:exterior",
+        alias = "exterior",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub exterior: Option<RingProperty>,
     /// The boundaries of the holes cut out of it.
-    #[serde(rename = "gml:interior", alias = "interior", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "gml:interior",
+        alias = "interior",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub interior: Vec<RingProperty>,
 }
 
@@ -248,9 +263,7 @@ impl Polygon {
             gml_namespace: gml_namespace(),
             id: id.into(),
             srs_name: None,
-            exterior: Some(RingProperty {
-                linear_ring: exterior,
-            }),
+            exterior: Some(RingProperty { linear_ring: exterior }),
             interior: Vec::new(),
         }
     }
@@ -325,10 +338,7 @@ mod tests {
     #[test]
     fn a_projected_location_reports_its_coordinate_list() {
         let location = Location::coordinates("EPSG:27700", "530000 180000");
-        assert_eq!(
-            location.position(),
-            Some(Position::Coordinates("530000 180000"))
-        );
+        assert_eq!(location.position(), Some(Position::Coordinates("530000 180000")));
     }
 
     #[test]
@@ -370,7 +380,10 @@ mod tests {
         assert_eq!(polygon.exterior.as_ref().unwrap().linear_ring.pos_list.count, Some(4));
 
         let written = quick_xml::se::to_string_with_root("AimedFlexibleArea", &area).unwrap();
-        assert!(written.contains(r#"xmlns:gml="http://www.opengis.net/gml/3.2""#), "{written}");
+        assert!(
+            written.contains(r#"xmlns:gml="http://www.opengis.net/gml/3.2""#),
+            "{written}"
+        );
     }
 
     #[test]
@@ -381,10 +394,7 @@ mod tests {
         });
         assert!(matches!(circle.shape(), Some(FlexibleShape::CircularArea(_))));
 
-        let box_ = FlexibleArea::bounding_box(BoundingBox::new(
-            Location::wgs84(0.0, 53.0),
-            Location::wgs84(0.1, 52.9),
-        ));
+        let box_ = FlexibleArea::bounding_box(BoundingBox::new(Location::wgs84(0.0, 53.0), Location::wgs84(0.1, 52.9)));
         assert!(matches!(box_.shape(), Some(FlexibleShape::BoundingBox(_))));
         assert_eq!(FlexibleArea::default().shape(), None);
     }

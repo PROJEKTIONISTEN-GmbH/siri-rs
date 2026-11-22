@@ -123,11 +123,7 @@ fn write(writer: &mut Writer<Vec<u8>>, event: Event<'_>) -> Result<()> {
 }
 
 fn into_string(bytes: Vec<u8>) -> Result<String> {
-    String::from_utf8(bytes).map_err(|e| {
-        Error::Xml(quick_xml::Error::Encoding(EncodingError::Utf8(
-            e.utf8_error(),
-        )))
-    })
+    String::from_utf8(bytes).map_err(|e| Error::Xml(quick_xml::Error::Encoding(EncodingError::Utf8(e.utf8_error()))))
 }
 
 /// Copies a start tag under the element's local name, declaring `declared` as the
@@ -152,8 +148,7 @@ fn rewrite_start(
     for attr in start.attributes().with_checks(false) {
         let attr = attr.map_err(quick_xml::Error::InvalidAttr)?;
         let key = attr.key.as_ref();
-        let restated = key == b"xmlns"
-            || (key.starts_with(b"xmlns:") && attr.value.as_ref() == NAMESPACE_BYTES);
+        let restated = key == b"xmlns" || (key.starts_with(b"xmlns:") && attr.value.as_ref() == NAMESPACE_BYTES);
         if restated {
             continue;
         }

@@ -51,9 +51,7 @@ impl VehicleMonitoringSource for TrackedVehicles {
             Some(wanted) => self
                 .vehicles
                 .iter()
-                .filter(|activity| {
-                    activity.monitored_vehicle_journey.vehicle_ref.as_ref() == Some(wanted)
-                })
+                .filter(|activity| activity.monitored_vehicle_journey.vehicle_ref.as_ref() == Some(wanted))
                 .cloned()
                 .collect(),
             None => self.vehicles.clone(),
@@ -97,20 +95,11 @@ async fn answer(State(producer): State<SharedProducer>, body: String) -> Respons
     let now = Utc::now().fixed_offset();
     let message: Siri = match siri_rs::from_str(&body) {
         Ok(message) => message,
-        Err(complaint) => {
-            return (
-                StatusCode::BAD_REQUEST,
-                format!("unreadable SIRI: {complaint}\n"),
-            )
-                .into_response()
-        }
+        Err(complaint) => return (StatusCode::BAD_REQUEST, format!("unreadable SIRI: {complaint}\n")).into_response(),
     };
     show("consumer → producer", &message);
 
-    let reply = producer
-        .lock()
-        .expect("the producer is usable")
-        .handle(&message, now);
+    let reply = producer.lock().expect("the producer is usable").handle(&message, now);
     match reply {
         Ok(Some(reply)) => match siri_rs::to_string(&reply) {
             Ok(body) => {

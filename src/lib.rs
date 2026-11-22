@@ -177,8 +177,8 @@ mod xml;
 
 pub use error::{Error, Result};
 pub use framework::{
-    CheckStatusRequest, CheckStatusResponse, HeartbeatNotification, ServiceDelivery, ServiceRequest,
-    Siri, SiriPayload, SubscriptionRequest, SubscriptionResponse,
+    CheckStatusRequest, CheckStatusResponse, HeartbeatNotification, ServiceDelivery, ServiceRequest, Siri, SiriPayload,
+    SubscriptionRequest, SubscriptionResponse,
 };
 pub use types::{Duration, NaturalLanguageString, ParticipantRef, SubscriptionRef};
 pub use xml::{from_str, to_string, to_string_pretty, SiriRoot, NAMESPACE};

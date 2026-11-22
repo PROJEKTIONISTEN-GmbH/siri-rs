@@ -11,12 +11,11 @@
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{
-    AccessFacility, Accessibility, AccommodationFacility, AssistanceFacility, CountedFeatureUnit,
-    CountingTrend, CountingType, DaysOfWeek, EquipmentStatus, FacilityCategory, FareClassFacility,
-    HireFacility,
-    HolidayType, LuggageFacility, MobilityFacility, MonitoringType, NuisanceFacility,
-    ParkingFacility, PassengerCommsFacility, PassengerInformationFacility, RefreshmentFacility,
-    RemedyType, ReservedSpaceFacility, RetailFacility, SanitaryFacility, TicketingFacility,
+    AccessFacility, Accessibility, AccommodationFacility, AssistanceFacility, CountedFeatureUnit, CountingTrend,
+    CountingType, DaysOfWeek, EquipmentStatus, FacilityCategory, FareClassFacility, HireFacility, HolidayType,
+    LuggageFacility, MobilityFacility, MonitoringType, NuisanceFacility, ParkingFacility, PassengerCommsFacility,
+    PassengerInformationFacility, RefreshmentFacility, RemedyType, ReservedSpaceFacility, RetailFacility,
+    SanitaryFacility, TicketingFacility,
 };
 use crate::model::accessibility::{acsb_namespace, AccessibilityAssessment, Suitabilities};
 use crate::model::formation::{
@@ -25,14 +24,13 @@ use crate::model::formation::{
 use crate::model::journey::CompoundTrainRef;
 use crate::model::location::Location;
 use crate::model::reference::{
-    ConnectionLinkRef, DatedVehicleJourneyRef, EquipmentRef, EquipmentTypeRef, FacilityRef,
-    FeatureRef, InterchangeRef, LineRef, OperatorRef, OrganisationRef, ProductCategoryRef,
-    ServiceFeatureRef, SituationRef, StopPlaceComponentRef, StopPlaceRef, StopPointRef,
-    VehicleFeatureRef, VehicleRef,
+    ConnectionLinkRef, DatedVehicleJourneyRef, EquipmentRef, EquipmentTypeRef, FacilityRef, FeatureRef, InterchangeRef,
+    LineRef, OperatorRef, OrganisationRef, ProductCategoryRef, ServiceFeatureRef, SituationRef, StopPlaceComponentRef,
+    StopPlaceRef, StopPointRef, VehicleFeatureRef, VehicleRef,
 };
 use crate::types::{
-    Duration, Extensions, HalfOpenTimeRange, HalfOpenTimestampInputRange,
-    HalfOpenTimestampOutputRange, NaturalLanguageString,
+    Duration, Extensions, HalfOpenTimeRange, HalfOpenTimestampInputRange, HalfOpenTimestampOutputRange,
+    NaturalLanguageString,
 };
 
 /// Something passengers use, described in enough detail to be recognised.
@@ -168,19 +166,44 @@ pub struct FacilityLimitations {
     #[serde(rename = "acsb:WheelchairAccess", alias = "WheelchairAccess")]
     pub wheelchair_access: Accessibility,
     /// Whether using it avoids steps.
-    #[serde(rename = "acsb:StepFreeAccess", alias = "StepFreeAccess", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:StepFreeAccess",
+        alias = "StepFreeAccess",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub step_free_access: Option<Accessibility>,
     /// Whether using it avoids escalators.
-    #[serde(rename = "acsb:EscalatorFreeAccess", alias = "EscalatorFreeAccess", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:EscalatorFreeAccess",
+        alias = "EscalatorFreeAccess",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub escalator_free_access: Option<Accessibility>,
     /// Whether using it avoids lifts.
-    #[serde(rename = "acsb:LiftFreeAccess", alias = "LiftFreeAccess", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:LiftFreeAccess",
+        alias = "LiftFreeAccess",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub lift_free_access: Option<Accessibility>,
     /// Whether it signals audibly.
-    #[serde(rename = "acsb:AudibleSignalsAvailable", alias = "AudibleSignalsAvailable", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:AudibleSignalsAvailable",
+        alias = "AudibleSignalsAvailable",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub audible_signals_available: Option<Accessibility>,
     /// Whether it signals visually.
-    #[serde(rename = "acsb:VisualSignsAvailable", alias = "VisualSignsAvailable", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "acsb:VisualSignsAvailable",
+        alias = "VisualSignsAvailable",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub visual_signs_available: Option<Accessibility>,
 }
 
@@ -511,10 +534,7 @@ pub enum FacilitySubject<'a> {
 
 impl FacilityCondition {
     /// The state of a facility the consumer already knows by reference.
-    pub fn for_reference(
-        facility_ref: impl Into<FacilityRef>,
-        facility_status: FacilityStatus,
-    ) -> Self {
+    pub fn for_reference(facility_ref: impl Into<FacilityRef>, facility_status: FacilityStatus) -> Self {
         Self::new(None, Some(facility_ref.into()), facility_status)
     }
 
@@ -523,11 +543,7 @@ impl FacilityCondition {
         Self::new(Some(facility), None, facility_status)
     }
 
-    fn new(
-        facility: Option<Facility>,
-        facility_ref: Option<FacilityRef>,
-        facility_status: FacilityStatus,
-    ) -> Self {
+    fn new(facility: Option<Facility>, facility_ref: Option<FacilityRef>, facility_status: FacilityStatus) -> Self {
         Self {
             facility,
             facility_ref,
@@ -666,10 +682,8 @@ mod tests {
 
     #[test]
     fn a_condition_reports_whether_it_describes_its_facility_or_refers_to_one() {
-        let referred = FacilityCondition::for_reference(
-            "LIFT-4",
-            FacilityStatus::new(FacilityStatusValue::NotAvailable),
-        );
+        let referred =
+            FacilityCondition::for_reference("LIFT-4", FacilityStatus::new(FacilityStatusValue::NotAvailable));
         assert!(matches!(referred.subject(), Some(FacilitySubject::Reference(r)) if r.as_str() == "LIFT-4"));
 
         let described = FacilityCondition::for_facility(
@@ -697,8 +711,14 @@ mod tests {
         };
 
         let xml = quick_xml::se::to_string_with_root("Facility", &facility).expect("serialises");
-        assert!(xml.contains("<Features><Feature><AccessFacility>lift</AccessFacility></Feature></Features>"), "{xml}");
-        assert!(xml.contains("<acsb:WheelchairAccess>true</acsb:WheelchairAccess>"), "{xml}");
+        assert!(
+            xml.contains("<Features><Feature><AccessFacility>lift</AccessFacility></Feature></Features>"),
+            "{xml}"
+        );
+        assert!(
+            xml.contains("<acsb:WheelchairAccess>true</acsb:WheelchairAccess>"),
+            "{xml}"
+        );
         assert!(xml.contains("<Suitabilities><Suitability"), "{xml}");
 
         let read: Facility = quick_xml::de::from_str(&xml).expect("round-trips");

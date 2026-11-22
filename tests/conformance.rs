@@ -12,9 +12,7 @@
 mod support;
 
 use siri_rs::sx::RoadSituationElement;
-use support::{
-    compare, parse, round_trip, validate_fixture, validator_available, Fixture, VALIDATOR_MISSING,
-};
+use support::{compare, parse, round_trip, validate_fixture, validator_available, Fixture, VALIDATOR_MISSING};
 
 /// Reads every document, writes it back and reports each one that lost, invented or
 /// reordered content.
@@ -283,14 +281,22 @@ fn included_situations_are_written_ahead_of_the_deliveries_they_accompany() {
     ));
     let message = Siri::new(
         "2.0",
-        ServiceDelivery::new(now, "KUBRICK", vec![board("first"), situations.clone(), board("second")]),
+        ServiceDelivery::new(
+            now,
+            "KUBRICK",
+            vec![board("first"), situations.clone(), board("second")],
+        ),
     );
 
     let xml = siri_rs::to_string(&message).expect("the message writes");
 
-    let included = xml.find("<IncludedSituationExchangeDelivery").expect("the situations are written");
+    let included = xml
+        .find("<IncludedSituationExchangeDelivery")
+        .expect("the situations are written");
     let first = xml.find("<SubscriptionRef>first").expect("the first board is written");
-    let second = xml.find("<SubscriptionRef>second").expect("the second board is written");
+    let second = xml
+        .find("<SubscriptionRef>second")
+        .expect("the second board is written");
     assert!(included < first && first < second, "{xml}");
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     support::validate(&xml).unwrap_or_else(|complaint| panic!("{xml}\n{complaint}"));

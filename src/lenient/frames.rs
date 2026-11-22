@@ -154,7 +154,9 @@ mod tests {
 
         let read = admitting(true, || read_delivery(FRAME_WITHOUT_JOURNEY)).expect("the frame is admitted");
         assert_eq!(read.estimated_journey_version_frame.len(), 1);
-        assert!(read.estimated_journey_version_frame[0].estimated_vehicle_journey.is_empty());
+        assert!(read.estimated_journey_version_frame[0]
+            .estimated_vehicle_journey
+            .is_empty());
 
         let refused = admitting(false, || read_delivery(FRAME_WITHOUT_JOURNEY)).expect_err("nothing is admitted");
         assert_eq!(refused.to_string(), "missing field `EstimatedVehicleJourney`");
@@ -223,7 +225,10 @@ mod tests {
                 "ServiceDelivery.EstimatedTimetableDelivery[0].EstimatedJourneyVersionFrame[12].EstimatedVehicleJourney[0]",
             ]
         );
-        let read_as_empty: Vec<&str> = findings.read_as_empty().map(|finding| finding.discarded.path()).collect();
+        let read_as_empty: Vec<&str> = findings
+            .read_as_empty()
+            .map(|finding| finding.discarded.path())
+            .collect();
         assert_eq!(read_as_empty, [paths[0], paths[2], paths[3]]);
     }
 }

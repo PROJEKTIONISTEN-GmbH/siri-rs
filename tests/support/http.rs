@@ -52,8 +52,7 @@ impl Wire {
     /// Records one message and validates it against the official schemas.
     fn saw(&self, direction: &str, xml: &str) {
         let mut log = self.0.lock().expect("the log is usable");
-        log.exchanged
-            .push(format!("{direction}: {}", payload_name(xml)));
+        log.exchanged.push(format!("{direction}: {}", payload_name(xml)));
         if let Err(complaint) = validate(xml) {
             log.invalid.push(format!("{direction}:\n{xml}\n{complaint}"));
         }
@@ -190,22 +189,15 @@ where
     loop {
         ticker.tick().await;
         let now = Utc::now().fixed_offset();
-        let due = state
-            .producer
-            .lock()
-            .expect("the producer is usable")
-            .poll(now);
+        let due = state.producer.lock().expect("the producer is usable").poll(now);
         for outbound in due {
             send(&state, &client, &outbound).await;
         }
     }
 }
 
-async fn send<Src, Svc>(
-    state: &ProducerState<Src, Svc>,
-    client: &reqwest::Client,
-    outbound: &Outbound,
-) where
+async fn send<Src, Svc>(state: &ProducerState<Src, Svc>, client: &reqwest::Client, outbound: &Outbound)
+where
     Src: Source<Svc> + Send + 'static,
     Svc: Service,
 {
@@ -272,9 +264,7 @@ where
     pub async fn start(consumer: Consumer<Svc>, wire: Wire) -> Self {
         let (address, listener) = bind().await;
         let (sender, events) = mpsc::unbounded_channel();
-        let consumer = Arc::new(Mutex::new(
-            consumer.at_address(format!("http://{address}/siri")),
-        ));
+        let consumer = Arc::new(Mutex::new(consumer.at_address(format!("http://{address}/siri"))));
         let state = ConsumerState {
             consumer: consumer.clone(),
             events: sender,
@@ -315,10 +305,7 @@ where
 
     /// The message closing every subscription this consumer holds.
     pub fn terminate_all(&mut self, now: DateTime<FixedOffset>) -> Siri {
-        self.consumer
-            .lock()
-            .expect("the consumer is usable")
-            .terminate_all(now)
+        self.consumer.lock().expect("the consumer is usable").terminate_all(now)
     }
 
     /// What the consumer makes of a message that reached it as an answer.

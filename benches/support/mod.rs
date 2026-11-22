@@ -32,8 +32,7 @@ pub fn case(name: &'static str) -> Case {
     let path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("tests/fixtures/xml")
         .join(name);
-    let xml = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
+    let xml = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
     Case { name, xml }
 }
 

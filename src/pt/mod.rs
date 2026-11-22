@@ -66,9 +66,8 @@ pub mod delivery;
 pub mod request;
 
 pub use capabilities::{
-    ProductionTimetableCapabilitiesResponse, ProductionTimetablePermissions,
-    ProductionTimetableServiceCapabilities, ProductionTimetableSubscriptionPolicy,
-    ProductionTimetableTopicFiltering,
+    ProductionTimetableCapabilitiesResponse, ProductionTimetablePermissions, ProductionTimetableServiceCapabilities,
+    ProductionTimetableSubscriptionPolicy, ProductionTimetableTopicFiltering,
 };
 pub use delivery::{DatedTimetableVersionFrame, ProductionTimetableDelivery};
 pub use request::{ProductionTimetableRequest, ProductionTimetableSubscriptionRequest};

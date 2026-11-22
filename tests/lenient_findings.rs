@@ -20,7 +20,9 @@ use siri_rs::et::{EstimatedTimetableRequest, EstimatedVersionFrame};
 use siri_rs::framework::{DataSupplyRequest, ServiceDeliveryPayload, SiriPayload};
 use siri_rs::lenient::{self, Discarded, Findings};
 use siri_rs::model::EstimatedVehicleJourney;
-use siri_rs::pubsub::{Consumer, EstimatedTimetable, EstimatedTimetableSource, Producer, ProducerConfig, PROTOCOL_VERSION};
+use siri_rs::pubsub::{
+    Consumer, EstimatedTimetable, EstimatedTimetableSource, Producer, ProducerConfig, PROTOCOL_VERSION,
+};
 use siri_rs::Siri;
 use support::mutation::{copy, element, emptied, insert_after, insert_before, remove, replace, with_text};
 
@@ -53,8 +55,8 @@ fn every_document_the_strict_reader_accepts_reads_the_same_with_no_findings() {
         if support::root_element(&fixture.xml) != "Siri" {
             continue;
         }
-        let expected = siri_rs::from_str::<Siri>(&fixture.xml)
-            .unwrap_or_else(|e| panic!("{}: reads strictly: {e}", fixture.name));
+        let expected =
+            siri_rs::from_str::<Siri>(&fixture.xml).unwrap_or_else(|e| panic!("{}: reads strictly: {e}", fixture.name));
         let (actual, findings) =
             lenient::from_str(&fixture.xml).unwrap_or_else(|e| panic!("{}: reads leniently: {e}", fixture.name));
         assert_eq!(actual, expected, "{}", fixture.name);
@@ -346,10 +348,12 @@ fn the_catalogue_of_faults_costs_exactly_what_each_fault_touches() {
         let label = format!("{} / {:?} / {}", case.class, case.position, case.fixture);
         let example = fixture(case.fixture);
         let broken = case.fault.apply(&example);
-        assert!(siri_rs::from_str::<Siri>(&broken).is_err(), "{label}: the strict reader refuses it");
+        assert!(
+            siri_rs::from_str::<Siri>(&broken).is_err(),
+            "{label}: the strict reader refuses it"
+        );
 
-        let (read, findings) =
-            lenient::from_str(&broken).unwrap_or_else(|e| panic!("{label}: reads leniently: {e}"));
+        let (read, findings) = lenient::from_str(&broken).unwrap_or_else(|e| panic!("{label}: reads leniently: {e}"));
 
         assert_eq!(read, strict(&case.repair.apply(&example)), "{label}");
         assert_eq!(findings.len(), 1, "{label}: {findings:?}");
@@ -369,7 +373,11 @@ fn the_catalogue_of_faults_costs_exactly_what_each_fault_touches() {
         );
         match case.position {
             Position::Optional => {
-                assert_eq!(finding.discarded.path(), finding.path, "{label}: only the element at fault goes");
+                assert_eq!(
+                    finding.discarded.path(),
+                    finding.path,
+                    "{label}: only the element at fault goes"
+                );
             }
             Position::Mandatory => assert!(
                 finding.path.starts_with(finding.discarded.path()),
@@ -380,8 +388,14 @@ fn the_catalogue_of_faults_costs_exactly_what_each_fault_touches() {
         *covered.entry((case.class, case.position)).or_default() += 1;
     }
     for class in ["empty timestamp", "missing mandatory element", "broken number"] {
-        assert!(covered.contains_key(&(class, Position::Optional)), "{class} in an optional position");
-        assert!(covered.contains_key(&(class, Position::Mandatory)), "{class} in a mandatory position");
+        assert!(
+            covered.contains_key(&(class, Position::Optional)),
+            "{class} in an optional position"
+        );
+        assert!(
+            covered.contains_key(&(class, Position::Mandatory)),
+            "{class} in a mandatory position"
+        );
     }
 }
 
@@ -469,7 +483,11 @@ fn records_after_an_interruption_of_their_list_are_left_out_one_by_one() {
         let example = fixture(case.fixture);
         let straggler = copy_named(&example, case.record, 0, case.identifier, "STRAGGLER");
         let broken = insert_after(&example, case.after, 0, &straggler);
-        assert!(siri_rs::from_str::<Siri>(&broken).is_err(), "{}: the reader is order-sensitive", case.fixture);
+        assert!(
+            siri_rs::from_str::<Siri>(&broken).is_err(),
+            "{}: the reader is order-sensitive",
+            case.fixture
+        );
 
         let (read, findings) = lenient(&broken);
 
@@ -502,11 +520,19 @@ fn several_faults_in_one_document_are_each_reported_in_document_order() {
     // Situations S1 and S3 lose their creation time, S4 the time its source was
     // heard from; the original and S2 are untouched. A situation carries a second
     // CreationTime in the situation it refers to, so its own is every other one.
-    let broken = emptied(&emptied(&emptied(&document, "CreationTime", 2), "CreationTime", 6), "TimeOfCommunication", 4);
+    let broken = emptied(
+        &emptied(&emptied(&document, "CreationTime", 2), "CreationTime", 6),
+        "TimeOfCommunication",
+        4,
+    );
 
     let (read, findings) = lenient(&broken);
 
-    let expected = remove(&remove(&remove(&document, "TimeOfCommunication", 4), "PtSituationElement", 3), "PtSituationElement", 1);
+    let expected = remove(
+        &remove(&remove(&document, "TimeOfCommunication", 4), "PtSituationElement", 3),
+        "PtSituationElement",
+        1,
+    );
     assert_eq!(read, strict(&expected));
     let reported: Vec<(&str, Option<&str>)> = findings
         .iter()
@@ -537,7 +563,12 @@ fn several_faults_in_one_document_are_each_reported_in_document_order() {
 #[test]
 fn a_delivery_left_out_reports_every_record_in_it() {
     let stop_monitoring = fixture(SM);
-    let both = insert_after(&stop_monitoring, "StopMonitoringDelivery", 0, &copy(&situations(1), "SituationExchangeDelivery", 0));
+    let both = insert_after(
+        &stop_monitoring,
+        "StopMonitoringDelivery",
+        0,
+        &copy(&situations(1), "SituationExchangeDelivery", 0),
+    );
     // The third ResponseTimestamp is the situation exchange delivery's own.
     let broken = emptied(&both, "ResponseTimestamp", 2);
 
@@ -550,16 +581,32 @@ fn a_delivery_left_out_reports_every_record_in_it() {
         .map(|finding| {
             assert_eq!(finding.path, format!("{delivery}.ResponseTimestamp"));
             assert_eq!(finding.reason, "premature end of input");
-            (finding.discarded.unit_name().expect("a unit"), finding.discarded.path(), finding.discarded.identifier())
+            (
+                finding.discarded.unit_name().expect("a unit"),
+                finding.discarded.path(),
+                finding.discarded.identifier(),
+            )
         })
         .collect();
     assert_eq!(
         reported,
         vec![
             ("SituationExchangeDelivery", delivery, None),
-            ("PtSituationElement", &*format!("{delivery}.Situations.PtSituationElement[0]"), Some("000354")),
-            ("PtSituationElement", &*format!("{delivery}.Situations.PtSituationElement[1]"), Some("S1")),
-            ("RoadSituationElement", &*format!("{delivery}.Situations.RoadSituationElement[0]"), Some("000354")),
+            (
+                "PtSituationElement",
+                &*format!("{delivery}.Situations.PtSituationElement[0]"),
+                Some("000354")
+            ),
+            (
+                "PtSituationElement",
+                &*format!("{delivery}.Situations.PtSituationElement[1]"),
+                Some("S1")
+            ),
+            (
+                "RoadSituationElement",
+                &*format!("{delivery}.Situations.RoadSituationElement[0]"),
+                Some("000354")
+            ),
         ]
     );
 }
@@ -602,7 +649,10 @@ fn what_the_producer_writes_for_no_journeys_reads_back_as_written() {
         let finding = findings.iter().next().expect("one finding");
         assert_eq!(finding.path, frame, "{label}");
         assert_eq!(finding.reason, NO_JOURNEY, "{label}");
-        assert!(matches!(&finding.discarded, Discarded::Nothing { path } if *path == frame), "{label}: {finding:?}");
+        assert!(
+            matches!(&finding.discarded, Discarded::Nothing { path } if *path == frame),
+            "{label}: {finding:?}"
+        );
         assert_eq!(finding.discarded.path(), frame, "{label}");
         assert!(!finding.discarded.is_unit(), "{label}");
         assert_eq!(finding.discarded.unit_name(), None, "{label}");
@@ -611,7 +661,11 @@ fn what_the_producer_writes_for_no_journeys_reads_back_as_written() {
         assert_eq!(findings.units().count(), 0, "{label}");
         assert_eq!(findings.elements().count(), 0, "{label}");
         assert_eq!(findings.by_reason(), BTreeMap::from([(NO_JOURNEY, 1)]), "{label}");
-        assert_eq!(finding.to_string(), format!("{frame}: {NO_JOURNEY}; read as holding none"), "{label}");
+        assert_eq!(
+            finding.to_string(),
+            format!("{frame}: {NO_JOURNEY}; read as holding none"),
+            "{label}"
+        );
     }
 }
 
@@ -630,7 +684,13 @@ fn a_frame_whose_journeys_are_all_left_out_reads_as_holding_none() {
     assert_eq!(read, expected);
     let reported: Vec<(&str, &str, Option<&str>)> = findings
         .iter()
-        .map(|finding| (finding.reason.as_str(), finding.discarded.path(), finding.discarded.identifier()))
+        .map(|finding| {
+            (
+                finding.reason.as_str(),
+                finding.discarded.path(),
+                finding.discarded.identifier(),
+            )
+        })
         .collect();
     assert_eq!(
         reported,
@@ -651,7 +711,11 @@ fn a_frame_without_a_journey_is_reported_in_document_order() {
     let example = fixture(ET);
     let recorded = copy(&example, "RecordedAtTime", 0);
     let empty_frame = format!("<EstimatedJourneyVersionFrame>{recorded}</EstimatedJourneyVersionFrame>");
-    let broken = remove(&insert_before(&example, "EstimatedJourneyVersionFrame", 0, &empty_frame), "LineRef", 1);
+    let broken = remove(
+        &insert_before(&example, "EstimatedJourneyVersionFrame", 0, &empty_frame),
+        "LineRef",
+        1,
+    );
 
     let (read, findings) = lenient(&broken);
 
@@ -667,7 +731,10 @@ fn a_frame_without_a_journey_is_reported_in_document_order() {
         reported,
         vec![
             (&*format!("{ET_FRAME}[0]"), None),
-            (&*format!("{ET_FRAME}[1].EstimatedVehicleJourney[1]"), Some("EstimatedVehicleJourney")),
+            (
+                &*format!("{ET_FRAME}[1].EstimatedVehicleJourney[1]"),
+                Some("EstimatedVehicleJourney")
+            ),
         ]
     );
 }
@@ -678,7 +745,11 @@ fn a_frame_without_a_journey_is_reported_in_document_order() {
 fn a_frame_without_a_journey_in_a_delivery_left_out_goes_with_the_delivery() {
     let stop_monitoring = fixture(SM);
     let timetable = copy(&fixture(ET), "EstimatedTimetableDelivery", 0);
-    let without_journeys = remove(&remove(&timetable, "EstimatedVehicleJourney", 1), "EstimatedVehicleJourney", 0);
+    let without_journeys = remove(
+        &remove(&timetable, "EstimatedVehicleJourney", 1),
+        "EstimatedVehicleJourney",
+        0,
+    );
     let broken_delivery = emptied(&without_journeys, "ResponseTimestamp", 0);
     let broken = insert_after(&stop_monitoring, "StopMonitoringDelivery", 0, &broken_delivery);
 
@@ -687,7 +758,10 @@ fn a_frame_without_a_journey_in_a_delivery_left_out_goes_with_the_delivery() {
     assert_eq!(read, strict(&stop_monitoring));
     assert_eq!(findings.len(), 1, "{findings:?}");
     let finding = findings.iter().next().expect("one finding");
-    assert_eq!(finding.path, "ServiceDelivery.EstimatedTimetableDelivery[1].ResponseTimestamp");
+    assert_eq!(
+        finding.path,
+        "ServiceDelivery.EstimatedTimetableDelivery[1].ResponseTimestamp"
+    );
     assert_eq!(finding.discarded.unit_name(), Some("EstimatedTimetableDelivery"));
     assert_eq!(findings.read_as_empty().count(), 0);
 }
@@ -732,7 +806,12 @@ fn journeys(siri: &Siri) -> Vec<&str> {
             _ => None,
         })
         .flat_map(|timetable| timetable.journeys())
-        .map(|journey| journey.dated_vehicle_journey_ref.as_ref().map_or("", |reference| reference.as_str()))
+        .map(|journey| {
+            journey
+                .dated_vehicle_journey_ref
+                .as_ref()
+                .map_or("", |reference| reference.as_str())
+        })
         .collect()
 }
 
@@ -755,7 +834,14 @@ fn paths_count_the_document_as_it_arrived() {
     let document = situations(2);
     let broken = emptied(&emptied(&document, "CreationTime", 0), "CreationTime", 4);
     let (read, findings) = lenient(&broken);
-    assert_eq!(read, strict(&remove(&remove(&document, "PtSituationElement", 2), "PtSituationElement", 0)));
+    assert_eq!(
+        read,
+        strict(&remove(
+            &remove(&document, "PtSituationElement", 2),
+            "PtSituationElement",
+            0
+        ))
+    );
     let paths: Vec<&str> = findings.iter().map(|finding| finding.discarded.path()).collect();
     let situations = "ServiceDelivery.SituationExchangeDelivery[0].Situations.PtSituationElement";
     assert_eq!(paths, vec![&*format!("{situations}[0]"), &*format!("{situations}[2]")]);
@@ -764,7 +850,10 @@ fn paths_count_the_document_as_it_arrived() {
     let example = fixture(ET);
     let broken = remove(&remove(&example, "StopPointRef", 2), "StopPointRef", 0);
     let (read, findings) = lenient(&broken);
-    assert_eq!(read, strict(&remove(&remove(&example, "EstimatedCall", 2), "EstimatedCall", 0)));
+    assert_eq!(
+        read,
+        strict(&remove(&remove(&example, "EstimatedCall", 2), "EstimatedCall", 0))
+    );
     let paths: Vec<&str> = findings.iter().map(|finding| finding.discarded.path()).collect();
     let calls = format!("{ET_JOURNEY}[0].EstimatedCalls.EstimatedCall");
     assert_eq!(paths, vec![&*format!("{calls}[0]"), &*format!("{calls}[2]")]);
@@ -774,7 +863,9 @@ fn paths_count_the_document_as_it_arrived() {
 fn what_is_wrong_with_the_document_rather_than_in_it_is_the_ordinary_error() {
     let example = fixture(SM);
     let unclosed = example.trim_end().trim_end_matches("</Siri>").to_string();
-    let wrong_root = example.replacen("<Siri ", "<Sirius ", 1).replacen("</Siri>", "</Sirius>", 1);
+    let wrong_root = example
+        .replacen("<Siri ", "<Sirius ", 1)
+        .replacen("</Siri>", "</Sirius>", 1);
     let no_payload = r#"<Siri xmlns="http://www.siri.org.uk/siri" version="2.0"></Siri>"#.to_string();
     let wrong_namespace = example.replacen("http://www.siri.org.uk/siri", "http://example.org/not-siri", 1);
     let second_root = format!("{}<Siri/>", example.trim_end());
@@ -816,10 +907,19 @@ const UNITS: &[(&str, &str)] = &[
     ("ConnectionTimetableDelivery", "TimetabledFeederArrival"),
     ("ConnectionTimetableDelivery", "TimetabledFeederArrivalCancellation"),
     ("ConnectionMonitoringFeederDelivery", "MonitoredFeederArrival"),
-    ("ConnectionMonitoringFeederDelivery", "MonitoredFeederArrivalCancellation"),
+    (
+        "ConnectionMonitoringFeederDelivery",
+        "MonitoredFeederArrivalCancellation",
+    ),
     ("ConnectionMonitoringDistributorDelivery", "WaitProlongedDeparture"),
-    ("ConnectionMonitoringDistributorDelivery", "StoppingPositionChangedDeparture"),
-    ("ConnectionMonitoringDistributorDelivery", "DistributorDepartureCancellation"),
+    (
+        "ConnectionMonitoringDistributorDelivery",
+        "StoppingPositionChangedDeparture",
+    ),
+    (
+        "ConnectionMonitoringDistributorDelivery",
+        "DistributorDepartureCancellation",
+    ),
     ("GeneralMessageDelivery", "GeneralMessage"),
     ("GeneralMessageDelivery", "GeneralMessageCancellation"),
     ("FacilityMonitoringDelivery", "FacilityCondition"),
@@ -916,8 +1016,14 @@ fn units_in(xml: &str) -> usize {
     loop {
         let (name, opens) = match reader.read_event().expect("well-formed") {
             Event::Eof => break,
-            Event::Start(element) => (String::from_utf8_lossy(element.local_name().as_ref()).into_owned(), true),
-            Event::Empty(element) => (String::from_utf8_lossy(element.local_name().as_ref()).into_owned(), false),
+            Event::Start(element) => (
+                String::from_utf8_lossy(element.local_name().as_ref()).into_owned(),
+                true,
+            ),
+            Event::Empty(element) => (
+                String::from_utf8_lossy(element.local_name().as_ref()).into_owned(),
+                false,
+            ),
             Event::End(_) => {
                 stack.pop();
                 continue;
@@ -925,7 +1031,9 @@ fn units_in(xml: &str) -> usize {
             _ => continue,
         };
         if let Some(parent) = stack.last() {
-            let record = UNITS.iter().any(|(container, unit)| container == parent && *unit == name);
+            let record = UNITS
+                .iter()
+                .any(|(container, unit)| container == parent && *unit == name);
             let delivery = parent == "ServiceDelivery" && !SERVICE_DELIVERY_OWN.contains(&name.as_str());
             if record || delivery {
                 units += 1;
@@ -1018,7 +1126,10 @@ fn a_randomly_damaged_document_never_panics_and_never_loses_a_unit_quietly() {
             read += 1;
             for finding in &findings {
                 assert!(finding.path.starts_with("ServiceDelivery."), "{label}: {finding}");
-                assert!(finding.discarded.path().starts_with("ServiceDelivery."), "{label}: {finding}");
+                assert!(
+                    finding.discarded.path().starts_with("ServiceDelivery."),
+                    "{label}: {finding}"
+                );
                 assert!(!finding.reason.is_empty(), "{label}: {finding}");
             }
             match siri_rs::from_str::<Siri>(&damaged) {
@@ -1027,7 +1138,10 @@ fn a_randomly_damaged_document_never_panics_and_never_loses_a_unit_quietly() {
                     assert!(findings.is_empty(), "{label}: {findings:?}");
                 }
                 Err(_) => {
-                    assert!(!findings.is_empty(), "{label}: read differently from the strict reader with nothing to report");
+                    assert!(
+                        !findings.is_empty(),
+                        "{label}: read differently from the strict reader with nothing to report"
+                    );
                     reported += 1;
                 }
             }

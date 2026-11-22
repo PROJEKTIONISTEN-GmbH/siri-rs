@@ -30,12 +30,7 @@ fn nothing_internal_is_shipped() {
         for (number, line) in text.lines().enumerate() {
             for needle in FORBIDDEN {
                 if line.contains(needle) {
-                    findings.push(format!(
-                        "{}:{}: {needle} — {}",
-                        display(&path),
-                        number + 1,
-                        line.trim()
-                    ));
+                    findings.push(format!("{}:{}: {needle} — {}", display(&path), number + 1, line.trim()));
                 }
             }
             if let Some(reference) = development_reference(line) {
@@ -123,8 +118,7 @@ fn published_files() -> Vec<PathBuf> {
 const THIS_FILE: &str = "publish_hygiene.rs";
 
 fn collect(dir: &Path, out: &mut Vec<PathBuf>) {
-    for entry in std::fs::read_dir(dir).unwrap_or_else(|e| panic!("cannot read {}: {e}", dir.display()))
-    {
+    for entry in std::fs::read_dir(dir).unwrap_or_else(|e| panic!("cannot read {}: {e}", dir.display())) {
         let path = entry.expect("readable directory entry").path();
         if path.is_dir() {
             collect(&path, out);
@@ -258,8 +252,7 @@ fn the_check_would_catch_doc_test_scaffolding() {
     assert!(doc_test_scaffolding_in("```rust\nlet answer = 42;\n```\n").is_empty());
     assert!(doc_test_scaffolding_in("# A heading\n\nAnd prose about `#`.\n").is_empty());
     assert!(
-        doc_test_scaffolding_in("```sh\ncargo run --example one  # in one terminal\n```\n")
-            .is_empty(),
+        doc_test_scaffolding_in("```sh\ncargo run --example one  # in one terminal\n```\n").is_empty(),
         "a comment at the end of a line is not scaffolding"
     );
     assert!(
@@ -307,7 +300,9 @@ fn the_lenient_feature_is_declared_and_shown() {
     let manifest = std::fs::read_to_string(root.join("Cargo.toml")).expect("readable manifest");
     let features = section(&manifest, "[features]");
     assert!(
-        features.lines().any(|line| line.trim_start().starts_with("lenient = [")),
+        features
+            .lines()
+            .any(|line| line.trim_start().starts_with("lenient = [")),
         "the manifest declares the `lenient` feature"
     );
     let docs_rs = section(&manifest, "[package.metadata.docs.rs]");

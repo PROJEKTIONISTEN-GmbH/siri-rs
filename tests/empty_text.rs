@@ -84,19 +84,23 @@ fn deliveries(document: &Siri) -> &[ServiceDeliveryPayload] {
 
 /// The summaries of every situation in the delivery, public-transport ones first.
 fn summaries(document: &Siri) -> Vec<&DefaultedText> {
-    let Some(ServiceDeliveryPayload::SituationExchangeDelivery(delivery)) = deliveries(document).first()
-    else {
+    let Some(ServiceDeliveryPayload::SituationExchangeDelivery(delivery)) = deliveries(document).first() else {
         panic!("the delivery is a situation exchange delivery");
     };
     let situations = delivery.situations.as_ref().expect("the delivery carries situations");
-    let pt = situations.pt_situation_element.iter().flat_map(|situation| &situation.summary);
-    let road = situations.road_situation_element.iter().flat_map(|situation| &situation.summary);
+    let pt = situations
+        .pt_situation_element
+        .iter()
+        .flat_map(|situation| &situation.summary);
+    let road = situations
+        .road_situation_element
+        .iter()
+        .flat_map(|situation| &situation.summary);
     pt.chain(road).collect()
 }
 
 fn published_line_names(document: &Siri) -> Vec<&NaturalLanguageString> {
-    let Some(ServiceDeliveryPayload::VehicleMonitoringDelivery(delivery)) = deliveries(document).first()
-    else {
+    let Some(ServiceDeliveryPayload::VehicleMonitoringDelivery(delivery)) = deliveries(document).first() else {
         panic!("the delivery is a vehicle monitoring delivery");
     };
     delivery
@@ -107,8 +111,7 @@ fn published_line_names(document: &Siri) -> Vec<&NaturalLanguageString> {
 }
 
 fn flexible_area_positions(document: &Siri) -> &PosList {
-    let Some(ServiceDeliveryPayload::EstimatedTimetableDelivery(delivery)) = deliveries(document).first()
-    else {
+    let Some(ServiceDeliveryPayload::EstimatedTimetableDelivery(delivery)) = deliveries(document).first() else {
         panic!("the delivery is an estimated timetable delivery");
     };
     let call = delivery
@@ -142,7 +145,10 @@ fn an_empty_summary_is_read_as_empty_text_and_the_situations_around_it_are_kept(
         assert_eq!(summaries[0].value, "", "{empty}");
         assert_eq!(summaries[0].lang.as_deref(), lang, "{empty}");
         assert_eq!(summaries[0].overridden, None, "{empty}");
-        assert_eq!(summaries[1].value, "Jam on the access road to Barchester Station", "{empty}");
+        assert_eq!(
+            summaries[1].value, "Jam on the access road to Barchester Station",
+            "{empty}"
+        );
     }
 }
 
@@ -195,9 +201,15 @@ fn an_empty_text_is_written_as_it_stands_even_though_the_schema_refuses_it() {
     let document = read_whole(&xml);
     let written = siri_rs::to_string(&document).expect("the document writes");
 
-    assert_eq!(summaries(&siri_rs::from_str(&written).expect("the written document reads"))[0].value, "");
+    assert_eq!(
+        summaries(&siri_rs::from_str(&written).expect("the written document reads"))[0].value,
+        ""
+    );
     let complaint = validate(&written).expect_err("an empty text is not valid SIRI");
-    assert!(complaint.contains("minLength"), "the schema names the rule: {complaint}");
+    assert!(
+        complaint.contains("minLength"),
+        "the schema names the rule: {complaint}"
+    );
 }
 
 #[test]
@@ -213,7 +225,10 @@ fn text_of_whitespace_alone_is_read_and_written_as_that_whitespace() {
         assert_eq!(summaries(&document)[0].value, blank, "{element:?}");
 
         let written = siri_rs::to_string(&document).expect("the document writes");
-        assert!(written.contains(&element), "{element:?} is written back as it was: {written}");
+        assert!(
+            written.contains(&element),
+            "{element:?} is written back as it was: {written}"
+        );
         validate(&written).unwrap_or_else(|e| panic!("{element:?}: what was valid stays valid: {e}"));
     }
 }
@@ -241,11 +256,13 @@ fn whitespace_alone_in_an_enumeration_is_kept_as_the_token_it_is_not() {
         "<Severity>  </Severity>",
     );
     let document = read_whole(&xml);
-    let Some(ServiceDeliveryPayload::SituationExchangeDelivery(delivery)) = deliveries(&document).first()
-    else {
+    let Some(ServiceDeliveryPayload::SituationExchangeDelivery(delivery)) = deliveries(&document).first() else {
         panic!("the delivery is a situation exchange delivery");
     };
-    let situation = delivery.pt_situations().first().expect("the delivery carries a situation");
+    let situation = delivery
+        .pt_situations()
+        .first()
+        .expect("the delivery carries a situation");
     assert_eq!(situation.severity, Some(Severity::Unrecognised("  ".to_owned())));
 }
 
@@ -310,17 +327,13 @@ fn an_empty_token_list_is_read_as_no_tokens_and_is_not_written_back() {
     // written document is the one without the element. Keeping the element needs a
     // field type that can say "present and empty", which changes the public API
     // and waits for a major release; this pins what 2.x does until then.
-    let original = std::fs::read_to_string(
-        fixtures_dir().join("xml/sm/exs_stopMonitoring_response_complex.xml"),
-    )
-    .expect("readable fixture");
+    let original = std::fs::read_to_string(fixtures_dir().join("xml/sm/exs_stopMonitoring_response_complex.xml"))
+        .expect("readable fixture");
     let monitored = "<Monitored>true</Monitored>";
     for empty in ["<MonitoringError/>", "<MonitoringError></MonitoringError>"] {
         let xml = original.replacen(monitored, &format!("{monitored}{empty}"), 1);
         let document: Siri = siri_rs::from_str(&xml).expect("the document reads");
-        let Some(ServiceDeliveryPayload::StopMonitoringDelivery(delivery)) =
-            deliveries(&document).first()
-        else {
+        let Some(ServiceDeliveryPayload::StopMonitoringDelivery(delivery)) = deliveries(&document).first() else {
             panic!("the delivery is a stop monitoring delivery");
         };
         let journey = &delivery.monitored_stop_visit[0].monitored_vehicle_journey;

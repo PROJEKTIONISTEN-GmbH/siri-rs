@@ -15,12 +15,9 @@ pub mod delivery;
 pub mod request;
 
 pub use capabilities::{
-    FacilityMonitoringAccessControl, FacilityMonitoringCapabilitiesResponse,
-    FacilityMonitoringPermissions, FacilityMonitoringRequestPolicy,
-    FacilityMonitoringResponseFeatures, FacilityMonitoringServiceCapabilities,
+    FacilityMonitoringAccessControl, FacilityMonitoringCapabilitiesResponse, FacilityMonitoringPermissions,
+    FacilityMonitoringRequestPolicy, FacilityMonitoringResponseFeatures, FacilityMonitoringServiceCapabilities,
     FacilityMonitoringServicePermission, FacilityMonitoringTopicFiltering,
 };
 pub use delivery::FacilityMonitoringDelivery;
-pub use request::{
-    AccessibilityNeedsFilter, FacilityMonitoringRequest, FacilityMonitoringSubscriptionRequest,
-};
+pub use request::{AccessibilityNeedsFilter, FacilityMonitoringRequest, FacilityMonitoringSubscriptionRequest};

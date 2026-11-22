@@ -24,26 +24,16 @@ fn read(c: &mut Criterion) {
 
     for case in support::siri_documents() {
         group.throughput(case.bytes());
-        group.bench_with_input(
-            BenchmarkId::from_parameter(case.name),
-            &case.xml,
-            |b, xml| {
-                b.iter(|| siri_rs::from_str::<Siri>(black_box(xml)).expect("the fixture reads"));
-            },
-        );
+        group.bench_with_input(BenchmarkId::from_parameter(case.name), &case.xml, |b, xml| {
+            b.iter(|| siri_rs::from_str::<Siri>(black_box(xml)).expect("the fixture reads"));
+        });
     }
 
     let prefixed = support::prefixed_situation();
     group.throughput(prefixed.bytes());
-    group.bench_with_input(
-        BenchmarkId::from_parameter(prefixed.name),
-        &prefixed.xml,
-        |b, xml| {
-            b.iter(|| {
-                siri_rs::from_str::<RoadSituationElement>(black_box(xml)).expect("the fixture reads")
-            });
-        },
-    );
+    group.bench_with_input(BenchmarkId::from_parameter(prefixed.name), &prefixed.xml, |b, xml| {
+        b.iter(|| siri_rs::from_str::<RoadSituationElement>(black_box(xml)).expect("the fixture reads"));
+    });
 
     group.finish();
 }
@@ -61,12 +51,16 @@ fn read_leniently(c: &mut Criterion) {
 
     let damaged = support::one_visit_lost();
     group.throughput(damaged.bytes());
-    group.bench_with_input(BenchmarkId::new("one unit lost", damaged.name), &damaged.xml, |b, xml| {
-        b.iter(|| {
-            let (_, findings) = siri_rs::lenient::from_str(black_box(xml)).expect("the rest reads");
-            assert_eq!(findings.len(), 1);
-        });
-    });
+    group.bench_with_input(
+        BenchmarkId::new("one unit lost", damaged.name),
+        &damaged.xml,
+        |b, xml| {
+            b.iter(|| {
+                let (_, findings) = siri_rs::lenient::from_str(black_box(xml)).expect("the rest reads");
+                assert_eq!(findings.len(), 1);
+            });
+        },
+    );
 
     group.finish();
 }

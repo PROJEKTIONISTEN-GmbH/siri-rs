@@ -6,13 +6,13 @@ use serde::{Deserialize, Serialize};
 use crate::enumerations::{ServiceException as ServiceExceptionStatus, VehicleModesOfTransport};
 use crate::framework::{ErrorCondition, ServiceRequestError};
 use crate::model::{
-    Branding, BrandingRef, ClearDownRef, DirectionRef, FacilityRef, FramedVehicleJourneyRef,
-    GroupOfLinesRef, JourneyPatternRef, LineRef, MonitoredVehicleJourney, MonitoringRef, RouteRef,
-    SituationNumber, SituationRef, StopPointRef,
+    Branding, BrandingRef, ClearDownRef, DirectionRef, FacilityRef, FramedVehicleJourneyRef, GroupOfLinesRef,
+    JourneyPatternRef, LineRef, MonitoredVehicleJourney, MonitoringRef, RouteRef, SituationNumber, SituationRef,
+    StopPointRef,
 };
 use crate::types::{
-    Duration, EndpointAddress, Extensions, ItemIdentifier, ItemRef, MessageRef,
-    NaturalLanguageString, ParticipantRef, SubscriptionFilterRef, SubscriptionRef,
+    Duration, EndpointAddress, Extensions, ItemIdentifier, ItemRef, MessageRef, NaturalLanguageString, ParticipantRef,
+    SubscriptionFilterRef, SubscriptionRef,
 };
 
 /// What is due at one or more monitoring points.
@@ -82,13 +82,21 @@ pub struct StopMonitoringDelivery {
     #[serde(rename = "MonitoredStopVisit", default, skip_serializing_if = "Vec::is_empty")]
     pub monitored_stop_visit: Vec<MonitoredStopVisit>,
     /// Visits the producer previously reported and is now withdrawing.
-    #[serde(rename = "MonitoredStopVisitCancellation", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "MonitoredStopVisitCancellation",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub monitored_stop_visit_cancellation: Vec<MonitoredStopVisitCancellation>,
     /// Notices about a line at this stop, whether or not it has a visit due.
     #[serde(rename = "StopLineNotice", default, skip_serializing_if = "Vec::is_empty")]
     pub stop_line_notice: Vec<StopLineNotice>,
     /// Line notices the producer is withdrawing.
-    #[serde(rename = "StopLineNoticeCancellation", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "StopLineNoticeCancellation",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub stop_line_notice_cancellation: Vec<StopLineNoticeCancellation>,
     /// Notices about the stop itself.
     #[serde(rename = "StopNotice", default, skip_serializing_if = "Vec::is_empty")]
@@ -109,10 +117,7 @@ pub struct StopMonitoringDelivery {
 
 impl StopMonitoringDelivery {
     /// A delivery carrying the given visits.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        monitored_stop_visit: Vec<MonitoredStopVisit>,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, monitored_stop_visit: Vec<MonitoredStopVisit>) -> Self {
         Self {
             version: None,
             response_timestamp,
@@ -181,10 +186,7 @@ pub struct MonitoredStopVisit {
 
 impl MonitoredStopVisit {
     /// A visit by the given journey, as known at `recorded_at_time`.
-    pub fn new(
-        recorded_at_time: DateTime<FixedOffset>,
-        monitored_vehicle_journey: MonitoredVehicleJourney,
-    ) -> Self {
+    pub fn new(recorded_at_time: DateTime<FixedOffset>, monitored_vehicle_journey: MonitoredVehicleJourney) -> Self {
         Self {
             recorded_at_time,
             item_identifier: None,
@@ -477,10 +479,7 @@ pub struct ServiceException {
 
 impl ServiceException {
     /// An exception of the given kind, as known at `recorded_at_time`.
-    pub fn new(
-        recorded_at_time: DateTime<FixedOffset>,
-        service_status: ServiceExceptionStatus,
-    ) -> Self {
+    pub fn new(recorded_at_time: DateTime<FixedOffset>, service_status: ServiceExceptionStatus) -> Self {
         Self {
             recorded_at_time,
             line_ref: None,
@@ -507,25 +506,18 @@ mod tests {
             timestamp(),
             vec![MonitoredStopVisit {
                 monitoring_ref: Some("HLTST011".into()),
-                ..MonitoredStopVisit::new(
-                    timestamp(),
-                    MonitoredVehicleJourney::on_line("Line123"),
-                )
+                ..MonitoredStopVisit::new(timestamp(), MonitoredVehicleJourney::on_line("Line123"))
             }],
         );
         delivery.monitoring_ref = vec!["HLTST011".into()];
         delivery
             .monitored_stop_visit_cancellation
             .push(MonitoredStopVisitCancellation::new(timestamp(), "SED984"));
-        delivery.stop_line_notice.push(StopLineNotice::new(
-            timestamp(),
-            "HLTST011",
-            "123",
-            "Out",
-        ));
+        delivery
+            .stop_line_notice
+            .push(StopLineNotice::new(timestamp(), "HLTST011", "123", "Out"));
 
-        let xml = quick_xml::se::to_string_with_root("StopMonitoringDelivery", &delivery)
-            .expect("delivery serialises");
+        let xml = quick_xml::se::to_string_with_root("StopMonitoringDelivery", &delivery).expect("delivery serialises");
         let visit = xml.find("<MonitoredStopVisit>").expect("the visit is written");
         let cancellation = xml
             .find("<MonitoredStopVisitCancellation>")
@@ -533,8 +525,7 @@ mod tests {
         let notice = xml.find("<StopLineNotice>").expect("the notice is written");
         assert!(visit < cancellation && cancellation < notice, "{xml}");
 
-        let read: StopMonitoringDelivery =
-            quick_xml::de::from_str(&xml).expect("delivery round-trips");
+        let read: StopMonitoringDelivery = quick_xml::de::from_str(&xml).expect("delivery round-trips");
         assert_eq!(read, delivery);
     }
 
@@ -546,8 +537,7 @@ mod tests {
             ..ServiceException::new(timestamp(), ServiceExceptionStatus::AfterLastJourney)
         };
 
-        let xml = quick_xml::se::to_string_with_root("ServiceException", &exception)
-            .expect("exception serialises");
+        let xml = quick_xml::se::to_string_with_root("ServiceException", &exception).expect("exception serialises");
         assert!(xml.contains("<ServiceStatus>afterLastJourney</ServiceStatus>"), "{xml}");
         assert_eq!(
             quick_xml::de::from_str::<ServiceException>(&xml).expect("exception round-trips"),

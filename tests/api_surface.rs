@@ -44,8 +44,7 @@ fn every_public_enum_is_non_exhaustive() {
 /// runs with, are read through methods rather than fields.
 #[test]
 fn the_hubs_own_state_is_not_a_public_field() {
-    let source = std::fs::read_to_string(root().join("src/pubsub/producer.rs"))
-        .expect("readable producer");
+    let source = std::fs::read_to_string(root().join("src/pubsub/producer.rs")).expect("readable producer");
     for name in ["ProducerConfig", "Subscription<S: Service>"] {
         let declaration = format!("pub struct {name} {{");
         let start = source
@@ -53,10 +52,7 @@ fn the_hubs_own_state_is_not_a_public_field() {
             .unwrap_or_else(|| panic!("{name} is declared in the producer"));
         let body = &source[start + declaration.len()..];
         let body = &body[..body.find("\n}").expect("the struct ends")];
-        assert!(
-            !body.contains("pub "),
-            "{name} exposes a field:\n{body}"
-        );
+        assert!(!body.contains("pub "), "{name} exposes a field:\n{body}");
     }
 }
 
@@ -90,7 +86,11 @@ fn the_messages_carrying_an_account_key_are_these() {
                 current = rest.split(|c: char| !c.is_alphanumeric()).next().map(str::to_owned);
             }
             if line.trim_start().starts_with("pub account_key:") {
-                keyed.push(current.clone().unwrap_or_else(|| panic!("{}: a field outside a struct", display(&path))));
+                keyed.push(
+                    current
+                        .clone()
+                        .unwrap_or_else(|| panic!("{}: a field outside a struct", display(&path))),
+                );
             }
         }
     }
@@ -103,10 +103,9 @@ fn the_messages_carrying_an_account_key_are_these() {
 fn an_account_key_is_not_shown_in_debug_output() {
     use chrono::DateTime;
     use siri_rs::framework::{
-        CapabilitiesRequest, CheckStatusRequest, DataReadyNotification, DataSupplyRequest,
-        HeartbeatNotification, LinesRequest, ProductCategoriesRequest, ServiceFeaturesRequest,
-        ServiceRequest, StopPointsRequest, SubscriptionRequest, TerminateSubscriptionRequest,
-        VehicleFeaturesRequest,
+        CapabilitiesRequest, CheckStatusRequest, DataReadyNotification, DataSupplyRequest, HeartbeatNotification,
+        LinesRequest, ProductCategoriesRequest, ServiceFeaturesRequest, ServiceRequest, StopPointsRequest,
+        SubscriptionRequest, TerminateSubscriptionRequest, VehicleFeaturesRequest,
     };
     use siri_rs::Siri;
 
@@ -117,7 +116,11 @@ fn an_account_key_is_not_shown_in_debug_output() {
             let mut message = $message;
             message.account_id = Some("EREWHON-ACCOUNT".into());
             message.account_key = Some(KEY.into());
-            (stringify!($message), format!("{message:?}"), format!("{:?}", Siri::new("2.0", message)))
+            (
+                stringify!($message),
+                format!("{message:?}"),
+                format!("{:?}", Siri::new("2.0", message)),
+            )
         }};
     }
     let shown = [
@@ -139,8 +142,14 @@ fn an_account_key_is_not_shown_in_debug_output() {
     for (message, alone, enveloped) in shown {
         for debug in [alone, enveloped] {
             assert!(!debug.contains(KEY), "{message} shows its key: {debug}");
-            assert!(debug.contains("account_key: Some(<redacted>)"), "{message} says it carries one: {debug}");
-            assert!(debug.contains("EREWHON-ACCOUNT"), "{message} still shows the rest: {debug}");
+            assert!(
+                debug.contains("account_key: Some(<redacted>)"),
+                "{message} says it carries one: {debug}"
+            );
+            assert!(
+                debug.contains("EREWHON-ACCOUNT"),
+                "{message} still shows the rest: {debug}"
+            );
         }
     }
 }
@@ -180,7 +189,12 @@ fn every_timestamp_field_says_why_a_timestamp_does_not_read() {
         }
     }
     assert!(fields > 250, "the scan found only {fields} timestamp fields");
-    assert!(plain.is_empty(), "{} timestamp fields read plainly:\n{}", plain.len(), plain.join("\n"));
+    assert!(
+        plain.is_empty(),
+        "{} timestamp fields read plainly:\n{}",
+        plain.len(),
+        plain.join("\n")
+    );
 }
 
 /// The attribute lines above the field declared on line `field`, doc comments
@@ -228,8 +242,7 @@ fn source_files() -> Vec<PathBuf> {
 }
 
 fn collect(dir: &Path, out: &mut Vec<PathBuf>) {
-    for entry in std::fs::read_dir(dir).unwrap_or_else(|e| panic!("cannot read {}: {e}", dir.display()))
-    {
+    for entry in std::fs::read_dir(dir).unwrap_or_else(|e| panic!("cannot read {}: {e}", dir.display())) {
         let path = entry.expect("readable directory entry").path();
         if path.is_dir() {
             collect(&path, out);
@@ -240,8 +253,5 @@ fn collect(dir: &Path, out: &mut Vec<PathBuf>) {
 }
 
 fn display(path: &Path) -> String {
-    path.strip_prefix(root())
-        .unwrap_or(path)
-        .display()
-        .to_string()
+    path.strip_prefix(root()).unwrap_or(path).display().to_string()
 }

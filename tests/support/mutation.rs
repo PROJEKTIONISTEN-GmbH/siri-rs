@@ -19,12 +19,18 @@ pub fn element(xml: &str, name: &str, nth: usize) -> Range<usize> {
     let mut depth = 0usize;
     let mut at = start;
     loop {
-        let open = xml[at..].find('<').map_or_else(|| panic!("<{name}> is never closed"), |i| at + i);
+        let open = xml[at..]
+            .find('<')
+            .map_or_else(|| panic!("<{name}> is never closed"), |i| at + i);
         if xml[open..].starts_with("<!--") {
-            at = xml[open..].find("-->").map_or_else(|| panic!("a comment is never closed"), |i| open + i + 3);
+            at = xml[open..]
+                .find("-->")
+                .map_or_else(|| panic!("a comment is never closed"), |i| open + i + 3);
             continue;
         }
-        let close = xml[open..].find('>').map_or_else(|| panic!("a tag is never closed"), |i| open + i + 1);
+        let close = xml[open..]
+            .find('>')
+            .map_or_else(|| panic!("a tag is never closed"), |i| open + i + 1);
         let tag = &xml[open..close];
         if opens(tag, name) {
             if tag.ends_with("/>") {

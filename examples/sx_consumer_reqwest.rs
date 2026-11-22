@@ -64,8 +64,8 @@ struct Receiving {
 
 #[tokio::main]
 async fn main() -> Result<(), Failure> {
-    let producer_url = std::env::var("SIRI_PRODUCER_URL")
-        .unwrap_or_else(|_| "http://127.0.0.1:8000/siri/fetched".to_owned());
+    let producer_url =
+        std::env::var("SIRI_PRODUCER_URL").unwrap_or_else(|_| "http://127.0.0.1:8000/siri/fetched".to_owned());
     let address: SocketAddr = std::env::var("SIRI_CONSUMER_ADDRESS")
         .unwrap_or_else(|_| "127.0.0.1:8001".to_owned())
         .parse()?;
@@ -139,10 +139,7 @@ async fn main() -> Result<(), Failure> {
 
     // 4. Unsubscribe, and stop once the producer has confirmed.
     let now = Utc::now().fixed_offset();
-    let terminate = consumer
-        .lock()
-        .expect("the consumer is usable")
-        .terminate_all(now);
+    let terminate = consumer.lock().expect("the consumer is usable").terminate_all(now);
     let confirmation = request(&client, &producer_url, &terminate).await?;
     match interpret(&consumer, &confirmation)? {
         ConsumerEvent::Terminated { subscription_refs } => {
@@ -163,13 +160,7 @@ async fn main() -> Result<(), Failure> {
 async fn receive(State(state): State<Receiving>, body: String) -> Response {
     let message: Siri = match siri_rs::from_str(&body) {
         Ok(message) => message,
-        Err(complaint) => {
-            return (
-                StatusCode::BAD_REQUEST,
-                format!("unreadable SIRI: {complaint}\n"),
-            )
-                .into_response()
-        }
+        Err(complaint) => return (StatusCode::BAD_REQUEST, format!("unreadable SIRI: {complaint}\n")).into_response(),
     };
 
     let event = match interpret(&state.consumer, &message) {
@@ -191,17 +182,23 @@ async fn receive(State(state): State<Receiving>, body: String) -> Response {
         }
         // A delivery that also carries road situations arrives whole; the situations
         // this consumer follows are its items either way.
-        ConsumerEvent::Delivered { items: situations, reply, .. }
-        | ConsumerEvent::DeliveredWhole { items: situations, reply, .. } => {
+        ConsumerEvent::Delivered {
+            items: situations,
+            reply,
+            ..
+        }
+        | ConsumerEvent::DeliveredWhole {
+            items: situations,
+            reply,
+            ..
+        } => {
             let _ = state.delivered.send(situations);
             match reply {
                 Some(reply) => answer_with(&reply),
                 None => StatusCode::NO_CONTENT.into_response(),
             }
         }
-        ConsumerEvent::Alive {
-            service_started_time,
-        } => {
+        ConsumerEvent::Alive { service_started_time } => {
             println!(
                 "the producer is alive, serving since {}",
                 service_started_time
@@ -233,8 +230,16 @@ async fn fetch_the_data(state: Receiving, fetch: Siri) {
     };
     match interpret(&state.consumer, &delivery) {
         Ok(
-            ConsumerEvent::Delivered { items: situations, reply, .. }
-            | ConsumerEvent::DeliveredWhole { items: situations, reply, .. },
+            ConsumerEvent::Delivered {
+                items: situations,
+                reply,
+                ..
+            }
+            | ConsumerEvent::DeliveredWhole {
+                items: situations,
+                reply,
+                ..
+            },
         ) => {
             let _ = state.delivered.send(situations);
             // A producer that asked for confirmation gets it as a fresh request, since
@@ -256,11 +261,7 @@ fn report(outcomes: &[Subscribed]) {
         println!(
             "subscription {} was {}",
             outcome.subscription_ref,
-            if outcome.accepted {
-                "accepted"
-            } else {
-                "refused"
-            }
+            if outcome.accepted { "accepted" } else { "refused" }
         );
     }
 }
@@ -275,11 +276,7 @@ fn interpret(consumer: &SharedConsumer, message: &Siri) -> siri_rs::Result<Consu
 
 /// Posts a message to the producer and reads the message that comes back, if any: a
 /// producer answers acknowledgements with silence.
-async fn post_to(
-    client: &reqwest::Client,
-    url: &str,
-    message: &Siri,
-) -> Result<Option<Siri>, Failure> {
+async fn post_to(client: &reqwest::Client, url: &str, message: &Siri) -> Result<Option<Siri>, Failure> {
     let body = siri_rs::to_string(message)?;
     let answer = client
         .post(url)

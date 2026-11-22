@@ -14,13 +14,13 @@ mod support;
 use chrono::{DateTime, FixedOffset};
 
 use siri_rs::framework::{
-    CheckStatusResponse, ErrorCondition, HeartbeatNotification, ServiceDelivery,
-    ServiceDeliveryPayload, ServiceNotAvailableError, StatusError,
+    CheckStatusResponse, ErrorCondition, HeartbeatNotification, ServiceDelivery, ServiceDeliveryPayload,
+    ServiceNotAvailableError, StatusError,
 };
 use siri_rs::pubsub::{
-    ConnectionMonitoringFeeder, ConnectionTimetable, Consumer, ConsumerEvent, EstimatedTimetable,
-    FacilityMonitoring, GeneralMessage, ProductionTimetable, Service, SituationExchange,
-    StopMonitoring, StopTimetable, VehicleMonitoring, PROTOCOL_VERSION,
+    ConnectionMonitoringFeeder, ConnectionTimetable, Consumer, ConsumerEvent, EstimatedTimetable, FacilityMonitoring,
+    GeneralMessage, ProductionTimetable, Service, SituationExchange, StopMonitoring, StopTimetable, VehicleMonitoring,
+    PROTOCOL_VERSION,
 };
 use siri_rs::Siri;
 use support::{validate, validator_available, VALIDATOR_MISSING};
@@ -28,8 +28,7 @@ use support::{validate, validator_available, VALIDATOR_MISSING};
 /// The official example at `name` under `tests/fixtures`, read.
 fn fixture(name: &str) -> Siri {
     let path = support::fixtures_dir().join(name);
-    let xml = std::fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
+    let xml = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
     siri_rs::from_str(&xml).unwrap_or_else(|e| panic!("{name} reads: {e}"))
 }
 
@@ -104,16 +103,9 @@ fn a_stop_monitoring_delivery_hands_on_its_cancelled_visits() {
         Some(2),
         "the second is named by its journey and visit"
     );
-    assert_eq!(
-        *delivery,
-        *service_delivery(&message),
-        "nothing of the message is lost"
-    );
+    assert_eq!(*delivery, *service_delivery(&message), "nothing of the message is lost");
     assert!(outcome.succeeded());
-    assert!(
-        reply.is_none(),
-        "the consumer was not asked to confirm deliveries"
-    );
+    assert!(reply.is_none(), "the consumer was not asked to confirm deliveries");
 }
 
 /// Every record a delivery may carry beside the ones the hub publishes, for every
@@ -195,14 +187,8 @@ fn every_record_beside_the_published_ones_hands_the_delivery_on_whole() {
             "xml/cm/exc_connectionMonitoringFeeder_response.xml",
             whole::<ConnectionMonitoringFeeder>,
         ),
-        (
-            "xml/gm/exm_generalMessage_response.xml",
-            whole::<GeneralMessage>,
-        ),
-        (
-            "xml/sx/exx_situationExchange_response.xml",
-            whole::<SituationExchange>,
-        ),
+        ("xml/gm/exm_generalMessage_response.xml", whole::<GeneralMessage>),
+        ("xml/sx/exx_situationExchange_response.xml", whole::<SituationExchange>),
     ];
     for (name, handed_on_whole) in official {
         assert!(
@@ -239,10 +225,7 @@ fn a_delivery_of_published_records_alone_is_delivered_as_before() {
     };
     assert_eq!(items.len(), 2);
     assert!(
-        matches!(
-            event::<StopMonitoring>(&board),
-            ConsumerEvent::DeliveredWhole { .. }
-        ),
+        matches!(event::<StopMonitoring>(&board), ConsumerEvent::DeliveredWhole { .. }),
         "the notice the official board carries is a record of its own"
     );
 
@@ -272,10 +255,7 @@ fn delivered_as_before<S: Service>(message: &Siri) -> bool {
 fn the_situations_a_delivery_comes_with_are_handed_on() {
     let message = fixture("derived/sm/exs_stopMonitoring_response_included_situation.xml");
 
-    let ConsumerEvent::DeliveredWhole {
-        items, delivery, ..
-    } = event::<StopMonitoring>(&message)
-    else {
+    let ConsumerEvent::DeliveredWhole { items, delivery, .. } = event::<StopMonitoring>(&message) else {
         panic!("a delivery accompanied by situations is handed on whole");
     };
 
@@ -298,13 +278,11 @@ fn the_situations_a_delivery_comes_with_are_handed_on() {
 #[test]
 fn a_heartbeat_reporting_an_outage_is_not_alive() {
     let started = now() - chrono::Duration::hours(2);
-    let outage = ErrorCondition::new(StatusError::ServiceNotAvailableError(
-        ServiceNotAvailableError {
-            error_text: Some("timetable server restarting".into()),
-            expected_restart_time: Some(now() + chrono::Duration::minutes(5)),
-            ..ServiceNotAvailableError::default()
-        },
-    ));
+    let outage = ErrorCondition::new(StatusError::ServiceNotAvailableError(ServiceNotAvailableError {
+        error_text: Some("timetable server restarting".into()),
+        expected_restart_time: Some(now() + chrono::Duration::minutes(5)),
+        ..ServiceNotAvailableError::default()
+    }));
     let heartbeat = Siri::new(
         PROTOCOL_VERSION,
         HeartbeatNotification {

@@ -210,7 +210,11 @@ impl fmt::Display for Finding {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.discarded {
             Discarded::Nothing { .. } => write!(f, "{}: {}; read as holding none", self.path, self.reason),
-            _ => write!(f, "cannot read {}: {}; left out {}", self.path, self.reason, self.discarded),
+            _ => write!(
+                f,
+                "cannot read {}: {}; left out {}",
+                self.path, self.reason, self.discarded
+            ),
         }
     }
 }

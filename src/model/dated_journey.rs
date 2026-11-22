@@ -17,15 +17,13 @@ use crate::enumerations::{
 use crate::model::call::PlannedStopAssignment;
 use crate::model::formation::{CompoundTrains, FormationAssignment, TrainElements, Trains};
 use crate::model::journey::{
-    Branding, BrandingRef, ConnectingJourneyRef, DatedVehicleJourneyIndirectRef, GroupOfLinesRef,
-    JourneyParts, JourneyPlaceRef, JourneyRelations, SimpleContact, TrainBlockPart, TrainNumbers,
-    ViaName,
+    Branding, BrandingRef, ConnectingJourneyRef, DatedVehicleJourneyIndirectRef, GroupOfLinesRef, JourneyParts,
+    JourneyPlaceRef, JourneyRelations, SimpleContact, TrainBlockPart, TrainNumbers, ViaName,
 };
 use crate::model::reference::{
-    BlockRef, ConnectionLinkRef, CourseOfJourneyRef, DatedVehicleJourneyRef, DestinationRef,
-    FramedVehicleJourneyRef, InterchangeRef, JourneyPatternRef, LineRef, OperatorRef,
-    ProductCategoryRef, RouteRef, ServiceFeatureRef, StopPointRef, VehicleFeatureRef,
-    VehicleJourneyRef, VehicleRef,
+    BlockRef, ConnectionLinkRef, CourseOfJourneyRef, DatedVehicleJourneyRef, DestinationRef, FramedVehicleJourneyRef,
+    InterchangeRef, JourneyPatternRef, LineRef, OperatorRef, ProductCategoryRef, RouteRef, ServiceFeatureRef,
+    StopPointRef, VehicleFeatureRef, VehicleJourneyRef, VehicleRef,
 };
 use crate::types::{Duration, Extensions, NaturalLanguagePlaceName, NaturalLanguageString};
 
@@ -102,7 +100,11 @@ pub struct DatedVehicleJourney {
     #[serde(rename = "OriginShortName", default, skip_serializing_if = "Vec::is_empty")]
     pub origin_short_name: Vec<NaturalLanguagePlaceName>,
     /// What is shown at the origin as the destination, one per language.
-    #[serde(rename = "DestinationDisplayAtOrigin", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "DestinationDisplayAtOrigin",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub destination_display_at_origin: Vec<NaturalLanguagePlaceName>,
     /// Places passed through that tell this run apart from similar ones.
     #[serde(rename = "Via", default, skip_serializing_if = "Vec::is_empty")]
@@ -117,7 +119,11 @@ pub struct DatedVehicleJourney {
     #[serde(rename = "DestinationShortName", default, skip_serializing_if = "Vec::is_empty")]
     pub destination_short_name: Vec<NaturalLanguagePlaceName>,
     /// What is shown at the destination as the origin, one per language.
-    #[serde(rename = "OriginDisplayAtDestination", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "OriginDisplayAtDestination",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub origin_display_at_destination: Vec<NaturalLanguagePlaceName>,
     /// The operator running the service.
     #[serde(rename = "OperatorRef", default, skip_serializing_if = "Option::is_none")]
@@ -325,7 +331,11 @@ pub struct DatedCall {
     #[serde(rename = "ArrivalStopAssignment", default, skip_serializing_if = "Vec::is_empty")]
     pub arrival_stop_assignment: Vec<PlannedStopAssignment>,
     /// Where each part of the train is planned to stand on arrival.
-    #[serde(rename = "ArrivalFormationAssignment", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "ArrivalFormationAssignment",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub arrival_formation_assignment: Vec<FormationAssignment>,
     /// The operators whose tickets are valid on arrival.
     #[serde(rename = "ArrivalOperatorRefs", default, skip_serializing_if = "Vec::is_empty")]
@@ -353,7 +363,11 @@ pub struct DatedCall {
     #[serde(rename = "DepartureStopAssignment", default, skip_serializing_if = "Vec::is_empty")]
     pub departure_stop_assignment: Vec<PlannedStopAssignment>,
     /// Where each part of the train is planned to stand for departure.
-    #[serde(rename = "DepartureFormationAssignment", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "DepartureFormationAssignment",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub departure_formation_assignment: Vec<FormationAssignment>,
     /// The operators whose tickets are valid on departure.
     #[serde(rename = "DepartureOperatorRefs", default, skip_serializing_if = "Vec::is_empty")]
@@ -373,10 +387,18 @@ pub struct DatedCall {
     #[serde(rename = "TargetedInterchange", default, skip_serializing_if = "Vec::is_empty")]
     pub targeted_interchange: Vec<TargetedInterchange>,
     /// Interchanges at which this call is the arrival passengers change from.
-    #[serde(rename = "FromServiceJourneyInterchange", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "FromServiceJourneyInterchange",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub from_service_journey_interchange: Vec<FromServiceJourneyInterchange>,
     /// Interchanges at which this call is the departure passengers change onto.
-    #[serde(rename = "ToServiceJourneyInterchange", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "ToServiceJourneyInterchange",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub to_service_journey_interchange: Vec<ToServiceJourneyInterchange>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -428,7 +450,11 @@ pub struct RemovedDatedVehicleJourney {
     #[serde(rename = "FramedVehicleJourneyRef")]
     pub framed_vehicle_journey_ref: FramedVehicleJourneyRef,
     /// The same run, named by where and when it ran.
-    #[serde(rename = "DatedVehicleJourneyIndirectRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DatedVehicleJourneyIndirectRef",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub dated_vehicle_journey_indirect_ref: Option<DatedVehicleJourneyIndirectRef>,
     /// The train numbers it was planned under.
     #[serde(rename = "TrainNumbers", default, skip_serializing_if = "Option::is_none")]
@@ -448,10 +474,18 @@ pub struct TargetedInterchange {
     #[serde(rename = "DistributorVehicleJourneyRef")]
     pub distributor_vehicle_journey_ref: DatedVehicleJourneyRef,
     /// The link passengers walk along, stated elsewhere.
-    #[serde(rename = "DistributorConnectionLinkRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DistributorConnectionLinkRef",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub distributor_connection_link_ref: Option<ConnectionLinkRef>,
     /// The link passengers walk along, stated here.
-    #[serde(rename = "DistributorConnectionLink", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DistributorConnectionLink",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub distributor_connection_link: Option<ContextualisedConnectionLink>,
     /// Which visit to the departure stop the onward service makes.
     #[serde(rename = "DistributorVisitNumber", default, skip_serializing_if = "Option::is_none")]
@@ -490,7 +524,11 @@ pub struct TargetedInterchange {
     #[serde(rename = "MaximumWaitTime", default, skip_serializing_if = "Option::is_none")]
     pub maximum_wait_time: Option<Duration>,
     /// The longest it will wait without a controller deciding.
-    #[serde(rename = "MaximumAutomaticWaitTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MaximumAutomaticWaitTime",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub maximum_automatic_wait_time: Option<Duration>,
     /// How long the transfer normally takes.
     #[serde(rename = "StandardTransferTime", default, skip_serializing_if = "Option::is_none")]
@@ -542,10 +580,18 @@ pub struct ContextualisedConnectionLink {
     #[serde(rename = "DefaultDuration", default, skip_serializing_if = "Option::is_none")]
     pub default_duration: Option<Duration>,
     /// How long it takes someone who knows the way.
-    #[serde(rename = "FrequentTravellerDuration", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FrequentTravellerDuration",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub frequent_traveller_duration: Option<Duration>,
     /// How long it takes someone who does not.
-    #[serde(rename = "OccasionalTravellerDuration", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "OccasionalTravellerDuration",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub occasional_traveller_duration: Option<Duration>,
     /// How long it takes someone with impaired mobility.
     #[serde(rename = "ImpairedAccessDuration", default, skip_serializing_if = "Option::is_none")]
@@ -648,7 +694,11 @@ pub struct ServiceJourneyInterchange {
     #[serde(rename = "MaximumWaitTime", default, skip_serializing_if = "Option::is_none")]
     pub maximum_wait_time: Option<Duration>,
     /// The longest it will wait without a controller deciding.
-    #[serde(rename = "MaximumAutomaticWaitTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MaximumAutomaticWaitTime",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub maximum_automatic_wait_time: Option<Duration>,
     /// How long the transfer normally takes.
     #[serde(rename = "StandardTransferTime", default, skip_serializing_if = "Option::is_none")]
@@ -735,7 +785,11 @@ pub struct FromServiceJourneyInterchange {
     #[serde(rename = "MaximumWaitTime", default, skip_serializing_if = "Option::is_none")]
     pub maximum_wait_time: Option<Duration>,
     /// The longest it will wait without a controller deciding.
-    #[serde(rename = "MaximumAutomaticWaitTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MaximumAutomaticWaitTime",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub maximum_automatic_wait_time: Option<Duration>,
     /// How long the transfer normally takes.
     #[serde(rename = "StandardTransferTime", default, skip_serializing_if = "Option::is_none")]
@@ -822,7 +876,11 @@ pub struct ToServiceJourneyInterchange {
     #[serde(rename = "MaximumWaitTime", default, skip_serializing_if = "Option::is_none")]
     pub maximum_wait_time: Option<Duration>,
     /// The longest it will wait without a controller deciding.
-    #[serde(rename = "MaximumAutomaticWaitTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MaximumAutomaticWaitTime",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub maximum_automatic_wait_time: Option<Duration>,
     /// How long the transfer normally takes.
     #[serde(rename = "StandardTransferTime", default, skip_serializing_if = "Option::is_none")]
@@ -921,14 +979,9 @@ mod tests {
             ..DatedCall::at("HLTS00102")
         };
 
-        let xml =
-            quick_xml::se::to_string_with_root("DatedCall", &call).expect("the call serialises");
-        let departure = xml
-            .find("<AimedDepartureTime>")
-            .expect("departure is written");
-        let interchange = xml
-            .find("<TargetedInterchange>")
-            .expect("the interchange is written");
+        let xml = quick_xml::se::to_string_with_root("DatedCall", &call).expect("the call serialises");
+        let departure = xml.find("<AimedDepartureTime>").expect("departure is written");
+        let interchange = xml.find("<TargetedInterchange>").expect("the interchange is written");
         assert!(departure < interchange, "{xml}");
 
         let read: DatedCall = quick_xml::de::from_str(&xml).expect("the call round-trips");
@@ -950,10 +1003,8 @@ mod tests {
             ["HLTS00101", "HLTS00102"]
         );
 
-        let xml = quick_xml::se::to_string_with_root("DatedVehicleJourney", &run)
-            .expect("the run serialises");
-        let read: DatedVehicleJourney =
-            quick_xml::de::from_str(&xml).expect("the run round-trips");
+        let xml = quick_xml::se::to_string_with_root("DatedVehicleJourney", &run).expect("the run serialises");
+        let read: DatedVehicleJourney = quick_xml::de::from_str(&xml).expect("the run round-trips");
         assert_eq!(read, run);
     }
 }

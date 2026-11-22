@@ -20,47 +20,32 @@ use std::fmt;
 use chrono::{DateTime, FixedOffset};
 
 use crate::cm::{
-    ConnectionMonitoringFeederDelivery, ConnectionMonitoringRequest,
-    ConnectionMonitoringSubscriptionRequest, MonitoredFeederArrival,
+    ConnectionMonitoringFeederDelivery, ConnectionMonitoringRequest, ConnectionMonitoringSubscriptionRequest,
+    MonitoredFeederArrival,
 };
 use crate::ct::{
-    ConnectionTimetableDelivery, ConnectionTimetableRequest,
-    ConnectionTimetableSubscriptionRequest, TimetabledFeederArrival,
+    ConnectionTimetableDelivery, ConnectionTimetableRequest, ConnectionTimetableSubscriptionRequest,
+    TimetabledFeederArrival,
 };
-use crate::et::{
-    EstimatedTimetableDelivery, EstimatedTimetableRequest, EstimatedTimetableSubscriptionRequest,
-};
-use crate::fm::{
-    FacilityMonitoringDelivery, FacilityMonitoringRequest, FacilityMonitoringSubscriptionRequest,
-};
+use crate::et::{EstimatedTimetableDelivery, EstimatedTimetableRequest, EstimatedTimetableSubscriptionRequest};
+use crate::fm::{FacilityMonitoringDelivery, FacilityMonitoringRequest, FacilityMonitoringSubscriptionRequest};
 use crate::framework::{
-    ErrorCondition, ServiceDeliveryPayload, ServiceRequestError, ServiceRequestPayload,
-    SubscriptionRequestPayload,
+    ErrorCondition, ServiceDeliveryPayload, ServiceRequestError, ServiceRequestPayload, SubscriptionRequestPayload,
 };
-use crate::gm::{
-    GeneralMessageDelivery, GeneralMessageRequest, GeneralMessageSubscriptionRequest, InfoMessage,
-};
+use crate::gm::{GeneralMessageDelivery, GeneralMessageRequest, GeneralMessageSubscriptionRequest, InfoMessage};
 use crate::model::{EstimatedVehicleJourney, FacilityCondition};
 use crate::pt::{
     DatedTimetableVersionFrame, ProductionTimetableDelivery, ProductionTimetableRequest,
     ProductionTimetableSubscriptionRequest,
 };
-use crate::sm::{
-    MonitoredStopVisit, StopMonitoringDelivery, StopMonitoringRequest,
-    StopMonitoringSubscriptionRequest,
-};
-use crate::st::{
-    StopTimetableDelivery, StopTimetableRequest, StopTimetableSubscriptionRequest,
-    TimetabledStopVisit,
-};
+use crate::sm::{MonitoredStopVisit, StopMonitoringDelivery, StopMonitoringRequest, StopMonitoringSubscriptionRequest};
+use crate::st::{StopTimetableDelivery, StopTimetableRequest, StopTimetableSubscriptionRequest, TimetabledStopVisit};
 use crate::sx::{
-    PtSituationElement, SituationExchangeDelivery, SituationExchangeRequest,
-    SituationExchangeSubscriptionRequest,
+    PtSituationElement, SituationExchangeDelivery, SituationExchangeRequest, SituationExchangeSubscriptionRequest,
 };
 use crate::types::{ParticipantRef, SubscriptionQualifier, SubscriptionRef};
 use crate::vm::{
-    VehicleActivity, VehicleMonitoringDelivery, VehicleMonitoringRequest,
-    VehicleMonitoringSubscriptionRequest,
+    VehicleActivity, VehicleMonitoringDelivery, VehicleMonitoringRequest, VehicleMonitoringSubscriptionRequest,
 };
 
 /// One SIRI functional service, as the publish/subscribe hub sees it.
@@ -156,17 +141,10 @@ pub trait Service: sealed::Sealed + Sized + Copy + fmt::Debug + Eq {
     fn subscription_of(payload: &SubscriptionRequestPayload) -> Option<SubscriptionParts<Self>>;
 
     /// A delivery carrying the given records.
-    fn delivery(
-        response_timestamp: DateTime<FixedOffset>,
-        items: Vec<Self::Item>,
-    ) -> Self::Delivery;
+    fn delivery(response_timestamp: DateTime<FixedOffset>, items: Vec<Self::Item>) -> Self::Delivery;
 
     /// Marks a delivery as satisfying a subscription rather than answering a request.
-    fn attribute(
-        delivery: &mut Self::Delivery,
-        subscriber_ref: ParticipantRef,
-        subscription_ref: SubscriptionRef,
-    );
+    fn attribute(delivery: &mut Self::Delivery, subscriber_ref: ParticipantRef, subscription_ref: SubscriptionRef);
 
     /// Wraps a delivery as the element a `ServiceDelivery` carries.
     fn service_delivery(delivery: Self::Delivery) -> ServiceDeliveryPayload;
@@ -467,31 +445,22 @@ impl Service for SituationExchange {
 
     fn subscription_of(payload: &SubscriptionRequestPayload) -> Option<SubscriptionParts<Self>> {
         match payload {
-            SubscriptionRequestPayload::SituationExchangeSubscriptionRequest(subscription) => {
-                Some(SubscriptionParts {
-                    subscriber_ref: subscription.subscriber_ref.clone(),
-                    subscription_identifier: subscription.subscription_identifier.clone(),
-                    initial_termination_time: subscription.initial_termination_time,
-                    request: subscription.situation_exchange_request.clone(),
-                    incremental_updates: subscription.incremental_updates,
-                })
-            }
+            SubscriptionRequestPayload::SituationExchangeSubscriptionRequest(subscription) => Some(SubscriptionParts {
+                subscriber_ref: subscription.subscriber_ref.clone(),
+                subscription_identifier: subscription.subscription_identifier.clone(),
+                initial_termination_time: subscription.initial_termination_time,
+                request: subscription.situation_exchange_request.clone(),
+                incremental_updates: subscription.incremental_updates,
+            }),
             _ => None,
         }
     }
 
-    fn delivery(
-        response_timestamp: DateTime<FixedOffset>,
-        items: Vec<Self::Item>,
-    ) -> Self::Delivery {
+    fn delivery(response_timestamp: DateTime<FixedOffset>, items: Vec<Self::Item>) -> Self::Delivery {
         SituationExchangeDelivery::new(response_timestamp, items)
     }
 
-    fn attribute(
-        delivery: &mut Self::Delivery,
-        subscriber_ref: ParticipantRef,
-        subscription_ref: SubscriptionRef,
-    ) {
+    fn attribute(delivery: &mut Self::Delivery, subscriber_ref: ParticipantRef, subscription_ref: SubscriptionRef) {
         delivery.subscriber_ref = Some(subscriber_ref);
         delivery.subscription_ref = Some(subscription_ref);
         delivery.status = Some(true);
@@ -573,18 +542,11 @@ impl Service for EstimatedTimetable {
     /// The journeys go into one version frame, recorded at the delivery's own
     /// timestamp: a producer that needs several frames, or a stated timetable
     /// version, builds the delivery itself.
-    fn delivery(
-        response_timestamp: DateTime<FixedOffset>,
-        items: Vec<Self::Item>,
-    ) -> Self::Delivery {
+    fn delivery(response_timestamp: DateTime<FixedOffset>, items: Vec<Self::Item>) -> Self::Delivery {
         EstimatedTimetableDelivery::new(response_timestamp, items)
     }
 
-    fn attribute(
-        delivery: &mut Self::Delivery,
-        subscriber_ref: ParticipantRef,
-        subscription_ref: SubscriptionRef,
-    ) {
+    fn attribute(delivery: &mut Self::Delivery, subscriber_ref: ParticipantRef, subscription_ref: SubscriptionRef) {
         delivery.subscriber_ref = Some(subscriber_ref);
         delivery.subscription_ref = Some(subscription_ref);
         delivery.status = Some(true);
@@ -663,18 +625,11 @@ impl Service for ProductionTimetable {
         }
     }
 
-    fn delivery(
-        response_timestamp: DateTime<FixedOffset>,
-        items: Vec<Self::Item>,
-    ) -> Self::Delivery {
+    fn delivery(response_timestamp: DateTime<FixedOffset>, items: Vec<Self::Item>) -> Self::Delivery {
         ProductionTimetableDelivery::new(response_timestamp, items)
     }
 
-    fn attribute(
-        delivery: &mut Self::Delivery,
-        subscriber_ref: ParticipantRef,
-        subscription_ref: SubscriptionRef,
-    ) {
+    fn attribute(delivery: &mut Self::Delivery, subscriber_ref: ParticipantRef, subscription_ref: SubscriptionRef) {
         delivery.subscriber_ref = Some(subscriber_ref);
         delivery.subscription_ref = Some(subscription_ref);
         delivery.status = Some(true);
@@ -738,31 +693,22 @@ impl Service for VehicleMonitoring {
 
     fn subscription_of(payload: &SubscriptionRequestPayload) -> Option<SubscriptionParts<Self>> {
         match payload {
-            SubscriptionRequestPayload::VehicleMonitoringSubscriptionRequest(subscription) => {
-                Some(SubscriptionParts {
-                    subscriber_ref: subscription.subscriber_ref.clone(),
-                    subscription_identifier: subscription.subscription_identifier.clone(),
-                    initial_termination_time: subscription.initial_termination_time,
-                    request: subscription.vehicle_monitoring_request.clone(),
-                    incremental_updates: subscription.incremental_updates,
-                })
-            }
+            SubscriptionRequestPayload::VehicleMonitoringSubscriptionRequest(subscription) => Some(SubscriptionParts {
+                subscriber_ref: subscription.subscriber_ref.clone(),
+                subscription_identifier: subscription.subscription_identifier.clone(),
+                initial_termination_time: subscription.initial_termination_time,
+                request: subscription.vehicle_monitoring_request.clone(),
+                incremental_updates: subscription.incremental_updates,
+            }),
             _ => None,
         }
     }
 
-    fn delivery(
-        response_timestamp: DateTime<FixedOffset>,
-        items: Vec<Self::Item>,
-    ) -> Self::Delivery {
+    fn delivery(response_timestamp: DateTime<FixedOffset>, items: Vec<Self::Item>) -> Self::Delivery {
         VehicleMonitoringDelivery::new(response_timestamp, items)
     }
 
-    fn attribute(
-        delivery: &mut Self::Delivery,
-        subscriber_ref: ParticipantRef,
-        subscription_ref: SubscriptionRef,
-    ) {
+    fn attribute(delivery: &mut Self::Delivery, subscriber_ref: ParticipantRef, subscription_ref: SubscriptionRef) {
         delivery.subscriber_ref = Some(subscriber_ref);
         delivery.subscription_ref = Some(subscription_ref);
         delivery.status = Some(true);
@@ -810,46 +756,35 @@ impl Service for StopTimetable {
     }
 
     fn subscription_request(parts: SubscriptionParts<Self>) -> SubscriptionRequestPayload {
-        SubscriptionRequestPayload::StopTimetableSubscriptionRequest(Box::new(
-            StopTimetableSubscriptionRequest {
-                subscriber_ref: parts.subscriber_ref,
-                incremental_updates: parts.incremental_updates,
-                ..StopTimetableSubscriptionRequest::new(
-                    parts.subscription_identifier,
-                    parts.initial_termination_time,
-                    parts.request,
-                )
-            },
-        ))
+        SubscriptionRequestPayload::StopTimetableSubscriptionRequest(Box::new(StopTimetableSubscriptionRequest {
+            subscriber_ref: parts.subscriber_ref,
+            incremental_updates: parts.incremental_updates,
+            ..StopTimetableSubscriptionRequest::new(
+                parts.subscription_identifier,
+                parts.initial_termination_time,
+                parts.request,
+            )
+        }))
     }
 
     fn subscription_of(payload: &SubscriptionRequestPayload) -> Option<SubscriptionParts<Self>> {
         match payload {
-            SubscriptionRequestPayload::StopTimetableSubscriptionRequest(subscription) => {
-                Some(SubscriptionParts {
-                    subscriber_ref: subscription.subscriber_ref.clone(),
-                    subscription_identifier: subscription.subscription_identifier.clone(),
-                    initial_termination_time: subscription.initial_termination_time,
-                    request: subscription.stop_timetable_request.clone(),
-                    incremental_updates: subscription.incremental_updates,
-                })
-            }
+            SubscriptionRequestPayload::StopTimetableSubscriptionRequest(subscription) => Some(SubscriptionParts {
+                subscriber_ref: subscription.subscriber_ref.clone(),
+                subscription_identifier: subscription.subscription_identifier.clone(),
+                initial_termination_time: subscription.initial_termination_time,
+                request: subscription.stop_timetable_request.clone(),
+                incremental_updates: subscription.incremental_updates,
+            }),
             _ => None,
         }
     }
 
-    fn delivery(
-        response_timestamp: DateTime<FixedOffset>,
-        items: Vec<Self::Item>,
-    ) -> Self::Delivery {
+    fn delivery(response_timestamp: DateTime<FixedOffset>, items: Vec<Self::Item>) -> Self::Delivery {
         StopTimetableDelivery::new(response_timestamp, items)
     }
 
-    fn attribute(
-        delivery: &mut Self::Delivery,
-        subscriber_ref: ParticipantRef,
-        subscription_ref: SubscriptionRef,
-    ) {
+    fn attribute(delivery: &mut Self::Delivery, subscriber_ref: ParticipantRef, subscription_ref: SubscriptionRef) {
         delivery.subscriber_ref = Some(subscriber_ref);
         delivery.subscription_ref = Some(subscription_ref);
         delivery.status = Some(true);
@@ -900,46 +835,35 @@ impl Service for StopMonitoring {
     }
 
     fn subscription_request(parts: SubscriptionParts<Self>) -> SubscriptionRequestPayload {
-        SubscriptionRequestPayload::StopMonitoringSubscriptionRequest(Box::new(
-            StopMonitoringSubscriptionRequest {
-                subscriber_ref: parts.subscriber_ref,
-                incremental_updates: parts.incremental_updates,
-                ..StopMonitoringSubscriptionRequest::new(
-                    parts.subscription_identifier,
-                    parts.initial_termination_time,
-                    parts.request,
-                )
-            },
-        ))
+        SubscriptionRequestPayload::StopMonitoringSubscriptionRequest(Box::new(StopMonitoringSubscriptionRequest {
+            subscriber_ref: parts.subscriber_ref,
+            incremental_updates: parts.incremental_updates,
+            ..StopMonitoringSubscriptionRequest::new(
+                parts.subscription_identifier,
+                parts.initial_termination_time,
+                parts.request,
+            )
+        }))
     }
 
     fn subscription_of(payload: &SubscriptionRequestPayload) -> Option<SubscriptionParts<Self>> {
         match payload {
-            SubscriptionRequestPayload::StopMonitoringSubscriptionRequest(subscription) => {
-                Some(SubscriptionParts {
-                    subscriber_ref: subscription.subscriber_ref.clone(),
-                    subscription_identifier: subscription.subscription_identifier.clone(),
-                    initial_termination_time: subscription.initial_termination_time,
-                    request: subscription.stop_monitoring_request.clone(),
-                    incremental_updates: subscription.incremental_updates,
-                })
-            }
+            SubscriptionRequestPayload::StopMonitoringSubscriptionRequest(subscription) => Some(SubscriptionParts {
+                subscriber_ref: subscription.subscriber_ref.clone(),
+                subscription_identifier: subscription.subscription_identifier.clone(),
+                initial_termination_time: subscription.initial_termination_time,
+                request: subscription.stop_monitoring_request.clone(),
+                incremental_updates: subscription.incremental_updates,
+            }),
             _ => None,
         }
     }
 
-    fn delivery(
-        response_timestamp: DateTime<FixedOffset>,
-        items: Vec<Self::Item>,
-    ) -> Self::Delivery {
+    fn delivery(response_timestamp: DateTime<FixedOffset>, items: Vec<Self::Item>) -> Self::Delivery {
         StopMonitoringDelivery::new(response_timestamp, items)
     }
 
-    fn attribute(
-        delivery: &mut Self::Delivery,
-        subscriber_ref: ParticipantRef,
-        subscription_ref: SubscriptionRef,
-    ) {
+    fn attribute(delivery: &mut Self::Delivery, subscriber_ref: ParticipantRef, subscription_ref: SubscriptionRef) {
         delivery.subscriber_ref = Some(subscriber_ref);
         delivery.subscription_ref = Some(subscription_ref);
         delivery.status = Some(true);
@@ -1022,18 +946,11 @@ impl Service for ConnectionTimetable {
         }
     }
 
-    fn delivery(
-        response_timestamp: DateTime<FixedOffset>,
-        items: Vec<Self::Item>,
-    ) -> Self::Delivery {
+    fn delivery(response_timestamp: DateTime<FixedOffset>, items: Vec<Self::Item>) -> Self::Delivery {
         ConnectionTimetableDelivery::new(response_timestamp, items)
     }
 
-    fn attribute(
-        delivery: &mut Self::Delivery,
-        subscriber_ref: ParticipantRef,
-        subscription_ref: SubscriptionRef,
-    ) {
+    fn attribute(delivery: &mut Self::Delivery, subscriber_ref: ParticipantRef, subscription_ref: SubscriptionRef) {
         delivery.subscriber_ref = Some(subscriber_ref);
         delivery.subscription_ref = Some(subscription_ref);
         delivery.status = Some(true);
@@ -1110,21 +1027,14 @@ impl Service for ConnectionMonitoringFeeder {
         }
     }
 
-    fn delivery(
-        response_timestamp: DateTime<FixedOffset>,
-        items: Vec<Self::Item>,
-    ) -> Self::Delivery {
+    fn delivery(response_timestamp: DateTime<FixedOffset>, items: Vec<Self::Item>) -> Self::Delivery {
         ConnectionMonitoringFeederDelivery {
             monitored_feeder_arrival: items,
             ..ConnectionMonitoringFeederDelivery::new(response_timestamp)
         }
     }
 
-    fn attribute(
-        delivery: &mut Self::Delivery,
-        subscriber_ref: ParticipantRef,
-        subscription_ref: SubscriptionRef,
-    ) {
+    fn attribute(delivery: &mut Self::Delivery, subscriber_ref: ParticipantRef, subscription_ref: SubscriptionRef) {
         delivery.subscriber_ref = Some(subscriber_ref);
         delivery.subscription_ref = Some(subscription_ref);
         delivery.status = Some(true);
@@ -1174,45 +1084,34 @@ impl Service for GeneralMessage {
     /// The schema gives this service's subscription no incremental-updates flag, so
     /// a consumer asking for one is served the full set each time.
     fn subscription_request(parts: SubscriptionParts<Self>) -> SubscriptionRequestPayload {
-        SubscriptionRequestPayload::GeneralMessageSubscriptionRequest(Box::new(
-            GeneralMessageSubscriptionRequest {
-                subscriber_ref: parts.subscriber_ref,
-                ..GeneralMessageSubscriptionRequest::new(
-                    parts.subscription_identifier,
-                    parts.initial_termination_time,
-                    parts.request,
-                )
-            },
-        ))
+        SubscriptionRequestPayload::GeneralMessageSubscriptionRequest(Box::new(GeneralMessageSubscriptionRequest {
+            subscriber_ref: parts.subscriber_ref,
+            ..GeneralMessageSubscriptionRequest::new(
+                parts.subscription_identifier,
+                parts.initial_termination_time,
+                parts.request,
+            )
+        }))
     }
 
     fn subscription_of(payload: &SubscriptionRequestPayload) -> Option<SubscriptionParts<Self>> {
         match payload {
-            SubscriptionRequestPayload::GeneralMessageSubscriptionRequest(subscription) => {
-                Some(SubscriptionParts {
-                    subscriber_ref: subscription.subscriber_ref.clone(),
-                    subscription_identifier: subscription.subscription_identifier.clone(),
-                    initial_termination_time: subscription.initial_termination_time,
-                    request: subscription.general_message_request.clone(),
-                    incremental_updates: None,
-                })
-            }
+            SubscriptionRequestPayload::GeneralMessageSubscriptionRequest(subscription) => Some(SubscriptionParts {
+                subscriber_ref: subscription.subscriber_ref.clone(),
+                subscription_identifier: subscription.subscription_identifier.clone(),
+                initial_termination_time: subscription.initial_termination_time,
+                request: subscription.general_message_request.clone(),
+                incremental_updates: None,
+            }),
             _ => None,
         }
     }
 
-    fn delivery(
-        response_timestamp: DateTime<FixedOffset>,
-        items: Vec<Self::Item>,
-    ) -> Self::Delivery {
+    fn delivery(response_timestamp: DateTime<FixedOffset>, items: Vec<Self::Item>) -> Self::Delivery {
         GeneralMessageDelivery::new(response_timestamp, items)
     }
 
-    fn attribute(
-        delivery: &mut Self::Delivery,
-        subscriber_ref: ParticipantRef,
-        subscription_ref: SubscriptionRef,
-    ) {
+    fn attribute(delivery: &mut Self::Delivery, subscriber_ref: ParticipantRef, subscription_ref: SubscriptionRef) {
         delivery.subscriber_ref = Some(subscriber_ref);
         delivery.subscription_ref = Some(subscription_ref);
         delivery.status = Some(true);
@@ -1288,18 +1187,11 @@ impl Service for FacilityMonitoring {
         }
     }
 
-    fn delivery(
-        response_timestamp: DateTime<FixedOffset>,
-        items: Vec<Self::Item>,
-    ) -> Self::Delivery {
+    fn delivery(response_timestamp: DateTime<FixedOffset>, items: Vec<Self::Item>) -> Self::Delivery {
         FacilityMonitoringDelivery::new(response_timestamp, items)
     }
 
-    fn attribute(
-        delivery: &mut Self::Delivery,
-        subscriber_ref: ParticipantRef,
-        subscription_ref: SubscriptionRef,
-    ) {
+    fn attribute(delivery: &mut Self::Delivery, subscriber_ref: ParticipantRef, subscription_ref: SubscriptionRef) {
         delivery.subscriber_ref = Some(subscriber_ref);
         delivery.subscription_ref = Some(subscription_ref);
         delivery.status = Some(true);

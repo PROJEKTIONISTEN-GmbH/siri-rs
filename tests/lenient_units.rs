@@ -254,7 +254,11 @@ fn an_element_whose_absence_means_its_default_takes_its_parent_with_it() {
     let finding = findings.iter().next().expect("one finding");
     let journey = "ServiceDelivery.EstimatedTimetableDelivery[0].EstimatedJourneyVersionFrame[0]\
                    .EstimatedVehicleJourney[1]";
-    assert_eq!(finding.path, format!("{journey}.Cancellation"), "the fault is named where it was");
+    assert_eq!(
+        finding.path,
+        format!("{journey}.Cancellation"),
+        "the fault is named where it was"
+    );
     assert_eq!(finding.discarded.path(), journey);
     assert_eq!(finding.discarded.unit_name(), Some("EstimatedVehicleJourney"));
     assert_eq!(finding.discarded.identifier(), Some("00009"));
@@ -276,7 +280,11 @@ fn an_element_whose_absence_means_its_default_costs_the_optional_element_around_
     let call = "ServiceDelivery.StopMonitoringDelivery[0].MonitoredStopVisit[0]\
                 .MonitoredVehicleJourney.MonitoredCall";
     assert_eq!(finding.path, format!("{call}.VehicleAtStop"));
-    assert!(matches!(&finding.discarded, Discarded::Element { .. }), "{:?}", finding.discarded);
+    assert!(
+        matches!(&finding.discarded, Discarded::Element { .. }),
+        "{:?}",
+        finding.discarded
+    );
     assert_eq!(finding.discarded.path(), call);
 }
 
@@ -302,7 +310,10 @@ fn every_service_has_units_that_are_left_out_whole() {
         let finding = findings.iter().next().expect("one finding");
         assert_eq!(finding.discarded.unit_name(), Some(case.unit), "{}", case.fixture);
         assert!(
-            finding.discarded.path().ends_with(&format!("{}[{}]", case.unit, case.nth)),
+            finding
+                .discarded
+                .path()
+                .ends_with(&format!("{}[{}]", case.unit, case.nth)),
             "{}: {}",
             case.fixture,
             finding.discarded.path()
@@ -328,7 +339,15 @@ fn a_delivery_is_left_out_when_its_own_elements_do_not_read_and_another_remains(
     let stop_monitoring = fixture(SM);
     let situations = copy(&fixture(SX), "SituationExchangeDelivery", 0);
     let both = insert_after(&stop_monitoring, "StopMonitoringDelivery", 0, &situations);
-    assert_eq!(strict(&both).payload.as_service_delivery().expect("a delivery").deliveries.len(), 2);
+    assert_eq!(
+        strict(&both)
+            .payload
+            .as_service_delivery()
+            .expect("a delivery")
+            .deliveries
+            .len(),
+        2
+    );
     // The third ResponseTimestamp is the situation exchange delivery's own.
     let broken = emptied(&both, "ResponseTimestamp", 2);
 
@@ -339,8 +358,14 @@ fn a_delivery_is_left_out_when_its_own_elements_do_not_read_and_another_remains(
         .iter()
         .find(|finding| finding.discarded.unit_name() == Some("SituationExchangeDelivery"))
         .expect("the delivery is reported");
-    assert_eq!(delivery.discarded.path(), "ServiceDelivery.SituationExchangeDelivery[1]");
-    assert_eq!(delivery.path, "ServiceDelivery.SituationExchangeDelivery[1].ResponseTimestamp");
+    assert_eq!(
+        delivery.discarded.path(),
+        "ServiceDelivery.SituationExchangeDelivery[1]"
+    );
+    assert_eq!(
+        delivery.path,
+        "ServiceDelivery.SituationExchangeDelivery[1].ResponseTimestamp"
+    );
     assert_eq!(delivery.reason, "premature end of input");
 }
 

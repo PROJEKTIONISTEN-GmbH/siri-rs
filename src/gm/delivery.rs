@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 use crate::framework::{ErrorCondition, ServiceRequestError};
 use crate::model::SituationRef;
 use crate::types::{
-    AnyContent, Duration, EndpointAddress, Extensions, ItemIdentifier, ItemRef, MessageRef,
-    ParticipantRef, SubscriptionFilterRef, SubscriptionRef,
+    AnyContent, Duration, EndpointAddress, Extensions, ItemIdentifier, ItemRef, MessageRef, ParticipantRef,
+    SubscriptionFilterRef, SubscriptionRef,
 };
 
 use super::{InfoChannelRef, InfoMessageRef};
@@ -73,7 +73,11 @@ pub struct GeneralMessageDelivery {
     #[serde(rename = "GeneralMessage", default, skip_serializing_if = "Vec::is_empty")]
     pub general_message: Vec<InfoMessage>,
     /// Messages the producer is withdrawing.
-    #[serde(rename = "GeneralMessageCancellation", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "GeneralMessageCancellation",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub general_message_cancellation: Vec<InfoMessageCancellation>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -82,10 +86,7 @@ pub struct GeneralMessageDelivery {
 
 impl GeneralMessageDelivery {
     /// A delivery carrying the given messages.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        general_message: Vec<InfoMessage>,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, general_message: Vec<InfoMessage>) -> Self {
         Self {
             version: None,
             response_timestamp,
@@ -194,10 +195,7 @@ pub struct InfoMessageCancellation {
 
 impl InfoMessageCancellation {
     /// A withdrawal of the message with the given identifier.
-    pub fn new(
-        recorded_at_time: DateTime<FixedOffset>,
-        info_message_identifier: impl Into<InfoMessageRef>,
-    ) -> Self {
+    pub fn new(recorded_at_time: DateTime<FixedOffset>, info_message_identifier: impl Into<InfoMessageRef>) -> Self {
         Self {
             recorded_at_time,
             item_ref: None,
@@ -222,23 +220,17 @@ mod tests {
             timestamp(),
             vec![InfoMessage {
                 info_channel_ref: Some(InfoChannelRef::new("WARNINGS")),
-                ..InfoMessage::new(
-                    timestamp(),
-                    "00034567",
-                    AnyContent::text("Beware the Ides of March"),
-                )
+                ..InfoMessage::new(timestamp(), "00034567", AnyContent::text("Beware the Ides of March"))
             }],
         );
         delivery
             .general_message_cancellation
             .push(InfoMessageCancellation::new(timestamp(), "00034564"));
 
-        let xml = quick_xml::se::to_string_with_root("GeneralMessageDelivery", &delivery)
-            .expect("delivery serialises");
+        let xml = quick_xml::se::to_string_with_root("GeneralMessageDelivery", &delivery).expect("delivery serialises");
         assert!(xml.contains("<Content>Beware the Ides of March</Content>"), "{xml}");
 
-        let read: GeneralMessageDelivery =
-            quick_xml::de::from_str(&xml).expect("delivery round-trips");
+        let read: GeneralMessageDelivery = quick_xml::de::from_str(&xml).expect("delivery round-trips");
         assert_eq!(read, delivery);
     }
 }

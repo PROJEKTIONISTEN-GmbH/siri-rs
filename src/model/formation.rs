@@ -19,8 +19,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{
-    FareClass, FormationChange, Occupancy, TrainElementType, TrainSize, TypeOfFuel,
-    VehicleInFormationStatus,
+    FareClass, FormationChange, Occupancy, TrainElementType, TrainSize, TypeOfFuel, VehicleInFormationStatus,
 };
 use crate::model::accessibility::AccessibilityAssessment;
 use crate::model::call::StopAssignment;
@@ -95,7 +94,11 @@ pub struct FormationAssignment {
     #[serde(rename = "EntranceToVehicleRef", default, skip_serializing_if = "Option::is_none")]
     pub entrance_to_vehicle_ref: Option<EntranceToVehicleRef>,
     /// Whether that part is available, missing, defective and so on.
-    #[serde(rename = "VehicleInFormationStatus", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VehicleInFormationStatus",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub vehicle_in_formation_status: Option<VehicleInFormationStatusRecord>,
     /// Where the part stands, at least one assignment.
     #[serde(rename = "TrainStopAssignment")]
@@ -127,7 +130,11 @@ pub struct FormationCondition {
     #[serde(rename = "FormationStatus", default, skip_serializing_if = "Option::is_none")]
     pub formation_status: Option<FormationStatus>,
     /// What changed about one vehicle in it, instead of `formation_status`.
-    #[serde(rename = "VehicleInFormationStatus", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VehicleInFormationStatus",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub vehicle_in_formation_status: Option<VehicleInFormationStatusRecord>,
     /// The situation that explains the change.
     #[serde(rename = "SituationRef", default, skip_serializing_if = "Option::is_none")]
@@ -329,7 +336,11 @@ pub struct VehicleOccupancy {
     #[serde(rename = "BicycleOnboardCount", default, skip_serializing_if = "Option::is_none")]
     pub bicycle_onboard_count: Option<u64>,
     /// How many seats are reserved in total.
-    #[serde(rename = "TotalNumberOfReservedSeats", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TotalNumberOfReservedSeats",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub total_number_of_reserved_seats: Option<u64>,
     /// Group bookings held on this vehicle.
     #[serde(rename = "GroupReservation", default, skip_serializing_if = "Vec::is_empty")]
@@ -463,7 +474,11 @@ pub struct TrainElement {
     #[serde(rename = "EuroClass", default, skip_serializing_if = "Option::is_none")]
     pub euro_class: Option<String>,
     /// How many passengers it can take.
-    #[serde(rename = "MaximumPassengerCapacities", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MaximumPassengerCapacities",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub maximum_passenger_capacities: Option<MaximumPassengerCapacities>,
     /// Whether it has a low floor.
     #[serde(rename = "LowFloor", default, skip_serializing_if = "Option::is_none")]
@@ -589,7 +604,11 @@ pub struct Train {
     #[serde(rename = "EuroClass", default, skip_serializing_if = "Option::is_none")]
     pub euro_class: Option<String>,
     /// How many passengers it can take.
-    #[serde(rename = "MaximumPassengerCapacities", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MaximumPassengerCapacities",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub maximum_passenger_capacities: Option<MaximumPassengerCapacities>,
     /// Whether it has a low floor.
     #[serde(rename = "LowFloor", default, skip_serializing_if = "Option::is_none")]
@@ -689,7 +708,11 @@ pub struct CompoundTrain {
     #[serde(rename = "EuroClass", default, skip_serializing_if = "Option::is_none")]
     pub euro_class: Option<String>,
     /// How many passengers it can take.
-    #[serde(rename = "MaximumPassengerCapacities", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MaximumPassengerCapacities",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub maximum_passenger_capacities: Option<MaximumPassengerCapacities>,
     /// Whether it has a low floor.
     #[serde(rename = "LowFloor", default, skip_serializing_if = "Option::is_none")]
@@ -739,7 +762,11 @@ pub enum TrainInCompoundTrainItem {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct TrainInCompoundTrain {
     /// The producer's identifier for this place.
-    #[serde(rename = "TrainInCompoundTrainCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "TrainInCompoundTrainCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub train_in_compound_train_code: Option<TrainInCompoundTrainRef>,
     /// Where in the compound train it is, counting from one.
     #[serde(rename = "Order")]
@@ -766,7 +793,11 @@ pub struct TrainInCompoundTrain {
     #[serde(rename = "OriginShortName", default, skip_serializing_if = "Vec::is_empty")]
     pub origin_short_name: Vec<NaturalLanguagePlaceName>,
     /// What is shown at the origin as the destination, one per language.
-    #[serde(rename = "DestinationDisplayAtOrigin", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "DestinationDisplayAtOrigin",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub destination_display_at_origin: Vec<NaturalLanguagePlaceName>,
     /// Places passed through that tell this train apart from similar ones.
     #[serde(rename = "Via", default, skip_serializing_if = "Vec::is_empty")]
@@ -781,7 +812,11 @@ pub struct TrainInCompoundTrain {
     #[serde(rename = "DestinationShortName", default, skip_serializing_if = "Vec::is_empty")]
     pub destination_short_name: Vec<NaturalLanguagePlaceName>,
     /// What is shown at the destination as the origin, one per language.
-    #[serde(rename = "OriginDisplayAtDestination", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "OriginDisplayAtDestination",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub origin_display_at_destination: Vec<NaturalLanguagePlaceName>,
     /// Whether the train is coupled the other way round.
     #[serde(
@@ -924,21 +959,15 @@ mod tests {
 
     #[test]
     fn a_formation_condition_reports_which_alternative_it_carries() {
-        let formation = FormationCondition::formation(FormationStatus::new(
-            FormationChange::MissingRestaurantCoach,
-        ));
+        let formation = FormationCondition::formation(FormationStatus::new(FormationChange::MissingRestaurantCoach));
         assert!(matches!(
             formation.status(),
             Some(FormationConditionStatus::Formation(status)) if status.status == FormationChange::MissingRestaurantCoach
         ));
 
-        let vehicle = FormationCondition::vehicle(VehicleInFormationStatusRecord::new(
-            VehicleInFormationStatus::Defective,
-        ));
-        assert!(matches!(
-            vehicle.status(),
-            Some(FormationConditionStatus::Vehicle(_))
-        ));
+        let vehicle =
+            FormationCondition::vehicle(VehicleInFormationStatusRecord::new(VehicleInFormationStatus::Defective));
+        assert!(matches!(vehicle.status(), Some(FormationConditionStatus::Vehicle(_))));
         assert_eq!(vehicle.formation_status, None);
     }
 

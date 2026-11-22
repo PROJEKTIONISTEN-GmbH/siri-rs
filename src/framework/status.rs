@@ -4,9 +4,7 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::framework::error_condition::{ErrorCondition, StatusError};
-use crate::types::{
-    Duration, EndpointAddress, Extensions, MessageQualifier, MessageRef, ParticipantRef,
-};
+use crate::types::{Duration, EndpointAddress, Extensions, MessageQualifier, MessageRef, ParticipantRef};
 
 /// A request for the current operational status of a service.
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
@@ -52,10 +50,7 @@ debug_without_account_key!(CheckStatusRequest {
 
 impl CheckStatusRequest {
     /// A status request from `requestor_ref`.
-    pub fn new(
-        request_timestamp: DateTime<FixedOffset>,
-        requestor_ref: impl Into<ParticipantRef>,
-    ) -> Self {
+    pub fn new(request_timestamp: DateTime<FixedOffset>, requestor_ref: impl Into<ParticipantRef>) -> Self {
         Self {
             version: None,
             request_timestamp,
@@ -84,7 +79,11 @@ pub struct CheckStatusResponse {
     #[serde(rename = "Address", default, skip_serializing_if = "Option::is_none")]
     pub address: Option<EndpointAddress>,
     /// Identifier the producer puts on this message.
-    #[serde(rename = "ResponseMessageIdentifier", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ResponseMessageIdentifier",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub response_message_identifier: Option<MessageQualifier>,
     /// The status request this answers.
     #[serde(rename = "RequestMessageRef", default, skip_serializing_if = "Option::is_none")]

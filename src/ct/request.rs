@@ -4,9 +4,7 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::model::{ConnectionLinkRef, DirectionRef, LineRef};
-use crate::types::{
-    ClosedTimestampRange, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier,
-};
+use crate::types::{ClosedTimestampRange, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier};
 
 /// A request for the connections planned over one connection link.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -140,15 +138,14 @@ mod tests {
                 .within(ClosedTimestampRange::between(timestamp(), timestamp()))
         };
 
-        let xml = quick_xml::se::to_string_with_root("ConnectionTimetableRequest", &request)
-            .expect("request serialises");
+        let xml =
+            quick_xml::se::to_string_with_root("ConnectionTimetableRequest", &request).expect("request serialises");
         let window = xml.find("<ArrivalWindow>").expect("the window is written");
         let link = xml.find("<ConnectionLinkRef>").expect("the link is written");
         let line = xml.find("<LineRef>").expect("the line is written");
         assert!(window < link && link < line, "{xml}");
 
-        let read: ConnectionTimetableRequest =
-            quick_xml::de::from_str(&xml).expect("request round-trips");
+        let read: ConnectionTimetableRequest = quick_xml::de::from_str(&xml).expect("request round-trips");
         assert_eq!(read, request);
     }
 }

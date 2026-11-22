@@ -6,8 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::framework::{ErrorCondition, ServiceRequestError};
 use crate::model::FacilityCondition;
 use crate::types::{
-    Duration, EndpointAddress, Extensions, MessageRef, ParticipantRef, SubscriptionFilterRef,
-    SubscriptionRef,
+    Duration, EndpointAddress, Extensions, MessageRef, ParticipantRef, SubscriptionFilterRef, SubscriptionRef,
 };
 
 /// The state of the facilities a producer watches.
@@ -77,10 +76,7 @@ pub struct FacilityMonitoringDelivery {
 
 impl FacilityMonitoringDelivery {
     /// A delivery carrying the given facility conditions.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        facility_condition: Vec<FacilityCondition>,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, facility_condition: Vec<FacilityCondition>) -> Self {
         Self {
             version: None,
             response_timestamp,
@@ -109,8 +105,7 @@ mod tests {
 
     #[test]
     fn a_delivery_carries_the_condition_of_each_facility() {
-        let timestamp =
-            DateTime::parse_from_rfc3339("2004-12-17T09:30:47-05:00").expect("valid timestamp");
+        let timestamp = DateTime::parse_from_rfc3339("2004-12-17T09:30:47-05:00").expect("valid timestamp");
         let delivery = FacilityMonitoringDelivery::new(
             timestamp,
             vec![FacilityCondition::for_facility(
@@ -119,13 +114,12 @@ mod tests {
             )],
         );
 
-        let xml = quick_xml::se::to_string_with_root("FacilityMonitoringDelivery", &delivery)
-            .expect("delivery serialises");
+        let xml =
+            quick_xml::se::to_string_with_root("FacilityMonitoringDelivery", &delivery).expect("delivery serialises");
         assert!(xml.contains("<FacilityCode>134567-L4</FacilityCode>"), "{xml}");
         assert!(xml.contains("<Status>notAvailable</Status>"), "{xml}");
 
-        let read: FacilityMonitoringDelivery =
-            quick_xml::de::from_str(&xml).expect("delivery round-trips");
+        let read: FacilityMonitoringDelivery = quick_xml::de::from_str(&xml).expect("delivery round-trips");
         assert_eq!(read, delivery);
     }
 }

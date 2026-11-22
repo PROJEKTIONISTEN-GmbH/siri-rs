@@ -12,9 +12,7 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{JourneyRelationType, QualityIndex};
-use crate::model::reference::{
-    DirectionRef, FramedVehicleJourneyRef, LineRef, OperatorRef, StopPointRef,
-};
+use crate::model::reference::{DirectionRef, FramedVehicleJourneyRef, LineRef, OperatorRef, StopPointRef};
 use crate::types::{NaturalLanguagePlaceName, NaturalLanguageString, ParticipantRef};
 
 siri_ref! {
@@ -282,7 +280,11 @@ pub struct ConnectingJourneyRef {
     #[serde(rename = "FramedVehicleJourneyRef", default, skip_serializing_if = "Option::is_none")]
     pub framed_vehicle_journey_ref: Option<FramedVehicleJourneyRef>,
     /// The journey named by where and when it runs.
-    #[serde(rename = "DatedVehicleJourneyIndirectRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DatedVehicleJourneyIndirectRef",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub dated_vehicle_journey_indirect_ref: Option<DatedVehicleJourneyIndirectRef>,
     /// The line it runs on.
     #[serde(rename = "LineRef", default, skip_serializing_if = "Option::is_none")]
@@ -339,10 +341,7 @@ pub enum JourneyRelationScope<'a> {
 
 impl JourneyRelation {
     /// A relation of the given kind to the given journeys.
-    pub fn new(
-        journey_relation_type: JourneyRelationType,
-        related_journey: Vec<RelatedJourney>,
-    ) -> Self {
+    pub fn new(journey_relation_type: JourneyRelationType, related_journey: Vec<RelatedJourney>) -> Self {
         Self {
             journey_relation_type,
             call_info: None,
@@ -415,7 +414,11 @@ pub struct RelatedJourney {
     #[serde(rename = "FramedVehicleJourneyRef", default, skip_serializing_if = "Option::is_none")]
     pub framed_vehicle_journey_ref: Option<FramedVehicleJourneyRef>,
     /// The journey named by where and when it runs.
-    #[serde(rename = "DatedVehicleJourneyIndirectRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DatedVehicleJourneyIndirectRef",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub dated_vehicle_journey_indirect_ref: Option<DatedVehicleJourneyIndirectRef>,
     /// The line it runs on.
     #[serde(rename = "LineRef", default, skip_serializing_if = "Option::is_none")]

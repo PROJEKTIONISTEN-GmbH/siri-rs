@@ -5,8 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::model::{DirectionRef, LineRef, MonitoringRef};
 use crate::types::{
-    ClosedTimestampRange, Duration, Extensions, MessageQualifier, ParticipantRef,
-    SubscriptionQualifier,
+    ClosedTimestampRange, Duration, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier,
 };
 
 /// A request for the timetable at one monitoring point.
@@ -56,10 +55,7 @@ pub struct StopTimetableRequest {
 
 impl StopTimetableRequest {
     /// An unfiltered request for the timetable at one monitoring point.
-    pub fn at_stop(
-        request_timestamp: DateTime<FixedOffset>,
-        monitoring_ref: impl Into<MonitoringRef>,
-    ) -> Self {
+    pub fn at_stop(request_timestamp: DateTime<FixedOffset>, monitoring_ref: impl Into<MonitoringRef>) -> Self {
         Self {
             version: None,
             request_timestamp,
@@ -154,15 +150,13 @@ mod tests {
                 .within(ClosedTimestampRange::between(timestamp(), timestamp()))
         };
 
-        let xml = quick_xml::se::to_string_with_root("StopTimetableRequest", &request)
-            .expect("request serialises");
+        let xml = quick_xml::se::to_string_with_root("StopTimetableRequest", &request).expect("request serialises");
         let window = xml.find("<DepartureWindow>").expect("the window is written");
         let monitoring = xml.find("<MonitoringRef>").expect("the stop is written");
         let line = xml.find("<LineRef>").expect("the line is written");
         assert!(window < monitoring && monitoring < line, "{xml}");
 
-        let read: StopTimetableRequest =
-            quick_xml::de::from_str(&xml).expect("request round-trips");
+        let read: StopTimetableRequest = quick_xml::de::from_str(&xml).expect("request round-trips");
         assert_eq!(read, request);
     }
 }

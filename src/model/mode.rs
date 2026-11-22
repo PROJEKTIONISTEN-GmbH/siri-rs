@@ -7,9 +7,8 @@
 //! and at most one of them is set. [`Submode`] reports which.
 
 use crate::enumerations::{
-    AirSubmodesOfTransport, BusSubmodesOfTransport, CoachSubmodesOfTransport,
-    MetroSubmodesOfTransport, RailSubmodesOfTransport, TelecabinSubmodesOfTransport,
-    TramSubmodesOfTransport, WaterSubmodesOfTransport,
+    AirSubmodesOfTransport, BusSubmodesOfTransport, CoachSubmodesOfTransport, MetroSubmodesOfTransport,
+    RailSubmodesOfTransport, TelecabinSubmodesOfTransport, TramSubmodesOfTransport, WaterSubmodesOfTransport,
 };
 
 /// The submode a structure carries, if any.

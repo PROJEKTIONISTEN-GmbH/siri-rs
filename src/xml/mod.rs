@@ -268,8 +268,7 @@ pub(crate) fn document_path(path: &serde_path_to_error::Path) -> String {
 /// no reader would read the document.
 pub fn to_string<T: SiriRoot>(value: &T) -> Result<String> {
     let mut document = String::from(PROLOGUE);
-    let serialiser = quick_xml::se::Serializer::with_root(&mut document, Some(T::ELEMENT_NAME))
-        .map_err(Error::from)?;
+    let serialiser = quick_xml::se::Serializer::with_root(&mut document, Some(T::ELEMENT_NAME)).map_err(Error::from)?;
     value.serialize(serialiser).map_err(Error::from)?;
     finish::<T>(document)
 }
@@ -278,8 +277,8 @@ pub fn to_string<T: SiriRoot>(value: &T) -> Result<String> {
 /// refusing what [`to_string`] refuses.
 pub fn to_string_pretty<T: SiriRoot>(value: &T) -> Result<String> {
     let mut document = String::from(PROLOGUE);
-    let mut serialiser = quick_xml::se::Serializer::with_root(&mut document, Some(T::ELEMENT_NAME))
-        .map_err(Error::from)?;
+    let mut serialiser =
+        quick_xml::se::Serializer::with_root(&mut document, Some(T::ELEMENT_NAME)).map_err(Error::from)?;
     serialiser.indent('\t', 1);
     value.serialize(serialiser).map_err(Error::from)?;
     finish::<T>(document)
@@ -338,7 +337,9 @@ fn check_root<T: SiriRoot>(xml: &str) -> Result<()> {
             ResolveResult::Bound(bound) => String::from_utf8_lossy(bound.as_ref()).into_owned(),
             ResolveResult::Unbound => String::new(),
             ResolveResult::Unknown(prefix) => {
-                return Err(Error::Xml(quick_xml::Error::Namespace(NamespaceError::UnknownPrefix(prefix))))
+                return Err(Error::Xml(quick_xml::Error::Namespace(NamespaceError::UnknownPrefix(
+                    prefix,
+                ))))
             }
         };
         return Err(Error::UnexpectedNamespace {

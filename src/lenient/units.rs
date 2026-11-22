@@ -364,8 +364,10 @@ mod tests {
         use crate::sm::StopMonitoringDelivery;
         use crate::types::{EndpointAddress, MessageQualifier, MessageRef, ParticipantRef};
 
-        let when: DateTime<FixedOffset> =
-            FixedOffset::east_opt(3600).expect("an offset").with_ymd_and_hms(2026, 1, 1, 0, 0, 0).unwrap();
+        let when: DateTime<FixedOffset> = FixedOffset::east_opt(3600)
+            .expect("an offset")
+            .with_ymd_and_hms(2026, 1, 1, 0, 0, 0)
+            .unwrap();
         let delivery = ServiceDelivery {
             srs_name: None,
             response_timestamp: when,
@@ -376,7 +378,9 @@ mod tests {
             delegator_address: Some(EndpointAddress::new("http://example.org/d")),
             delegator_ref: Some(ParticipantRef::new("D")),
             status: Some(true),
-            error_condition: Some(ErrorCondition::new(DeliveryError::OtherError(ErrorCodeDetail::default()))),
+            error_condition: Some(ErrorCondition::new(DeliveryError::OtherError(
+                ErrorCodeDetail::default(),
+            ))),
             more_data: Some(false),
             deliveries: vec![StopMonitoringDelivery::new(when, Vec::new()).into()],
         };

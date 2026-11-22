@@ -4,18 +4,16 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{
-    ChangeModel, ChangeOfJourneyTimingType, ControlActionReasonCategory, StopPlaceStatus,
-    TypeOfActivatedJourney,
+    ChangeModel, ChangeOfJourneyTimingType, ControlActionReasonCategory, StopPlaceStatus, TypeOfActivatedJourney,
 };
 use crate::model::{
-    AuthorityRef, ControlActionRef, DirectionRef, FramedVehicleJourneyRef, JourneyPatternRef,
-    Location, OperatorRef, QuayRef, SituationRef, StopPlaceRef, StopPointRef, TypeOfValue,
-    ValidityCondition, VehicleJourneyRef, VehicleRef, IFOPT_NAMESPACE,
+    AuthorityRef, ControlActionRef, DirectionRef, FramedVehicleJourneyRef, JourneyPatternRef, Location, OperatorRef,
+    QuayRef, SituationRef, StopPlaceRef, StopPointRef, TypeOfValue, ValidityCondition, VehicleJourneyRef, VehicleRef,
+    IFOPT_NAMESPACE,
 };
 use crate::sx::situation::{Images, InfoLinks};
 use crate::types::{
-    DefaultedText, Duration, Extensions, ItemIdentifier, ItemRef, NaturalLanguageString,
-    ParticipantRef,
+    DefaultedText, Duration, Extensions, ItemIdentifier, ItemRef, NaturalLanguageString, ParticipantRef,
 };
 
 pub(super) fn ifopt_namespace() -> String {
@@ -89,10 +87,18 @@ pub struct ControlAction {
     #[serde(rename = "JourneyCancellation", default, skip_serializing_if = "Option::is_none")]
     pub journey_cancellation: Option<JourneyScope>,
     /// Part of a journey taken out of it.
-    #[serde(rename = "PartialJourneyCancellation", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "PartialJourneyCancellation",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub partial_journey_cancellation: Option<CallCancellationAction>,
     /// A journey that had to be booked, now running.
-    #[serde(rename = "FlexibleJourneyActivation", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "FlexibleJourneyActivation",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub flexible_journey_activation: Option<FlexibleJourneyActivation>,
     /// A journey now calling somewhere else.
     #[serde(rename = "ChangeOfJourneyPattern", default, skip_serializing_if = "Option::is_none")]
@@ -138,10 +144,7 @@ impl ControlAction {
     ///
     /// The schema requires exactly one of the eleven actions, so a message is only
     /// valid once one of them has been set.
-    pub fn new(
-        creation_time: DateTime<FixedOffset>,
-        control_action_code: impl Into<ControlActionRef>,
-    ) -> Self {
+    pub fn new(creation_time: DateTime<FixedOffset>, control_action_code: impl Into<ControlActionRef>) -> Self {
         Self {
             ifopt_namespace: ifopt_namespace(),
             item_identifier: None,
@@ -308,10 +311,7 @@ impl JourneyScope {
     }
 
     /// Every journey on one line, over the given period.
-    pub fn on_line(
-        line_ref: impl Into<crate::model::LineRef>,
-        time_scope: ValidityCondition,
-    ) -> Self {
+    pub fn on_line(line_ref: impl Into<crate::model::LineRef>, time_scope: ValidityCondition) -> Self {
         Self {
             line_ref: Some(line_ref.into()),
             time_scope: Some(time_scope),
@@ -335,7 +335,12 @@ pub struct PointInJourneyPatternRef {
     #[serde(rename = "StopPointRef", default, skip_serializing_if = "Option::is_none")]
     pub stop_point_ref: Option<StopPointRef>,
     /// The stop place, when the point is one.
-    #[serde(rename = "ifopt:StopPlaceRef", alias = "StopPlaceRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ifopt:StopPlaceRef",
+        alias = "StopPlaceRef",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stop_place_ref: Option<StopPlaceRef>,
     /// A position, when the point is neither of the above.
     #[serde(rename = "arbitraryPoint", default, skip_serializing_if = "Option::is_none")]
@@ -399,7 +404,12 @@ pub struct TargetPoint {
     #[serde(rename = "StopPointRef", default, skip_serializing_if = "Option::is_none")]
     pub stop_point_ref: Option<StopPointRef>,
     /// The stop place, when the point is one.
-    #[serde(rename = "ifopt:StopPlaceRef", alias = "StopPlaceRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ifopt:StopPlaceRef",
+        alias = "StopPlaceRef",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stop_place_ref: Option<StopPlaceRef>,
     /// A position, when the point is neither of the above.
     #[serde(rename = "arbitraryPoint", default, skip_serializing_if = "Option::is_none")]
@@ -437,7 +447,12 @@ pub struct DatedCallRef {
     #[serde(rename = "StopPointRef", default, skip_serializing_if = "Option::is_none")]
     pub stop_point_ref: Option<StopPointRef>,
     /// The stop place, when the call is at one.
-    #[serde(rename = "ifopt:StopPlaceRef", alias = "StopPlaceRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ifopt:StopPlaceRef",
+        alias = "StopPlaceRef",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stop_place_ref: Option<StopPlaceRef>,
     /// A position, when the call is at neither of the above.
     #[serde(rename = "arbitraryPoint", default, skip_serializing_if = "Option::is_none")]
@@ -504,7 +519,11 @@ pub struct JourneyCreation {
     #[serde(rename = "MiddleCall", default, skip_serializing_if = "Vec::is_empty")]
     pub middle_call: Vec<MiddleCall>,
     /// The journey this one reinforces, when it runs to help another.
-    #[serde(rename = "ReinforcedVehicleJourneyRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ReinforcedVehicleJourneyRef",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub reinforced_vehicle_journey_ref: Option<FramedVehicleJourneyRef>,
     /// The identifier the new journey is to be known by.
     #[serde(rename = "NewJourneyCode")]
@@ -736,11 +755,7 @@ impl CallCancellationAction {
     }
 
     /// Every call between the two given points.
-    pub fn between(
-        journey_scope: JourneyScope,
-        from: PointInJourneyPatternRef,
-        to: PointInJourneyPatternRef,
-    ) -> Self {
+    pub fn between(journey_scope: JourneyScope, from: PointInJourneyPatternRef, to: PointInJourneyPatternRef) -> Self {
         Self {
             calls_between_points: Some(CallsBetweenPoints {
                 from_point_in_journey_pattern_ref: from,
@@ -1002,11 +1017,7 @@ pub struct ChangeOfStopPointStatus {
 
 impl ChangeOfStopPointStatus {
     /// The given stops, in the given state, over the given period.
-    pub fn new(
-        stop_refs: StopRefs,
-        time_scope: StopPointStatusTimeScope,
-        status: StopPlaceStatus,
-    ) -> Self {
+    pub fn new(stop_refs: StopRefs, time_scope: StopPointStatusTimeScope, status: StopPlaceStatus) -> Self {
         Self {
             stop_refs,
             time_scope,
@@ -1022,7 +1033,12 @@ pub struct StopRefs {
     #[serde(rename = "StopPointRef", default, skip_serializing_if = "Vec::is_empty")]
     pub stop_point_ref: Vec<StopPointRef>,
     /// Stop places.
-    #[serde(rename = "ifopt:StopPlaceRef", alias = "StopPlaceRef", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "ifopt:StopPlaceRef",
+        alias = "StopPlaceRef",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub stop_place_ref: Vec<StopPlaceRef>,
 }
 
@@ -1058,10 +1074,7 @@ pub struct StopPointStatusTimeScope {
 
 impl StopPointStatusTimeScope {
     /// The whole period between the two instants.
-    pub fn between(
-        from_date_time: DateTime<FixedOffset>,
-        upto_date_time: DateTime<FixedOffset>,
-    ) -> Self {
+    pub fn between(from_date_time: DateTime<FixedOffset>, upto_date_time: DateTime<FixedOffset>) -> Self {
         Self {
             from_date_time,
             upto_date_time,
@@ -1216,10 +1229,7 @@ pub struct VehicleWorkAssignment {
 
 impl VehicleWorkAssignment {
     /// The vehicle put on the given block of work.
-    pub fn on_block(
-        vehicle_ref: impl Into<VehicleRef>,
-        dated_block_ref: impl Into<crate::model::BlockRef>,
-    ) -> Self {
+    pub fn on_block(vehicle_ref: impl Into<VehicleRef>, dated_block_ref: impl Into<crate::model::BlockRef>) -> Self {
         Self {
             dated_block_ref: Some(dated_block_ref.into()),
             ..Self::of(vehicle_ref)
@@ -1227,10 +1237,7 @@ impl VehicleWorkAssignment {
     }
 
     /// The vehicle put on the given journey.
-    pub fn on_journey(
-        vehicle_ref: impl Into<VehicleRef>,
-        dated_vehicle_journey_ref: FramedVehicleJourneyRef,
-    ) -> Self {
+    pub fn on_journey(vehicle_ref: impl Into<VehicleRef>, dated_vehicle_journey_ref: FramedVehicleJourneyRef) -> Self {
         Self {
             dated_vehicle_journey_ref: Some(dated_vehicle_journey_ref),
             ..Self::of(vehicle_ref)
@@ -1307,10 +1314,7 @@ mod tests {
             journey_cancellation: Some(JourneyScope::for_journey(journey())),
             ..ControlAction::new(timestamp(), "CA-4711")
         };
-        assert!(matches!(
-            action.kind(),
-            Some(ControlActionKind::JourneyCancellation(_))
-        ));
+        assert!(matches!(action.kind(), Some(ControlActionKind::JourneyCancellation(_))));
 
         let undecided = ControlAction::new(timestamp(), "CA-4712");
         assert_eq!(undecided.kind(), None, "nothing was decided yet");
@@ -1319,9 +1323,7 @@ mod tests {
     #[test]
     fn an_action_writes_its_header_before_the_decision_and_reads_back() {
         let action = ControlAction {
-            reason: Some(ControlActionReason::new(
-                ControlActionReasonCategory::Weather,
-            )),
+            reason: Some(ControlActionReason::new(ControlActionReasonCategory::Weather)),
             change_of_stop_point_status: Some(ChangeOfStopPointStatus::new(
                 StopRefs::at_stops(vec!["de:03241:101".into()]),
                 StopPointStatusTimeScope::between(timestamp(), timestamp()),
@@ -1331,15 +1333,10 @@ mod tests {
             ..ControlAction::new(timestamp(), "CA-4711")
         };
 
-        let xml = quick_xml::se::to_string_with_root("ControlAction", &action)
-            .expect("the action serialises");
+        let xml = quick_xml::se::to_string_with_root("ControlAction", &action).expect("the action serialises");
         let creation = xml.find("<CreationTime>").expect("the header is written");
-        let code = xml
-            .find("<ControlActionCode>")
-            .expect("the code is written");
-        let decision = xml
-            .find("<ChangeOfStopPointStatus>")
-            .expect("the decision is written");
+        let code = xml.find("<ControlActionCode>").expect("the code is written");
+        let decision = xml.find("<ChangeOfStopPointStatus>").expect("the decision is written");
         assert!(creation < code && code < decision, "{xml}");
 
         let read: ControlAction = quick_xml::de::from_str(&xml).expect("the action round-trips");

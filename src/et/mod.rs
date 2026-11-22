@@ -65,8 +65,8 @@ pub mod delivery;
 pub mod request;
 
 pub use capabilities::{
-    EstimatedTimetableCapabilitiesResponse, EstimatedTimetablePermissions,
-    EstimatedTimetableServiceCapabilities, EstimatedTimetableTopicFiltering,
+    EstimatedTimetableCapabilitiesResponse, EstimatedTimetablePermissions, EstimatedTimetableServiceCapabilities,
+    EstimatedTimetableTopicFiltering,
 };
 pub use delivery::{EstimatedTimetableDelivery, EstimatedVersionFrame};
 pub use request::{EstimatedTimetableRequest, EstimatedTimetableSubscriptionRequest};

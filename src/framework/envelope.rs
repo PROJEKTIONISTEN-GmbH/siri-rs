@@ -3,39 +3,35 @@
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
+use crate::ca::{ControlActionDelivery, ControlActionMultipleRequest, ControlActionRequest};
+use crate::cm::{
+    ConnectionMonitoringDistributorDelivery, ConnectionMonitoringFeederDelivery, ConnectionMonitoringRequest,
+};
+use crate::ct::{ConnectionTimetableDelivery, ConnectionTimetableRequest};
 use crate::enumerations::{DeliveryMethod, Predictors};
+use crate::et::{EstimatedTimetableDelivery, EstimatedTimetableRequest};
+use crate::fm::{FacilityMonitoringDelivery, FacilityMonitoringRequest};
 use crate::framework::capabilities::{CapabilitiesRequest, CapabilitiesResponse};
 use crate::framework::delivery::{
     DataReadyAcknowledgement, DataReadyNotification, DataReceivedAcknowledgement, DataSupplyRequest,
 };
 use crate::framework::discovery::{
-    LinesDelivery, LinesRequest, ProductCategoriesDelivery, ProductCategoriesRequest,
-    ServiceFeaturesDelivery, ServiceFeaturesRequest, StopPointsDelivery, StopPointsRequest,
-    VehicleFeaturesDelivery, VehicleFeaturesRequest,
+    LinesDelivery, LinesRequest, ProductCategoriesDelivery, ProductCategoriesRequest, ServiceFeaturesDelivery,
+    ServiceFeaturesRequest, StopPointsDelivery, StopPointsRequest, VehicleFeaturesDelivery, VehicleFeaturesRequest,
 };
 use crate::framework::error_condition::{DeliveryError, ErrorCondition};
 use crate::framework::status::{CheckStatusRequest, CheckStatusResponse, HeartbeatNotification};
 use crate::framework::subscription::{
-    SubscriptionRequest, SubscriptionResponse, SubscriptionTerminatedNotification,
-    TerminateSubscriptionRequest, TerminateSubscriptionResponse,
+    SubscriptionRequest, SubscriptionResponse, SubscriptionTerminatedNotification, TerminateSubscriptionRequest,
+    TerminateSubscriptionResponse,
 };
-use crate::ca::{ControlActionDelivery, ControlActionMultipleRequest, ControlActionRequest};
-use crate::cm::{
-    ConnectionMonitoringDistributorDelivery, ConnectionMonitoringFeederDelivery,
-    ConnectionMonitoringRequest,
-};
-use crate::ct::{ConnectionTimetableDelivery, ConnectionTimetableRequest};
-use crate::et::{EstimatedTimetableDelivery, EstimatedTimetableRequest};
-use crate::fm::{FacilityMonitoringDelivery, FacilityMonitoringRequest};
 use crate::gm::{GeneralMessageDelivery, GeneralMessageRequest};
 use crate::pt::{ProductionTimetableDelivery, ProductionTimetableRequest};
 use crate::sm::{StopMonitoringDelivery, StopMonitoringMultipleRequest, StopMonitoringRequest};
 use crate::st::{StopTimetableDelivery, StopTimetableRequest};
 use crate::sx::{SituationExchangeDelivery, SituationExchangeRequest};
+use crate::types::{Duration, Empty, EndpointAddress, Extensions, MessageQualifier, MessageRef, ParticipantRef};
 use crate::vm::{VehicleMonitoringDelivery, VehicleMonitoringRequest};
-use crate::types::{
-    Duration, EndpointAddress, Empty, Extensions, MessageQualifier, MessageRef, ParticipantRef,
-};
 use crate::xml::SiriRoot;
 
 /// The document element every SIRI exchange is wrapped in.
@@ -358,7 +354,11 @@ pub struct ServiceDelivery {
     #[serde(rename = "Address", default, skip_serializing_if = "Option::is_none")]
     pub address: Option<EndpointAddress>,
     /// Identifier the producer puts on this message.
-    #[serde(rename = "ResponseMessageIdentifier", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ResponseMessageIdentifier",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub response_message_identifier: Option<MessageQualifier>,
     /// The request this delivery answers.
     #[serde(rename = "RequestMessageRef", default, skip_serializing_if = "Option::is_none")]
@@ -555,7 +555,11 @@ pub struct ServiceRequestContext {
     #[serde(rename = "SubscribeAddress", default, skip_serializing_if = "Option::is_none")]
     pub subscribe_address: Option<EndpointAddress>,
     /// Where to send subscription management requests.
-    #[serde(rename = "ManageSubscriptionAddress", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ManageSubscriptionAddress",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub manage_subscription_address: Option<EndpointAddress>,
     /// Where to fetch data from.
     #[serde(rename = "GetDataAddress", default, skip_serializing_if = "Option::is_none")]
@@ -626,7 +630,11 @@ pub struct ServiceRequestContext {
     )]
     pub confirm_delivery: Option<bool>,
     /// How many subscriptions the requestor may hold at once.
-    #[serde(rename = "MaximimumNumberOfSubscriptions", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MaximimumNumberOfSubscriptions",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub maximimum_number_of_subscriptions: Option<u64>,
     /// Which sources of prediction the requestor accepts.
     #[serde(
@@ -651,7 +659,11 @@ pub struct DataNameSpaces {
     #[serde(rename = "LineNameSpace", default, skip_serializing_if = "Option::is_none")]
     pub line_name_space: Option<String>,
     /// Namespace of product category identifiers.
-    #[serde(rename = "ProductCategoryNameSpace", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ProductCategoryNameSpace",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub product_category_name_space: Option<String>,
     /// Namespace of service feature identifiers.
     #[serde(rename = "ServiceFeatureNameSpace", default, skip_serializing_if = "Option::is_none")]

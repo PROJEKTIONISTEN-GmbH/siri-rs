@@ -5,15 +5,14 @@ use std::marker::PhantomData;
 use chrono::{DateTime, FixedOffset};
 
 use crate::framework::{
-    DataReadyAcknowledgement, DataReceivedAcknowledgement, DataSupplyRequest, DeliveryError,
-    ErrorCondition, ServiceDelivery, ServiceDeliveryPayload, Siri, SiriPayload, StatusError,
-    SubscriptionContext, SubscriptionRequest, TerminateSubscriptionRequest,
+    DataReadyAcknowledgement, DataReceivedAcknowledgement, DataSupplyRequest, DeliveryError, ErrorCondition,
+    ServiceDelivery, ServiceDeliveryPayload, Siri, SiriPayload, StatusError, SubscriptionContext, SubscriptionRequest,
+    TerminateSubscriptionRequest,
 };
 use crate::pubsub::envelope;
 use crate::pubsub::service::{FunctionalDeliveryOutcome, Service, SubscriptionParts};
 use crate::types::{
-    Duration, EndpointAddress, MessageQualifier, ParticipantRef, SubscriptionQualifier,
-    SubscriptionRef,
+    Duration, EndpointAddress, MessageQualifier, ParticipantRef, SubscriptionQualifier, SubscriptionRef,
 };
 use crate::Result;
 
@@ -190,13 +189,7 @@ impl<S: Service> Consumer<S> {
         request: S::Request,
         now: DateTime<FixedOffset>,
     ) -> Siri {
-        self.subscribe_with_heartbeat(
-            subscription_identifier,
-            initial_termination_time,
-            request,
-            None,
-            now,
-        )
+        self.subscribe_with_heartbeat(subscription_identifier, initial_termination_time, request, None, now)
     }
 
     /// Builds a request opening one subscription and asking for a heartbeat.
@@ -218,8 +211,7 @@ impl<S: Service> Consumer<S> {
         envelope(SubscriptionRequest {
             message_identifier: Some(self.mint_message_id()),
             consumer_address: self.consumer_address.clone(),
-            subscription_context: heartbeat_interval
-                .map(SubscriptionContext::with_heartbeat_interval),
+            subscription_context: heartbeat_interval.map(SubscriptionContext::with_heartbeat_interval),
             ..SubscriptionRequest::new(now, self.requestor_ref.clone(), vec![subscription])
         })
     }
@@ -229,11 +221,7 @@ impl<S: Service> Consumer<S> {
         envelope(crate::framework::ServiceRequest {
             message_identifier: Some(self.mint_message_id()),
             address: self.consumer_address.clone(),
-            ..crate::framework::ServiceRequest::new(
-                now,
-                self.requestor_ref.clone(),
-                vec![S::service_request(request)],
-            )
+            ..crate::framework::ServiceRequest::new(now, self.requestor_ref.clone(), vec![S::service_request(request)])
         })
     }
 
@@ -265,10 +253,7 @@ impl<S: Service> Consumer<S> {
                 Ok(ConsumerEvent::Subscribed { outcomes })
             }
             SiriPayload::DataReadyNotification(notification) => {
-                let notification_ref = notification
-                    .message_identifier
-                    .as_ref()
-                    .map(|id| id.as_str().into());
+                let notification_ref = notification.message_identifier.as_ref().map(|id| id.as_str().into());
                 let reply = envelope(DataReadyAcknowledgement {
                     request_message_ref: notification_ref.clone(),
                     ..DataReadyAcknowledgement::accepted(now, self.requestor_ref.clone())
@@ -285,12 +270,7 @@ impl<S: Service> Consumer<S> {
                 })
             }
             SiriPayload::ServiceDelivery(delivery) => {
-                let items = delivery
-                    .deliveries
-                    .iter()
-                    .filter_map(S::items_of)
-                    .flatten()
-                    .collect();
+                let items = delivery.deliveries.iter().filter_map(S::items_of).flatten().collect();
                 let holds_more = delivery.deliveries.iter().any(|payload| {
                     matches!(payload, ServiceDeliveryPayload::IncludedSituationExchangeDelivery(_))
                         || S::delivery_of(payload).is_some_and(S::holds_more_than_items)
@@ -318,11 +298,7 @@ impl<S: Service> Consumer<S> {
                         reply,
                     }
                 } else {
-                    ConsumerEvent::Delivered {
-                        items,
-                        outcome,
-                        reply,
-                    }
+                    ConsumerEvent::Delivered { items, outcome, reply }
                 })
             }
             SiriPayload::HeartbeatNotification(heartbeat) => Ok(status_event(
@@ -336,8 +312,7 @@ impl<S: Service> Consumer<S> {
                 &response.error_condition,
             )),
             SiriPayload::SubscriptionTerminatedNotification(notification) => {
-                self.subscriptions
-                    .retain(|held| *held != notification.subscription_ref);
+                self.subscriptions.retain(|held| *held != notification.subscription_ref);
                 Ok(ConsumerEvent::SubscriptionEnded {
                     subscription_ref: notification.subscription_ref.clone(),
                 })
@@ -349,8 +324,7 @@ impl<S: Service> Consumer<S> {
                     .filter(|status| status.status.unwrap_or(true))
                     .map(|status| status.subscription_ref.clone())
                     .collect();
-                self.subscriptions
-                    .retain(|held| !subscription_refs.contains(held));
+                self.subscriptions.retain(|held| !subscription_refs.contains(held));
                 Ok(ConsumerEvent::Terminated { subscription_refs })
             }
             _ => Ok(ConsumerEvent::Ignored),

@@ -6,10 +6,10 @@ use chrono::{DateTime, FixedOffset};
 
 use crate::enumerations::DeliveryMethod;
 use crate::framework::{
-    CheckStatusResponse, DataReadyNotification, ErrorCondition, HeartbeatNotification,
-    ServiceDelivery, ServiceRequestError, Siri, SiriPayload, StatusResponse, SubscriptionRequest,
-    SubscriptionResponse, TerminateSubscriptionRequest, TerminateSubscriptionResponse,
-    TerminationError, TerminationResponseStatus, TerminationScope, UnknownSubscriptionError,
+    CheckStatusResponse, DataReadyNotification, ErrorCondition, HeartbeatNotification, ServiceDelivery,
+    ServiceRequestError, Siri, SiriPayload, StatusResponse, SubscriptionRequest, SubscriptionResponse,
+    TerminateSubscriptionRequest, TerminateSubscriptionResponse, TerminationError, TerminationResponseStatus,
+    TerminationScope, UnknownSubscriptionError,
 };
 use crate::pubsub::envelope;
 use crate::pubsub::service::{Service, Source};
@@ -279,12 +279,8 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
     /// entry, refusals included.
     pub fn handle(&mut self, message: &Siri, now: DateTime<FixedOffset>) -> Result<Option<Siri>> {
         match &message.payload {
-            SiriPayload::SubscriptionRequest(request) => {
-                Ok(Some(self.open_subscriptions(request, now)?))
-            }
-            SiriPayload::TerminateSubscriptionRequest(request) => {
-                Ok(Some(self.close_subscriptions(request, now)))
-            }
+            SiriPayload::SubscriptionRequest(request) => Ok(Some(self.open_subscriptions(request, now)?)),
+            SiriPayload::TerminateSubscriptionRequest(request) => Ok(Some(self.close_subscriptions(request, now))),
             SiriPayload::DataSupplyRequest(request) => {
                 let consumer = request.consumer_ref.as_ref().ok_or(Error::MissingElement {
                     message: "DataSupplyRequest",
@@ -316,15 +312,11 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
                     deliveries.push(Svc::service_delivery(self.delivery_for(asked, now)));
                 }
                 Ok(Some(envelope(ServiceDelivery {
-                    request_message_ref: request
-                        .message_identifier
-                        .as_ref()
-                        .map(|id| id.as_str().into()),
+                    request_message_ref: request.message_identifier.as_ref().map(|id| id.as_str().into()),
                     ..ServiceDelivery::new(now, self.config.producer_ref.clone(), deliveries)
                 })))
             }
-            SiriPayload::DataReadyAcknowledgement(_)
-            | SiriPayload::DataReceivedAcknowledgement(_) => Ok(None),
+            SiriPayload::DataReadyAcknowledgement(_) | SiriPayload::DataReceivedAcknowledgement(_) => Ok(None),
             other => Err(Error::UnexpectedMessage {
                 expected: "a request a producer answers",
                 found: payload_name(other),
@@ -346,11 +338,7 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
     /// answer, not a failure of the request, and a request that fails as a whole —
     /// one naming no subscription at all, which the schema does not allow — has
     /// changed nothing by the time it fails.
-    fn open_subscriptions(
-        &mut self,
-        request: &SubscriptionRequest,
-        now: DateTime<FixedOffset>,
-    ) -> Result<Siri> {
+    fn open_subscriptions(&mut self, request: &SubscriptionRequest, now: DateTime<FixedOffset>) -> Result<Siri> {
         if request.subscriptions.is_empty() {
             return Err(Error::MissingElement {
                 message: "SubscriptionRequest",
@@ -372,9 +360,8 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
                 } => statuses.push(StatusResponse::refused(now, subscription_ref, reason)),
                 Decision::Accepted(subscription) => {
                     // Reopening a subscription replaces the one held under that name.
-                    self.subscriptions.retain(|held| {
-                        !held.is(&subscription.subscriber_ref, &subscription.subscription_ref)
-                    });
+                    self.subscriptions
+                        .retain(|held| !held.is(&subscription.subscriber_ref, &subscription.subscription_ref));
                     statuses.push(StatusResponse {
                         shortest_possible_cycle: self.config.shortest_possible_cycle.clone(),
                         valid_until: Some(subscription.initial_termination_time),
@@ -402,10 +389,7 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
         let subscription_ref = SubscriptionRef::new(payload.subscription_identifier().as_str());
         let refused = |description: String| Decision::Refused {
             subscription_ref: subscription_ref.clone(),
-            reason: ErrorCondition::with_description(
-                ServiceRequestError::OtherError(Default::default()),
-                description,
-            ),
+            reason: ErrorCondition::with_description(ServiceRequestError::OtherError(Default::default()), description),
         };
 
         let Some(subscription) = Svc::subscription_of(payload) else {
@@ -436,11 +420,7 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
     /// the error the schema provides for it; a request to close all of a
     /// subscriber's subscriptions when there are none is answered with no status at
     /// all, which the schema allows. Neither is a failure of the request.
-    fn close_subscriptions(
-        &mut self,
-        request: &TerminateSubscriptionRequest,
-        now: DateTime<FixedOffset>,
-    ) -> Siri {
+    fn close_subscriptions(&mut self, request: &TerminateSubscriptionRequest, now: DateTime<FixedOffset>) -> Siri {
         let subscriber = request
             .subscriber_ref
             .clone()
@@ -456,10 +436,7 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
                     .into_iter()
                     .partition(|held| held.subscriber_ref == subscriber);
                 self.subscriptions = kept;
-                closing
-                    .into_iter()
-                    .map(|held| closed(held.subscription_ref))
-                    .collect()
+                closing.into_iter().map(|held| closed(held.subscription_ref)).collect()
             }
             Some(TerminationScope::Subscriptions(qualifiers)) => qualifiers
                 .iter()
@@ -517,8 +494,7 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
             .iter()
             .enumerate()
             .filter(|(_, held)| {
-                held.subscriber_ref == *consumer
-                    && matches!(held.state, SubscriptionState::AwaitingFetch(_))
+                held.subscriber_ref == *consumer && matches!(held.state, SubscriptionState::AwaitingFetch(_))
             })
             .map(|(index, _)| index)
             .collect();
@@ -534,11 +510,7 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
             deliveries.push(Svc::service_delivery(Svc::delivery(now, Vec::new())));
         }
 
-        envelope(ServiceDelivery::new(
-            now,
-            self.config.producer_ref.clone(),
-            deliveries,
-        ))
+        envelope(ServiceDelivery::new(now, self.config.producer_ref.clone(), deliveries))
     }
 
     /// The messages the subscriptions that are owed one have fallen due for.
@@ -588,8 +560,7 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
                 }
                 DeliveryMethod::Fetched => {
                     let identifier = self.mint_message_id();
-                    self.subscriptions[index].state =
-                        SubscriptionState::AwaitingFetch(identifier.clone());
+                    self.subscriptions[index].state = SubscriptionState::AwaitingFetch(identifier.clone());
                     envelope(DataReadyNotification {
                         message_identifier: Some(identifier),
                         ..DataReadyNotification::new(now, self.config.producer_ref.clone())
@@ -730,19 +701,13 @@ fn request_name(payload: &crate::framework::ServiceRequestPayload) -> &'static s
 fn subscription_name(payload: &crate::framework::SubscriptionRequestPayload) -> &'static str {
     use crate::framework::SubscriptionRequestPayload as Payload;
     match payload {
-        Payload::ProductionTimetableSubscriptionRequest(_) => {
-            "ProductionTimetableSubscriptionRequest"
-        }
+        Payload::ProductionTimetableSubscriptionRequest(_) => "ProductionTimetableSubscriptionRequest",
         Payload::EstimatedTimetableSubscriptionRequest(_) => "EstimatedTimetableSubscriptionRequest",
         Payload::StopTimetableSubscriptionRequest(_) => "StopTimetableSubscriptionRequest",
         Payload::StopMonitoringSubscriptionRequest(_) => "StopMonitoringSubscriptionRequest",
         Payload::VehicleMonitoringSubscriptionRequest(_) => "VehicleMonitoringSubscriptionRequest",
-        Payload::ConnectionTimetableSubscriptionRequest(_) => {
-            "ConnectionTimetableSubscriptionRequest"
-        }
-        Payload::ConnectionMonitoringSubscriptionRequest(_) => {
-            "ConnectionMonitoringSubscriptionRequest"
-        }
+        Payload::ConnectionTimetableSubscriptionRequest(_) => "ConnectionTimetableSubscriptionRequest",
+        Payload::ConnectionMonitoringSubscriptionRequest(_) => "ConnectionMonitoringSubscriptionRequest",
         Payload::GeneralMessageSubscriptionRequest(_) => "GeneralMessageSubscriptionRequest",
         Payload::FacilityMonitoringSubscriptionRequest(_) => "FacilityMonitoringSubscriptionRequest",
         Payload::ControlActionSubscriptionRequest(_) => "ControlActionSubscriptionRequest",

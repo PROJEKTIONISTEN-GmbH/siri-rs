@@ -14,13 +14,11 @@ use serde::{Deserialize, Serialize};
 use crate::enumerations::{LinesDetail, StopPointsDetail};
 use crate::framework::error_condition::{ErrorCondition, ServiceRequestError};
 use crate::model::{
-    BoundingBox, DestinationRef, DirectionRef, JourneyPatternRef, LineDirection, LineRef, LineShape,
-    LinkProjection, Location, OperatorRef, PlaceRef, ProductCategory, ServiceFeature,
-    ServiceFeatureRef, StopAreaRef, StopPointRef, VehicleFeature,
+    BoundingBox, DestinationRef, DirectionRef, JourneyPatternRef, LineDirection, LineRef, LineShape, LinkProjection,
+    Location, OperatorRef, PlaceRef, ProductCategory, ServiceFeature, ServiceFeatureRef, StopAreaRef, StopPointRef,
+    VehicleFeature,
 };
-use crate::types::{
-    Duration, EndpointAddress, Extensions, MessageQualifier, NaturalLanguageString, ParticipantRef,
-};
+use crate::types::{Duration, EndpointAddress, Extensions, MessageQualifier, NaturalLanguageString, ParticipantRef};
 
 /// A request for the stop points a producer serves.
 ///
@@ -96,10 +94,7 @@ debug_without_account_key!(StopPointsRequest {
 
 impl StopPointsRequest {
     /// An unfiltered request for every stop the producer serves.
-    pub fn new(
-        request_timestamp: DateTime<FixedOffset>,
-        requestor_ref: impl Into<ParticipantRef>,
-    ) -> Self {
+    pub fn new(request_timestamp: DateTime<FixedOffset>, requestor_ref: impl Into<ParticipantRef>) -> Self {
         Self {
             version: None,
             request_timestamp,
@@ -275,10 +270,7 @@ debug_without_account_key!(LinesRequest {
 
 impl LinesRequest {
     /// An unfiltered request for every line the producer serves.
-    pub fn new(
-        request_timestamp: DateTime<FixedOffset>,
-        requestor_ref: impl Into<ParticipantRef>,
-    ) -> Self {
+    pub fn new(request_timestamp: DateTime<FixedOffset>, requestor_ref: impl Into<ParticipantRef>) -> Self {
         Self {
             version: None,
             request_timestamp,
@@ -308,9 +300,7 @@ impl LinesRequest {
         } else if let Some(place_ref) = &self.place_ref {
             Some(LinesScope::Place(place_ref))
         } else {
-            self.line_direction_ref
-                .as_ref()
-                .map(LinesScope::LineDirection)
+            self.line_direction_ref.as_ref().map(LinesScope::LineDirection)
         }
     }
 }
@@ -370,10 +360,7 @@ pub struct LinesDelivery {
 
 impl LinesDelivery {
     /// A successful delivery of the given lines.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        annotated_line_ref: Vec<AnnotatedLineRef>,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, annotated_line_ref: Vec<AnnotatedLineRef>) -> Self {
         Self {
             version: None,
             response_timestamp,
@@ -424,10 +411,7 @@ debug_without_account_key!(ServiceFeaturesRequest {
 
 impl ServiceFeaturesRequest {
     /// A request for the producer's whole service-feature code list.
-    pub fn new(
-        request_timestamp: DateTime<FixedOffset>,
-        requestor_ref: impl Into<ParticipantRef>,
-    ) -> Self {
+    pub fn new(request_timestamp: DateTime<FixedOffset>, requestor_ref: impl Into<ParticipantRef>) -> Self {
         Self {
             version: None,
             request_timestamp,
@@ -481,10 +465,7 @@ pub struct ServiceFeaturesDelivery {
 
 impl ServiceFeaturesDelivery {
     /// A successful delivery of the given code list.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        service_feature: Vec<ServiceFeature>,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, service_feature: Vec<ServiceFeature>) -> Self {
         Self {
             version: None,
             response_timestamp,
@@ -542,10 +523,7 @@ debug_without_account_key!(VehicleFeaturesRequest {
 
 impl VehicleFeaturesRequest {
     /// A request for the producer's whole vehicle-feature code list.
-    pub fn new(
-        request_timestamp: DateTime<FixedOffset>,
-        requestor_ref: impl Into<ParticipantRef>,
-    ) -> Self {
+    pub fn new(request_timestamp: DateTime<FixedOffset>, requestor_ref: impl Into<ParticipantRef>) -> Self {
         Self {
             version: None,
             request_timestamp,
@@ -601,10 +579,7 @@ pub struct VehicleFeaturesDelivery {
 
 impl VehicleFeaturesDelivery {
     /// A successful delivery of the given code list.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        vehicle_feature: Vec<VehicleFeature>,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, vehicle_feature: Vec<VehicleFeature>) -> Self {
         Self {
             version: None,
             response_timestamp,
@@ -663,10 +638,7 @@ debug_without_account_key!(ProductCategoriesRequest {
 
 impl ProductCategoriesRequest {
     /// A request for the producer's whole product-category code list.
-    pub fn new(
-        request_timestamp: DateTime<FixedOffset>,
-        requestor_ref: impl Into<ParticipantRef>,
-    ) -> Self {
+    pub fn new(request_timestamp: DateTime<FixedOffset>, requestor_ref: impl Into<ParticipantRef>) -> Self {
         Self {
             version: None,
             request_timestamp,
@@ -722,10 +694,7 @@ pub struct ProductCategoriesDelivery {
 
 impl ProductCategoriesDelivery {
     /// A successful delivery of the given code list.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        product_category: Vec<ProductCategory>,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, product_category: Vec<ProductCategory>) -> Self {
         Self {
             version: None,
             response_timestamp,
@@ -1149,11 +1118,7 @@ mod tests {
         assert_eq!(directions.len(), 2);
         assert!(directions[1].journey_patterns.is_none());
 
-        let stops = directions[0]
-            .journey_patterns
-            .as_ref()
-            .unwrap()
-            .journey_pattern[0]
+        let stops = directions[0].journey_patterns.as_ref().unwrap().journey_pattern[0]
             .stops_in_pattern
             .as_ref()
             .unwrap();
@@ -1164,11 +1129,7 @@ mod tests {
             Some(StopAreaRef::new("SA2001"))
         );
         assert_eq!(
-            stops.stop_point_in_pattern[1]
-                .lines
-                .as_ref()
-                .unwrap()
-                .items[0],
+            stops.stop_point_in_pattern[1].lines.as_ref().unwrap().items[0],
             StopPointLine::LineDirection(LineDirection::with_direction("Line564", "NORTH"))
         );
     }
@@ -1216,8 +1177,7 @@ mod tests {
             ],
         );
 
-        let xml =
-            quick_xml::se::to_string_with_root("ServiceFeaturesDelivery", &delivery).unwrap();
+        let xml = quick_xml::se::to_string_with_root("ServiceFeaturesDelivery", &delivery).unwrap();
         assert!(xml.contains("<ServiceFeatureCode>CAT01</ServiceFeatureCode>"));
         assert!(xml.contains("<ServiceFeatureCode>CAT021</ServiceFeatureCode>"));
         // Alone among the discovery deliveries, this one has no Extensions element.

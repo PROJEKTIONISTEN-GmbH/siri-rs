@@ -64,16 +64,13 @@ pub mod delivery;
 pub mod request;
 
 pub use capabilities::{
-    MonitoringPermissionItem, MonitoringPermissions, VehicleMonitorPermission,
-    VehicleMonitoringAccessControl, VehicleMonitoringCapabilitiesResponse,
-    VehicleMonitoringPermissions, VehicleMonitoringRequestPolicy,
-    VehicleMonitoringResponseFeatures, VehicleMonitoringServiceCapabilities,
-    VehicleMonitoringServicePermission, VehicleMonitoringTopicFiltering,
+    MonitoringPermissionItem, MonitoringPermissions, VehicleMonitorPermission, VehicleMonitoringAccessControl,
+    VehicleMonitoringCapabilitiesResponse, VehicleMonitoringPermissions, VehicleMonitoringRequestPolicy,
+    VehicleMonitoringResponseFeatures, VehicleMonitoringServiceCapabilities, VehicleMonitoringServicePermission,
+    VehicleMonitoringTopicFiltering,
 };
 pub use delivery::{VehicleActivity, VehicleActivityCancellation, VehicleMonitoringDelivery};
-pub use request::{
-    MonitoredSubject, VehicleMonitoringRequest, VehicleMonitoringSubscriptionRequest,
-};
+pub use request::{MonitoredSubject, VehicleMonitoringRequest, VehicleMonitoringSubscriptionRequest};
 
 siri_ref! {
     /// Identifies one of the vehicle-monitoring services a producer publishes under.

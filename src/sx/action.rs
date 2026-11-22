@@ -126,21 +126,13 @@ macro_rules! impl_action_list {
             /// because it is not a channel instruction.
             pub fn actions(&self) -> Vec<Action<'_>> {
                 let mut actions: Vec<Action<'_>> = Vec::new();
-                actions.extend(
-                    self.publish_to_web_action
-                        .iter()
-                        .map(Action::PublishToWebAction),
-                );
+                actions.extend(self.publish_to_web_action.iter().map(Action::PublishToWebAction));
                 actions.extend(
                     self.publish_to_mobile_action
                         .iter()
                         .map(Action::PublishToMobileAction),
                 );
-                actions.extend(
-                    self.publish_to_tv_action
-                        .iter()
-                        .map(Action::PublishToTvAction),
-                );
+                actions.extend(self.publish_to_tv_action.iter().map(Action::PublishToTvAction));
                 actions.extend(
                     self.publish_to_alerts_action
                         .iter()
@@ -157,11 +149,7 @@ macro_rules! impl_action_list {
                         .iter()
                         .map(Action::NotifyByEmailAction),
                 );
-                actions.extend(
-                    self.notify_by_sms_action
-                        .iter()
-                        .map(Action::NotifyBySmsAction),
-                );
+                actions.extend(self.notify_by_sms_action.iter().map(Action::NotifyBySmsAction));
                 actions.extend(
                     self.notify_by_pager_action
                         .iter()
@@ -218,10 +206,7 @@ pub struct PublishAtScope {
 impl PublishAtScope {
     /// A scope naming the given entities at the given level.
     pub fn new(scope_type: ScopeType, affects: AffectsScope) -> Self {
-        Self {
-            scope_type,
-            affects,
-        }
+        Self { scope_type, affects }
     }
 }
 
@@ -243,10 +228,7 @@ pub struct ClosedTimestampRange {
 impl ClosedTimestampRange {
     /// A period between two instants, both inclusive.
     pub fn between(start_time: DateTime<FixedOffset>, end_time: DateTime<FixedOffset>) -> Self {
-        Self {
-            start_time,
-            end_time,
-        }
+        Self { start_time, end_time }
     }
 }
 
@@ -899,14 +881,8 @@ mod tests {
         let actions: Actions = from_str(xml).unwrap();
         assert_eq!(actions.publish_to_web_action.len(), 2);
         assert_eq!(actions.publish_to_mobile_action.len(), 1);
-        assert_eq!(
-            actions.publish_to_web_action[1].social_network,
-            ["twitter.com"]
-        );
-        assert_eq!(
-            actions.publish_to_alerts_action[0].clear_notice,
-            Some(true)
-        );
+        assert_eq!(actions.publish_to_web_action[1].social_network, ["twitter.com"]);
+        assert_eq!(actions.publish_to_alerts_action[0].clear_notice, Some(true));
 
         let listed = actions.actions();
         assert_eq!(listed.len(), 4);
@@ -959,10 +935,7 @@ mod tests {
         assert!(at("<PublicationWindow>") < at("<ActionRef>"));
         assert!(at("<ActionRef>") < at("<RecordedAtTime>"));
         assert!(at("<Perspective>") < at("<TextualContent>"));
-        assert_eq!(
-            from_str::<PassengerInformationAction>(&written).unwrap(),
-            action
-        );
+        assert_eq!(from_str::<PassengerInformationAction>(&written).unwrap(), action);
     }
 
     #[test]
@@ -973,10 +946,7 @@ mod tests {
         assert_eq!(content.textual_content_size.as_deref(), Some("L"));
         assert_eq!(content.summary_content.summary_text.len(), 2);
         assert_eq!(content.summary_content.summary_text[0].value, "Unterbruch");
-        assert_eq!(
-            content.summary_content.summary_text[1].value,
-            "Line interruption"
-        );
+        assert_eq!(content.summary_content.summary_text[1].value, "Line interruption");
         assert!(content.reason_content.is_none());
         assert_eq!(content.remark_content[0].remark_priority, Some(1));
         assert!(content.actions().is_empty(), "no channel restriction given");

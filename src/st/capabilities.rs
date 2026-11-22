@@ -4,9 +4,9 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::framework::{
-    CoordinateFormat, ErrorCondition, GeneralInteractionCapability, GeneralPermissions,
-    LinePermissions, MonitoringCapabilityAccessControl, OperatorPermissions, PermissionScope,
-    PermissionVersionRef, ServiceRequestError, StopMonitorPermissions, TransportDescription,
+    CoordinateFormat, ErrorCondition, GeneralInteractionCapability, GeneralPermissions, LinePermissions,
+    MonitoringCapabilityAccessControl, OperatorPermissions, PermissionScope, PermissionVersionRef, ServiceRequestError,
+    StopMonitorPermissions, TransportDescription,
 };
 use crate::types::{Empty, EndpointAddress, Extensions, MessageRef, ParticipantRef};
 use crate::xml::SiriRoot;
@@ -51,7 +51,11 @@ pub struct StopTimetableCapabilitiesResponse {
     )]
     pub stop_timetable_service_capabilities: Option<StopTimetableServiceCapabilities>,
     /// What participants are allowed to see.
-    #[serde(rename = "StopTimetablePermissions", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StopTimetablePermissions",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stop_timetable_permissions: Option<StopTimetablePermissions>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -60,10 +64,7 @@ pub struct StopTimetableCapabilitiesResponse {
 
 impl StopTimetableCapabilitiesResponse {
     /// A successful answer describing the given capabilities.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        capabilities: StopTimetableServiceCapabilities,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, capabilities: StopTimetableServiceCapabilities) -> Self {
         Self {
             version: None,
             response_timestamp,

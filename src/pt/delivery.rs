@@ -6,15 +6,13 @@ use serde::{Deserialize, Serialize};
 use crate::enumerations::{FirstOrLastJourney, VehicleModesOfTransport};
 use crate::framework::{ErrorCondition, ServiceRequestError};
 use crate::model::{
-    Branding, BrandingRef, DatedVehicleJourney, DirectionRef, GroupOfLinesRef, JourneyPatternRef,
-    LineRef, OperatorRef, ProductCategoryRef, RemovedDatedVehicleJourney,
-    RemovedServiceJourneyInterchange, RouteRef, ServiceFeatureRef, ServiceJourneyInterchange,
-    VehicleFeatureRef, VersionRef,
+    Branding, BrandingRef, DatedVehicleJourney, DirectionRef, GroupOfLinesRef, JourneyPatternRef, LineRef, OperatorRef,
+    ProductCategoryRef, RemovedDatedVehicleJourney, RemovedServiceJourneyInterchange, RouteRef, ServiceFeatureRef,
+    ServiceJourneyInterchange, VehicleFeatureRef, VersionRef,
 };
 use crate::types::{
-    ClosedTimestampRange, Duration, EndpointAddress, Extensions, MessageRef,
-    NaturalLanguagePlaceName, NaturalLanguageString, ParticipantRef, SubscriptionFilterRef,
-    SubscriptionRef,
+    ClosedTimestampRange, Duration, EndpointAddress, Extensions, MessageRef, NaturalLanguagePlaceName,
+    NaturalLanguageString, ParticipantRef, SubscriptionFilterRef, SubscriptionRef,
 };
 
 /// The planned timetable a producer is publishing.
@@ -75,7 +73,11 @@ pub struct ProductionTimetableDelivery {
     #[serde(rename = "DefaultLanguage", default, skip_serializing_if = "Option::is_none")]
     pub default_language: Option<String>,
     /// The timetable itself, one frame per line and timetable version.
-    #[serde(rename = "DatedTimetableVersionFrame", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "DatedTimetableVersionFrame",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub dated_timetable_version_frame: Vec<DatedTimetableVersionFrame>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -223,13 +225,21 @@ pub struct DatedTimetableVersionFrame {
     #[serde(rename = "DatedVehicleJourney", default, skip_serializing_if = "Vec::is_empty")]
     pub dated_vehicle_journey: Vec<DatedVehicleJourney>,
     /// Runs taken out of a timetable already published.
-    #[serde(rename = "RemovedDatedVehicleJourney", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "RemovedDatedVehicleJourney",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub removed_dated_vehicle_journey: Vec<RemovedDatedVehicleJourney>,
     /// The interchanges planned around the runs.
     #[serde(rename = "ServiceJourneyInterchange", default, skip_serializing_if = "Vec::is_empty")]
     pub service_journey_interchange: Vec<ServiceJourneyInterchange>,
     /// Interchanges taken out of a timetable already published.
-    #[serde(rename = "RemovedServiceJourneyInterchange", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "RemovedServiceJourneyInterchange",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub removed_service_journey_interchange: Vec<RemovedServiceJourneyInterchange>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -305,24 +315,20 @@ mod tests {
     fn a_frame_states_what_its_runs_have_in_common_before_the_runs() {
         let delivery = ProductionTimetableDelivery::new(timestamp(), vec![frame("DVC0008767")]);
 
-        let xml = quick_xml::se::to_string_with_root("ProductionTimetableDelivery", &delivery)
-            .expect("delivery serialises");
+        let xml =
+            quick_xml::se::to_string_with_root("ProductionTimetableDelivery", &delivery).expect("delivery serialises");
         let line = xml.find("<LineRef>").expect("the line is written");
         let direction = xml.find("<DirectionRef>").expect("the direction is written");
-        let journey = xml
-            .find("<DatedVehicleJourney>")
-            .expect("the run is written");
+        let journey = xml.find("<DatedVehicleJourney>").expect("the run is written");
         assert!(line < direction && direction < journey, "{xml}");
 
-        let read: ProductionTimetableDelivery =
-            quick_xml::de::from_str(&xml).expect("delivery round-trips");
+        let read: ProductionTimetableDelivery = quick_xml::de::from_str(&xml).expect("delivery round-trips");
         assert_eq!(read, delivery);
     }
 
     #[test]
     fn the_runs_of_every_frame_are_reported_together() {
-        let delivery =
-            ProductionTimetableDelivery::new(timestamp(), vec![frame("first"), frame("second")]);
+        let delivery = ProductionTimetableDelivery::new(timestamp(), vec![frame("first"), frame("second")]);
 
         assert_eq!(
             delivery

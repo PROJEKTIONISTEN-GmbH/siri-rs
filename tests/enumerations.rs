@@ -150,9 +150,7 @@ fn every_enumeration_matches_the_schema_token_for_token() {
             continue;
         };
         if *expected != tokens {
-            failures.push(format!(
-                "{xsd_type}:\n  schema: {expected:?}\n  crate:  {tokens:?}"
-            ));
+            failures.push(format!("{xsd_type}:\n  schema: {expected:?}\n  crate:  {tokens:?}"));
         }
     }
 
@@ -180,8 +178,7 @@ fn every_enumeration_in_the_crate_is_checked() {
 fn schema_enumerations() -> BTreeMap<String, Vec<String>> {
     let mut out = BTreeMap::new();
     for path in schema_files() {
-        let xml = std::fs::read_to_string(&path)
-            .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
+        let xml = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
         let mut reader = quick_xml::Reader::from_str(&xml);
         let mut depth = 0usize;
         let mut current: Option<(usize, String, Vec<String>)> = None;
@@ -235,10 +232,7 @@ fn schema_enumerations() -> BTreeMap<String, Vec<String>> {
     out
 }
 
-fn collect_value(
-    current: Option<&mut (usize, String, Vec<String>)>,
-    element: &quick_xml::events::BytesStart<'_>,
-) {
+fn collect_value(current: Option<&mut (usize, String, Vec<String>)>, element: &quick_xml::events::BytesStart<'_>) {
     if let (Some(entry), Some(value)) = (current, attribute(element, "value")) {
         entry.2.push(value);
     }
@@ -250,11 +244,7 @@ fn attribute(start: &quick_xml::events::BytesStart<'_>, name: &str) -> Option<St
         .with_checks(false)
         .flatten()
         .find(|attribute| attribute.key.as_ref() == name.as_bytes())
-        .map(|attribute| {
-            String::from_utf8_lossy(&attribute.value)
-                .trim()
-                .to_owned()
-        })
+        .map(|attribute| String::from_utf8_lossy(&attribute.value).trim().to_owned())
 }
 
 fn local_name(bytes: &[u8]) -> String {

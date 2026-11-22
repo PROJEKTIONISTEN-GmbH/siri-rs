@@ -6,12 +6,12 @@ use serde::{Deserialize, Serialize};
 use crate::enumerations::VehicleModesOfTransport;
 use crate::framework::{ErrorCondition, ServiceRequestError};
 use crate::model::{
-    Branding, BrandingRef, DirectionRef, FramedVehicleJourneyRef, GroupOfLinesRef,
-    JourneyPatternRef, LineRef, MonitoredVehicleJourney, ProgressBetweenStops, RouteRef,
+    Branding, BrandingRef, DirectionRef, FramedVehicleJourneyRef, GroupOfLinesRef, JourneyPatternRef, LineRef,
+    MonitoredVehicleJourney, ProgressBetweenStops, RouteRef,
 };
 use crate::types::{
-    Duration, EndpointAddress, Extensions, ItemIdentifier, ItemRef, MessageRef,
-    NaturalLanguageString, ParticipantRef, SubscriptionFilterRef, SubscriptionRef,
+    Duration, EndpointAddress, Extensions, ItemIdentifier, ItemRef, MessageRef, NaturalLanguageString, ParticipantRef,
+    SubscriptionFilterRef, SubscriptionRef,
 };
 
 use super::VehicleMonitoringRef;
@@ -77,7 +77,11 @@ pub struct VehicleMonitoringDelivery {
     #[serde(rename = "VehicleActivity", default, skip_serializing_if = "Vec::is_empty")]
     pub vehicle_activity: Vec<VehicleActivity>,
     /// Vehicles the producer previously reported and is now withdrawing.
-    #[serde(rename = "VehicleActivityCancellation", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "VehicleActivityCancellation",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub vehicle_activity_cancellation: Vec<VehicleActivityCancellation>,
     /// Notes about the delivery as a whole, one per language.
     #[serde(rename = "VehicleActivityNote", default, skip_serializing_if = "Vec::is_empty")]
@@ -89,10 +93,7 @@ pub struct VehicleMonitoringDelivery {
 
 impl VehicleMonitoringDelivery {
     /// A delivery carrying the given vehicles.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        vehicle_activity: Vec<VehicleActivity>,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, vehicle_activity: Vec<VehicleActivity>) -> Self {
         Self {
             version: None,
             response_timestamp,
@@ -237,10 +238,7 @@ pub struct VehicleActivityCancellation {
 
 impl VehicleActivityCancellation {
     /// A withdrawal of what was reported about the given journey.
-    pub fn new(
-        recorded_at_time: DateTime<FixedOffset>,
-        vehicle_journey_ref: FramedVehicleJourneyRef,
-    ) -> Self {
+    pub fn new(recorded_at_time: DateTime<FixedOffset>, vehicle_journey_ref: FramedVehicleJourneyRef) -> Self {
         Self {
             recorded_at_time,
             item_ref: None,
@@ -293,19 +291,16 @@ mod tests {
     fn an_activity_writes_its_identity_before_the_journey_and_reads_back() {
         let delivery = VehicleMonitoringDelivery::new(timestamp(), vec![activity()]);
 
-        let xml = quick_xml::se::to_string_with_root("VehicleMonitoringDelivery", &delivery)
-            .expect("delivery serialises");
+        let xml =
+            quick_xml::se::to_string_with_root("VehicleMonitoringDelivery", &delivery).expect("delivery serialises");
         let valid_until = xml.find("<ValidUntilTime>").expect("the horizon is written");
         let monitoring = xml
             .find("<VehicleMonitoringRef>")
             .expect("the monitoring service is written");
-        let journey = xml
-            .find("<MonitoredVehicleJourney>")
-            .expect("the journey is written");
+        let journey = xml.find("<MonitoredVehicleJourney>").expect("the journey is written");
         assert!(valid_until < monitoring && monitoring < journey, "{xml}");
 
-        let read: VehicleMonitoringDelivery =
-            quick_xml::de::from_str(&xml).expect("delivery round-trips");
+        let read: VehicleMonitoringDelivery = quick_xml::de::from_str(&xml).expect("delivery round-trips");
         assert_eq!(read, delivery);
     }
 
@@ -322,16 +317,15 @@ mod tests {
                 },
             ));
 
-        let xml = quick_xml::se::to_string_with_root("VehicleMonitoringDelivery", &delivery)
-            .expect("delivery serialises");
+        let xml =
+            quick_xml::se::to_string_with_root("VehicleMonitoringDelivery", &delivery).expect("delivery serialises");
         let activity = xml.find("<VehicleActivity>").expect("the activity is written");
         let cancellation = xml
             .find("<VehicleActivityCancellation>")
             .expect("the cancellation is written");
         assert!(activity < cancellation, "{xml}");
 
-        let read: VehicleMonitoringDelivery =
-            quick_xml::de::from_str(&xml).expect("delivery round-trips");
+        let read: VehicleMonitoringDelivery = quick_xml::de::from_str(&xml).expect("delivery round-trips");
         assert_eq!(read, delivery);
     }
 }

@@ -17,24 +17,20 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{
-    AccessModes, AccessibilityFeature, AirSubmodesOfTransport, AreaOfInterest,
-    ArrivalBoardingActivity, BusSubmodesOfTransport, CallStatus, CoachSubmodesOfTransport,
-    ConnectionDirection, DepartureBoardingActivity, FacilityStatus, InterchangeStatus,
-    MetroSubmodesOfTransport, RailSubmodesOfTransport, RoutePointType, ServiceCondition,
-    StopPlaceComponentType, StopPlaceType, StopPointType, TelecabinSubmodesOfTransport,
+    AccessModes, AccessibilityFeature, AirSubmodesOfTransport, AreaOfInterest, ArrivalBoardingActivity,
+    BusSubmodesOfTransport, CallStatus, CoachSubmodesOfTransport, ConnectionDirection, DepartureBoardingActivity,
+    FacilityStatus, InterchangeStatus, MetroSubmodesOfTransport, RailSubmodesOfTransport, RoutePointType,
+    ServiceCondition, StopPlaceComponentType, StopPlaceType, StopPointType, TelecabinSubmodesOfTransport,
     TramSubmodesOfTransport, VehicleModesOfTransport, WaterSubmodesOfTransport,
 };
 use crate::model::{
-    AccessibilityAssessment, BlockRef, ConnectionLinkRef, CourseOfJourneyRef, DatedVehicleJourneyRef,
-    Direction, DirectionRef, FacilityRef, FramedVehicleJourneyRef, InterchangeRef, JourneyPartInfo,
-    LineRef, LinkProjection, Location, OperationalUnitRef, OperatorRef, PlaceRef, PointProjection,
-    ProductCategoryRef, QuayRef, RouteRef, ServiceFeatureRef, StopPlaceComponentRef, StopPlaceRef,
-    StopPointRef, TrainBlockPart, TrainNumberRef, VehicleFeatureRef, VehicleJourneyRef, VehicleRef,
-    ZoneProjection,
+    AccessibilityAssessment, BlockRef, ConnectionLinkRef, CourseOfJourneyRef, DatedVehicleJourneyRef, Direction,
+    DirectionRef, FacilityRef, FramedVehicleJourneyRef, InterchangeRef, JourneyPartInfo, LineRef, LinkProjection,
+    Location, OperationalUnitRef, OperatorRef, PlaceRef, PointProjection, ProductCategoryRef, QuayRef, RouteRef,
+    ServiceFeatureRef, StopPlaceComponentRef, StopPlaceRef, StopPointRef, TrainBlockPart, TrainNumberRef,
+    VehicleFeatureRef, VehicleJourneyRef, VehicleRef, ZoneProjection,
 };
-use crate::types::{
-    AnyContent, Duration, Empty, Extensions, NaturalLanguagePlaceName, NaturalLanguageString,
-};
+use crate::types::{AnyContent, Duration, Empty, Extensions, NaturalLanguagePlaceName, NaturalLanguageString};
 
 siri_ref! {
     /// Identifies a fare or administrative zone, or the locality a stop lies in.
@@ -488,10 +484,7 @@ impl AffectedModes {
 
     /// Only the given modes are affected.
     pub fn these(mode: Vec<AffectedMode>) -> Self {
-        Self {
-            all_modes: None,
-            mode,
-        }
+        Self { all_modes: None, mode }
     }
 
     /// Which alternative of the schema's choice this value carries, or `None` when
@@ -1326,7 +1319,11 @@ pub struct AffectedInterchange {
     #[serde(rename = "InterchangeStopPointName", default, skip_serializing_if = "Vec::is_empty")]
     pub interchange_stop_point_name: Vec<NaturalLanguageString>,
     /// The journey on the other side of the interchange.
-    #[serde(rename = "ConnectingVehicleJourneyRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ConnectingVehicleJourneyRef",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub connecting_vehicle_journey_ref: Option<DatedVehicleJourneyRef>,
     /// Whether the connection will be held, has been broken, or is uncertain.
     #[serde(
@@ -1421,10 +1418,18 @@ pub struct AffectedVehicleJourney {
     pub destination_aimed_arrival_time: Option<DateTime<FixedOffset>>,
     /// The origin as shown on displays at the destination, useful for identifying
     /// the journey to a passenger.
-    #[serde(rename = "OriginDisplayAtDestination", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "OriginDisplayAtDestination",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub origin_display_at_destination: Vec<NaturalLanguagePlaceName>,
     /// The destination as shown on displays at the origin.
-    #[serde(rename = "DestinationDisplayAtOrigin", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "DestinationDisplayAtOrigin",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub destination_display_at_origin: Vec<NaturalLanguagePlaceName>,
     /// How accessible the journey is while the situation lasts.
     #[serde(rename = "AccessibilityAssessment", default, skip_serializing_if = "Option::is_none")]
@@ -1839,7 +1844,11 @@ pub struct AffectedVehicle {
     #[serde(rename = "VehicleRef")]
     pub vehicle_ref: VehicleRef,
     /// The vehicle's registration plates.
-    #[serde(rename = "VehicleRegistrationNumberPlate", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "VehicleRegistrationNumberPlate",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub vehicle_registration_number_plate: Vec<String>,
     /// A telephone number the vehicle can be reached on.
     #[serde(rename = "PhoneNumber", default, skip_serializing_if = "Option::is_none")]
@@ -2038,9 +2047,7 @@ pub struct AffectedNavigationPaths {
 impl AffectedNavigationPaths {
     /// The given walking routes are affected.
     pub fn new(navigation_path_ref: Vec<NavigationPathRef>) -> Self {
-        Self {
-            navigation_path_ref,
-        }
+        Self { navigation_path_ref }
     }
 }
 
@@ -2123,15 +2130,13 @@ mod tests {
             AffectedLine::new("ch:vbl:VBL008"),
         ]);
 
-        let xml = quick_xml::se::to_string_with_root("AffectedNetwork", &network)
-            .expect("the network is written");
+        let xml = quick_xml::se::to_string_with_root("AffectedNetwork", &network).expect("the network is written");
         assert!(
             at(&xml, "ch:vbl:VBL006") < at(&xml, "ch:vbl:VBL008"),
             "the lines keep the order they were given: {xml}"
         );
 
-        let read_back: AffectedNetwork =
-            quick_xml::de::from_str(&xml).expect("the network parses back");
+        let read_back: AffectedNetwork = quick_xml::de::from_str(&xml).expect("the network parses back");
         assert_eq!(read_back, network);
     }
 
@@ -2161,16 +2166,15 @@ mod tests {
                      <StopPlaceName xml:lang=\"DE\">Casino-Palace</StopPlaceName>\
                    </AffectedStopPoint>";
 
-        let stop_point: AffectedStopPoint =
-            quick_xml::de::from_str(xml).expect("the stop point parses");
+        let stop_point: AffectedStopPoint = quick_xml::de::from_str(xml).expect("the stop point parses");
         assert_eq!(
             stop_point.stop_point_ref.as_ref().map(StopPointRef::as_str),
             Some("ch:vbl:621::01")
         );
         assert_eq!(stop_point.stop_point_name[0].lang.as_deref(), Some("DE"));
 
-        let written = quick_xml::se::to_string_with_root("AffectedStopPoint", &stop_point)
-            .expect("the stop point is written");
+        let written =
+            quick_xml::se::to_string_with_root("AffectedStopPoint", &stop_point).expect("the stop point is written");
         assert!(
             at(&written, "<StopPointRef>") < at(&written, "<StopPointName")
                 && at(&written, "<StopPointName") < at(&written, "<StopPlaceName"),
@@ -2196,9 +2200,7 @@ mod tests {
     fn an_indirect_section_reference_names_both_of_its_ends() {
         let section = IndirectSectionRef {
             first_stop_point_ref: Some(StopPointRef::new("BAAR0003")),
-            intermediate: vec![IntermediateSectionPoint::IntermediateQuayRef(QuayRef::new(
-                "BAR00021",
-            ))],
+            intermediate: vec![IntermediateSectionPoint::IntermediateQuayRef(QuayRef::new("BAR00021"))],
             last_quay_ref: Some(QuayRef::new("BAR00099")),
             ..IndirectSectionRef::default()
         };
@@ -2207,14 +2209,10 @@ mod tests {
             section.first(),
             Some(SectionBoundary::StopPoint(&StopPointRef::new("BAAR0003")))
         );
-        assert_eq!(
-            section.last(),
-            Some(SectionBoundary::Quay(&QuayRef::new("BAR00099")))
-        );
+        assert_eq!(section.last(), Some(SectionBoundary::Quay(&QuayRef::new("BAR00099"))));
         assert_eq!(IndirectSectionRef::default().first(), None);
 
-        let xml = quick_xml::se::to_string_with_root("IndirectSectionRef", &section)
-            .expect("the section is written");
+        let xml = quick_xml::se::to_string_with_root("IndirectSectionRef", &section).expect("the section is written");
         assert!(
             at(&xml, "<FirstStopPointRef>") < at(&xml, "<IntermediateQuayRef>")
                 && at(&xml, "<IntermediateQuayRef>") < at(&xml, "<LastQuayRef>"),

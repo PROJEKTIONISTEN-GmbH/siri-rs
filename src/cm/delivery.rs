@@ -6,13 +6,12 @@ use serde::{Deserialize, Serialize};
 use crate::enumerations::VehicleModesOfTransport;
 use crate::framework::{ErrorCondition, ServiceRequestError};
 use crate::model::{
-    Branding, BrandingRef, ClearDownRef, ConnectionLinkRef, DirectionRef, FramedVehicleJourneyRef,
-    GroupOfLinesRef, InterchangeJourney, InterchangeRef, JourneyPatternRef, LineRef, Location,
-    RouteRef, StopPointRef,
+    Branding, BrandingRef, ClearDownRef, ConnectionLinkRef, DirectionRef, FramedVehicleJourneyRef, GroupOfLinesRef,
+    InterchangeJourney, InterchangeRef, JourneyPatternRef, LineRef, Location, RouteRef, StopPointRef,
 };
 use crate::types::{
-    Duration, EndpointAddress, Extensions, ItemIdentifier, MessageRef, NaturalLanguageString,
-    ParticipantRef, SubscriptionFilterRef, SubscriptionRef,
+    Duration, EndpointAddress, Extensions, ItemIdentifier, MessageRef, NaturalLanguageString, ParticipantRef,
+    SubscriptionFilterRef, SubscriptionRef,
 };
 
 /// Declares the fields every connection-monitoring delivery shares.
@@ -199,7 +198,11 @@ pub struct MonitoredFeederArrival {
     )]
     pub vehicle_at_stop: Option<bool>,
     /// How many passengers want to change here.
-    #[serde(rename = "NumberOfTransferPassengers", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "NumberOfTransferPassengers",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub number_of_transfer_passengers: Option<u64>,
     /// When the feeder was planned to arrive.
     #[serde(
@@ -505,11 +508,7 @@ mod tests {
         let mut delivery = ConnectionMonitoringFeederDelivery::new(timestamp());
         delivery.monitored_feeder_arrival.push(MonitoredFeederArrival {
             number_of_transfer_passengers: Some(12),
-            ..MonitoredFeederArrival::new(
-                timestamp(),
-                "98789",
-                InterchangeJourney::new("123", "OUT"),
-            )
+            ..MonitoredFeederArrival::new(timestamp(), "98789", InterchangeJourney::new("123", "OUT"))
         });
         delivery
             .monitored_feeder_arrival_cancellation
@@ -524,17 +523,15 @@ mod tests {
                 },
             ));
 
-        let xml =
-            quick_xml::se::to_string_with_root("ConnectionMonitoringFeederDelivery", &delivery)
-                .expect("delivery serialises");
+        let xml = quick_xml::se::to_string_with_root("ConnectionMonitoringFeederDelivery", &delivery)
+            .expect("delivery serialises");
         let arrival = xml.find("<MonitoredFeederArrival>").expect("the arrival is written");
         let cancellation = xml
             .find("<MonitoredFeederArrivalCancellation>")
             .expect("the cancellation is written");
         assert!(arrival < cancellation, "{xml}");
 
-        let read: ConnectionMonitoringFeederDelivery =
-            quick_xml::de::from_str(&xml).expect("delivery round-trips");
+        let read: ConnectionMonitoringFeederDelivery = quick_xml::de::from_str(&xml).expect("delivery round-trips");
         assert_eq!(read, delivery);
     }
 
@@ -543,11 +540,7 @@ mod tests {
         let mut delivery = ConnectionMonitoringDistributorDelivery::new(timestamp());
         delivery.wait_prolonged_departure.push(WaitProlongedDeparture {
             expected_departure_time: Some(timestamp()),
-            ..WaitProlongedDeparture::new(
-                timestamp(),
-                "HLKT00023",
-                InterchangeJourney::new("ABC", "Out"),
-            )
+            ..WaitProlongedDeparture::new(timestamp(), "HLKT00023", InterchangeJourney::new("ABC", "Out"))
         });
         delivery
             .stopping_position_changed_departure
@@ -563,18 +556,11 @@ mod tests {
             .distributor_departure_cancellation
             .push(DistributorDepartureCancellation {
                 reason: vec![NaturalLanguageString::new("Short staff")],
-                ..DistributorDepartureCancellation::new(
-                    timestamp(),
-                    "987259",
-                    InterchangeJourney::new("123", "OUT"),
-                )
+                ..DistributorDepartureCancellation::new(timestamp(), "987259", InterchangeJourney::new("123", "OUT"))
             });
 
-        let xml = quick_xml::se::to_string_with_root(
-            "ConnectionMonitoringDistributorDelivery",
-            &delivery,
-        )
-        .expect("delivery serialises");
+        let xml = quick_xml::se::to_string_with_root("ConnectionMonitoringDistributorDelivery", &delivery)
+            .expect("delivery serialises");
         assert_eq!(xml.matches("<ConnectionLinkRef>").count(), 3, "{xml}");
         assert_eq!(xml.matches("<DistributorJourney>").count(), 3, "{xml}");
 

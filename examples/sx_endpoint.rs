@@ -82,8 +82,7 @@ fn main() -> siri_rs::Result<()> {
     //    producer uses fetched delivery it announces them rather than pushing.
     for outbound in producer.poll(now) {
         show("producer → consumer", &outbound.message)?;
-        let ConsumerEvent::DataReady { reply, fetch } = consumer.handle(&outbound.message, now)?
-        else {
+        let ConsumerEvent::DataReady { reply, fetch } = consumer.handle(&outbound.message, now)? else {
             panic!("a fetched-delivery producer announces its data");
         };
 

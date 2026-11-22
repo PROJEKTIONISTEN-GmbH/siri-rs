@@ -4,9 +4,9 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::framework::{
-    CoordinateFormat, ErrorCondition, GeneralInteractionCapability, GeneralPermissions,
-    LinePermissions, OperatorPermissions, PermissionScope, PermissionVersionRef,
-    ServiceRequestError, SubscriptionPolicyCapability, TransportDescription,
+    CoordinateFormat, ErrorCondition, GeneralInteractionCapability, GeneralPermissions, LinePermissions,
+    OperatorPermissions, PermissionScope, PermissionVersionRef, ServiceRequestError, SubscriptionPolicyCapability,
+    TransportDescription,
 };
 use crate::types::{Duration, Empty, EndpointAddress, Extensions, MessageRef, ParticipantRef};
 use crate::xml::SiriRoot;
@@ -64,10 +64,7 @@ pub struct FacilityMonitoringCapabilitiesResponse {
 
 impl FacilityMonitoringCapabilitiesResponse {
     /// A successful answer describing the given capabilities.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        capabilities: FacilityMonitoringServiceCapabilities,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, capabilities: FacilityMonitoringServiceCapabilities) -> Self {
         Self {
             version: None,
             response_timestamp,

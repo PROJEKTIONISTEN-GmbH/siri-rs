@@ -21,14 +21,13 @@ pub mod delivery;
 pub mod request;
 
 pub use capabilities::{
-    ConnectionMonitoringCapabilitiesResponse, ConnectionMonitoringPermissions,
-    ConnectionMonitoringRequestPolicy, ConnectionMonitoringServiceCapabilities,
-    ConnectionMonitoringTopicFiltering,
+    ConnectionMonitoringCapabilitiesResponse, ConnectionMonitoringPermissions, ConnectionMonitoringRequestPolicy,
+    ConnectionMonitoringServiceCapabilities, ConnectionMonitoringTopicFiltering,
 };
 pub use delivery::{
-    ConnectionMonitoringDistributorDelivery, ConnectionMonitoringFeederDelivery,
-    DistributorDepartureCancellation, MonitoredFeederArrival, MonitoredFeederArrivalCancellation,
-    StoppingPositionChangedDeparture, WaitProlongedDeparture,
+    ConnectionMonitoringDistributorDelivery, ConnectionMonitoringFeederDelivery, DistributorDepartureCancellation,
+    MonitoredFeederArrival, MonitoredFeederArrivalCancellation, StoppingPositionChangedDeparture,
+    WaitProlongedDeparture,
 };
 pub use request::{
     ConnectingJourneyFilter, ConnectingTimeFilter, ConnectionMonitoringRequest,

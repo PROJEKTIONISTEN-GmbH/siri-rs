@@ -22,8 +22,7 @@ use siri_rs::gm::GeneralMessageCapabilitiesResponse;
 use siri_rs::sm::StopMonitoringRequest;
 use siri_rs::{Siri, SiriRoot};
 use support::{
-    compare, fixtures_dir, parse, round_trip, validate_fixture, validator_available, Fixture,
-    VALIDATOR_MISSING,
+    compare, fixtures_dir, parse, round_trip, validate_fixture, validator_available, Fixture, VALIDATOR_MISSING,
 };
 
 /// Where the rendered table lives, relative to the crate root.
@@ -143,13 +142,11 @@ impl Types {
         if xsd_type.starts_with("xsd:") || xsd_type.starts_with("xs:") {
             return match name {
                 "boolean" => Class::Boolean,
-                "integer" | "nonNegativeInteger" | "positiveInteger" | "int" | "long"
-                | "short" | "unsignedInt" | "unsignedLong" | "unsignedShort" => Class::Integer,
+                "integer" | "nonNegativeInteger" | "positiveInteger" | "int" | "long" | "short" | "unsignedInt"
+                | "unsignedLong" | "unsignedShort" => Class::Integer,
                 "decimal" | "float" | "double" => Class::Decimal,
                 "duration" => Class::Duration,
-                "string" | "normalizedString" | "token" | "language" | "NMTOKEN" | "anyURI" => {
-                    Class::String
-                }
+                "string" | "normalizedString" | "token" | "language" | "NMTOKEN" | "anyURI" => Class::String,
                 other => panic!("no class for the schema primitive xsd:{other}"),
             };
         }
@@ -222,8 +219,7 @@ fn read_schemas() -> (Vec<Declaration>, Types) {
             .expect("schema lives under the schema root")
             .to_string_lossy()
             .replace('\\', "/");
-        let xml = std::fs::read_to_string(&path)
-            .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
+        let xml = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display()));
         read_schema(&file, &xml, &mut declarations, &mut types);
     }
 
@@ -258,9 +254,8 @@ fn read_schema(file: &str, xml: &str, declarations: &mut Vec<Declaration>, types
                             .map(|value| (false, value))
                             .or_else(|| attribute(start, "fixed").map(|value| (true, value)));
                         if let (Some(element), Some((fixed, value))) = (name.clone(), constraint) {
-                            let xsd_type = attribute(start, "type").unwrap_or_else(|| {
-                                panic!("{file}: <{element}> has a default but no named type")
-                            });
+                            let xsd_type = attribute(start, "type")
+                                .unwrap_or_else(|| panic!("{file}: <{element}> has a default but no named type"));
                             declarations.push(Declaration {
                                 element,
                                 file: file.to_owned(),
@@ -287,9 +282,7 @@ fn read_schema(file: &str, xml: &str, declarations: &mut Vec<Declaration>, types
                         }
                     }
                     "enumeration" => {
-                        if let (Some((_, _, simple)), Some(value)) =
-                            (simple.as_mut(), attribute(start, "value"))
-                        {
+                        if let (Some((_, _, simple)), Some(value)) = (simple.as_mut(), attribute(start, "value")) {
                             if !simple.tokens.contains(&value) {
                                 simple.tokens.push(value);
                             }
@@ -298,9 +291,7 @@ fn read_schema(file: &str, xml: &str, declarations: &mut Vec<Declaration>, types
                     _ => {}
                 }
                 if matches!(event, Event::Start(_)) {
-                    if let (Some(name), "complexType" | "group" | "element" | "attributeGroup") =
-                        (name, tag.as_str())
-                    {
+                    if let (Some(name), "complexType" | "group" | "element" | "attributeGroup") = (name, tag.as_str()) {
                         named.push((depth, name));
                     }
                 }
@@ -549,9 +540,7 @@ fn crate_fields() -> Vec<Field> {
                 .unwrap_or(rust_type);
             let (class, enum_xsd_type) = match inner {
                 "bool" => (Some(Class::Boolean), None),
-                "u8" | "u16" | "u32" | "u64" | "i8" | "i16" | "i32" | "i64" => {
-                    (Some(Class::Integer), None)
-                }
+                "u8" | "u16" | "u32" | "u64" | "i8" | "i16" | "i32" | "i64" => (Some(Class::Integer), None),
                 "f32" | "f64" => (Some(Class::Decimal), None),
                 "String" => (Some(Class::String), None),
                 "Duration" => (Some(Class::Duration), None),
@@ -599,8 +588,7 @@ fn enumeration_types() -> BTreeMap<String, String> {
 }
 
 fn collect_sources(dir: &Path, out: &mut Vec<PathBuf>) {
-    for entry in std::fs::read_dir(dir).unwrap_or_else(|e| panic!("cannot read {}: {e}", dir.display()))
-    {
+    for entry in std::fs::read_dir(dir).unwrap_or_else(|e| panic!("cannot read {}: {e}", dir.display())) {
         let path = entry.expect("readable directory entry").path();
         if path.is_dir() {
             collect_sources(&path, out);
@@ -623,9 +611,7 @@ fn expected_value(field: &Field, declarations: &[Declaration]) -> Result<Option<
     let rows: Vec<&Declaration> = declarations
         .iter()
         .filter(|d| d.element == field.element && d.class == class)
-        .filter(|d| {
-            class != Class::Enumeration || Some(d.type_name()) == field.enum_xsd_type.as_deref()
-        })
+        .filter(|d| class != Class::Enumeration || Some(d.type_name()) == field.enum_xsd_type.as_deref())
         .collect();
     let values: BTreeSet<&str> = rows.iter().map(|d| d.value.as_str()).collect();
     match values.len() {
@@ -724,12 +710,19 @@ fn the_table_has_the_expected_shape() {
 fn every_field_that_transcribes_a_declared_value_reads_it() {
     let (declarations, _) = declarations();
     let fields = crate_fields();
-    assert!(fields.len() > 1000, "the source scan found only {} fields", fields.len());
+    assert!(
+        fields.len() > 1000,
+        "the source scan found only {} fields",
+        fields.len()
+    );
     let (expected, mut failures) = expectations(&fields, &declarations);
 
     for (field, value) in expected {
         let expected = value.map(|value| {
-            format!("{MODULE}::{}", function_name(field.class.expect("a value has a class"), &value))
+            format!(
+                "{MODULE}::{}",
+                function_name(field.class.expect("a value has a class"), &value)
+            )
         });
         let actual = field.deserialize_with.as_deref();
         match (&expected, actual) {
@@ -892,11 +885,7 @@ fn empty_out(fixture: &Fixture, exercises: &[Exercise]) -> (String, String, BTre
     let mut exercised = BTreeSet::new();
 
     for exercise in exercises {
-        let Some(value) = exercise
-            .values
-            .get(&service)
-            .or_else(|| exercise.values.get(&None))
-        else {
+        let Some(value) = exercise.values.get(&service).or_else(|| exercise.values.get(&None)) else {
             continue;
         };
         for (open, text, close) in leaf_occurrences(&fixture.xml, &exercise.element) {
@@ -930,9 +919,11 @@ fn leaf_occurrences(xml: &str, element: &str) -> Vec<(String, String, String)> {
         if opaque.iter().any(|range| range.contains(&name_at)) {
             continue;
         }
-        let tag_at = xml[..name_at]
-            .rfind('<')
-            .filter(|&lt| xml[lt + 1..name_at].chars().all(|c| c.is_ascii_alphanumeric() || c == ':'));
+        let tag_at = xml[..name_at].rfind('<').filter(|&lt| {
+            xml[lt + 1..name_at]
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == ':')
+        });
         let Some(tag_at) = tag_at else {
             continue;
         };
@@ -1079,8 +1070,7 @@ fn an_empty_boolean_reads_as_the_declared_value() {
         "sm/exs_stopMonitoring_response_complex.xml",
         "<Monitored>true</Monitored>",
     );
-    let Some(ServiceDeliveryPayload::StopMonitoringDelivery(delivery)) = deliveries(&document).first()
-    else {
+    let Some(ServiceDeliveryPayload::StopMonitoringDelivery(delivery)) = deliveries(&document).first() else {
         panic!("the delivery is a stop monitoring delivery");
     };
     let visit = delivery.monitored_stop_visit.first().expect("the board has a visit");
@@ -1103,15 +1093,14 @@ fn an_empty_submode_in_the_situation_context_reads_as_the_declared_value() {
 
 #[test]
 fn an_empty_enumeration_reads_as_the_declared_value_and_is_written_in_full() {
-    let document: Siri = official_with_empty(
-        "sx/exx_situationExchange_response.xml",
-        "<Severity>severe</Severity>",
-    );
-    let Some(ServiceDeliveryPayload::SituationExchangeDelivery(delivery)) = deliveries(&document).first()
-    else {
+    let document: Siri = official_with_empty("sx/exx_situationExchange_response.xml", "<Severity>severe</Severity>");
+    let Some(ServiceDeliveryPayload::SituationExchangeDelivery(delivery)) = deliveries(&document).first() else {
         panic!("the delivery is a situation exchange delivery");
     };
-    let situation = delivery.pt_situations().first().expect("the delivery carries a situation");
+    let situation = delivery
+        .pt_situations()
+        .first()
+        .expect("the delivery carries a situation");
     assert_eq!(situation.severity, Some(Severity::Normal));
 
     let written = siri_rs::to_string(&document).expect("the document writes");
@@ -1136,8 +1125,7 @@ fn an_empty_decimal_reads_as_the_declared_value() {
         "sm/exs_stopMonitoring_response_complex.xml",
         "<Percentile>0.9</Percentile>",
     );
-    let Some(ServiceDeliveryPayload::StopMonitoringDelivery(delivery)) = deliveries(&document).first()
-    else {
+    let Some(ServiceDeliveryPayload::StopMonitoringDelivery(delivery)) = deliveries(&document).first() else {
         panic!("the delivery is a stop monitoring delivery");
     };
     let percentile = delivery
@@ -1168,8 +1156,7 @@ fn an_empty_duration_reads_as_the_declared_value() {
 #[test]
 fn an_empty_language_reads_as_the_declared_value() {
     // The first language in the example is the one the request context names.
-    let document: Siri =
-        official_with_empty("sm/exs_stopMonitoring_request.xml", "<Language>en</Language>");
+    let document: Siri = official_with_empty("sm/exs_stopMonitoring_request.xml", "<Language>en</Language>");
     let context = document
         .payload
         .as_service_request()
@@ -1184,10 +1171,8 @@ fn an_empty_language_reads_as_the_declared_value() {
 fn an_element_of_whitespace_alone_is_not_an_empty_element() {
     // Under the schema an element holding only whitespace is not empty: it carries
     // that text, which is no boolean. Such a document is refused, as it was.
-    let xml = std::fs::read_to_string(
-        fixtures_dir().join("xml/sm/exs_stopMonitoring_response_complex.xml"),
-    )
-    .expect("readable fixture");
+    let xml = std::fs::read_to_string(fixtures_dir().join("xml/sm/exs_stopMonitoring_response_complex.xml"))
+        .expect("readable fixture");
     let blank = xml.replacen("<Monitored>true</Monitored>", "<Monitored>   </Monitored>", 1);
     let error = siri_rs::from_str::<Siri>(&blank).expect_err("whitespace is not a boolean");
     assert!(error.to_string().contains("Monitored"), "{error}");
@@ -1210,7 +1195,11 @@ fn leaf_occurrences_find_the_element_and_only_the_element() {
         leaf_occurrences(xml, "Status"),
         [
             ("<Status>".to_owned(), "true".to_owned(), "</Status>".to_owned()),
-            ("<siri:Status>".to_owned(), "false".to_owned(), "</siri:Status>".to_owned()),
+            (
+                "<siri:Status>".to_owned(),
+                "false".to_owned(),
+                "</siri:Status>".to_owned()
+            ),
         ]
     );
 }

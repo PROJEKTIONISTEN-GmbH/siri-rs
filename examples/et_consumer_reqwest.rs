@@ -51,8 +51,7 @@ struct Receiving {
 
 #[tokio::main]
 async fn main() -> Result<(), Failure> {
-    let producer_url = std::env::var("SIRI_PRODUCER_URL")
-        .unwrap_or_else(|_| "http://127.0.0.1:8000/siri".to_owned());
+    let producer_url = std::env::var("SIRI_PRODUCER_URL").unwrap_or_else(|_| "http://127.0.0.1:8000/siri".to_owned());
     let address: SocketAddr = std::env::var("SIRI_CONSUMER_ADDRESS")
         .unwrap_or_else(|_| "127.0.0.1:8001".to_owned())
         .parse()?;
@@ -122,10 +121,7 @@ async fn main() -> Result<(), Failure> {
     }
 
     let now = Utc::now().fixed_offset();
-    let terminate = consumer
-        .lock()
-        .expect("the consumer is usable")
-        .terminate_all(now);
+    let terminate = consumer.lock().expect("the consumer is usable").terminate_all(now);
     let confirmation = request(&client, &producer_url, &terminate).await?;
     match interpret(&consumer, &confirmation)? {
         ConsumerEvent::Terminated { subscription_refs } => {
@@ -154,10 +150,9 @@ fn describe(journey: &EstimatedVehicleJourney) -> String {
                 Some((call.stop_point_ref.as_str(), expected - aimed))
             });
             match late {
-                Some((stop, behind)) if behind.num_seconds() > 0 => format!(
-                    "line {line}: {} minute(s) late leaving {stop}",
-                    behind.num_minutes()
-                ),
+                Some((stop, behind)) if behind.num_seconds() > 0 => {
+                    format!("line {line}: {} minute(s) late leaving {stop}", behind.num_minutes())
+                }
                 _ => format!("line {line}: on time"),
             }
         }
@@ -169,13 +164,7 @@ fn describe(journey: &EstimatedVehicleJourney) -> String {
 async fn receive(State(state): State<Receiving>, body: String) -> Response {
     let message: Siri = match siri_rs::from_str(&body) {
         Ok(message) => message,
-        Err(complaint) => {
-            return (
-                StatusCode::BAD_REQUEST,
-                format!("unreadable SIRI: {complaint}\n"),
-            )
-                .into_response()
-        }
+        Err(complaint) => return (StatusCode::BAD_REQUEST, format!("unreadable SIRI: {complaint}\n")).into_response(),
     };
 
     let event = match interpret(&state.consumer, &message) {
@@ -246,10 +235,7 @@ async fn fetch_the_data(state: Receiving, fetch: Siri) {
 }
 
 /// Hands a message to the consumer and says what it meant.
-fn interpret(
-    consumer: &SharedConsumer,
-    message: &Siri,
-) -> siri_rs::Result<ConsumerEvent<EstimatedTimetable>> {
+fn interpret(consumer: &SharedConsumer, message: &Siri) -> siri_rs::Result<ConsumerEvent<EstimatedTimetable>> {
     consumer
         .lock()
         .expect("the consumer is usable")
@@ -258,11 +244,7 @@ fn interpret(
 
 /// Posts a message to the producer and reads the message that comes back, if any: a
 /// producer answers acknowledgements with silence.
-async fn post_to(
-    client: &reqwest::Client,
-    url: &str,
-    message: &Siri,
-) -> Result<Option<Siri>, Failure> {
+async fn post_to(client: &reqwest::Client, url: &str, message: &Siri) -> Result<Option<Siri>, Failure> {
     let body = siri_rs::to_string(message)?;
     let answer = client
         .post(url)

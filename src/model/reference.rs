@@ -135,10 +135,7 @@ pub struct SituationFullRef {
 
 impl SituationFullRef {
     /// A reference to the given participant's situation.
-    pub fn new(
-        participant_ref: impl Into<ParticipantRef>,
-        situation_number: impl Into<SituationNumber>,
-    ) -> Self {
+    pub fn new(participant_ref: impl Into<ParticipantRef>, situation_number: impl Into<SituationNumber>) -> Self {
         Self {
             version_country_ref: None,
             participant_ref: participant_ref.into(),

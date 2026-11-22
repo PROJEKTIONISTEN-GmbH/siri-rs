@@ -15,8 +15,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{
-    AdviceType, ArrivalBoardingActivity, DelayBand, DelaysType, DepartureBoardingActivity,
-    ServiceCondition, Severity, TicketRestriction,
+    AdviceType, ArrivalBoardingActivity, DelayBand, DelaysType, DepartureBoardingActivity, ServiceCondition, Severity,
+    TicketRestriction,
 };
 use crate::model::Suitabilities;
 use crate::sx::affects::AffectsScope;
@@ -263,10 +263,7 @@ mod tests {
         assert_eq!(consequence.condition.len(), 1);
         assert!(consequence.severity.is_some());
         assert!(consequence.affects.is_some());
-        assert_eq!(
-            consequence.blocking.as_ref().unwrap().journey_planner,
-            Some(false)
-        );
+        assert_eq!(consequence.blocking.as_ref().unwrap().journey_planner, Some(false));
 
         let written = to_string_with_root("Consequence", &consequence).unwrap();
         let at = |tag: &str| written.find(tag).unwrap_or_else(|| panic!("no {tag}"));
@@ -324,16 +321,10 @@ mod tests {
         let consequence: Consequence = from_str(xml).unwrap();
         let delays = consequence.delays.as_ref().unwrap();
         assert_eq!(delays.delay.as_ref().unwrap().as_str(), "PT8M");
-        assert_eq!(
-            consequence.casualties.as_ref().unwrap().number_of_injured,
-            Some(3)
-        );
+        assert_eq!(consequence.casualties.as_ref().unwrap().number_of_injured, Some(3));
         assert_eq!(consequence.casualties.as_ref().unwrap().number_of_deaths, None);
         assert_eq!(consequence.easements.len(), 1);
-        assert_eq!(
-            consequence.easements[0].easement_ref.as_deref(),
-            Some("METRO_ON_BUS")
-        );
+        assert_eq!(consequence.easements[0].easement_ref.as_deref(), Some("METRO_ON_BUS"));
         assert_eq!(consequence.advice.as_ref().unwrap().details.len(), 1);
 
         let written = to_string_with_root("Consequence", &consequence).unwrap();

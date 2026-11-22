@@ -2786,7 +2786,6 @@ siri_enum! {
     }
 }
 
-
 siri_enum! {
     /// Passenger load status of a VEHICLE - GTFS-R / TPEG Pts045
     Occupancy as "OccupancyEnumeration" {

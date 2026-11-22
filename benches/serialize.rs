@@ -30,13 +30,9 @@ fn write(c: &mut Criterion) {
     let prefixed = support::prefixed_situation();
     let situation: RoadSituationElement = siri_rs::from_str(&prefixed.xml).expect("the fixture reads");
     group.throughput(written_bytes(&situation));
-    group.bench_with_input(
-        BenchmarkId::from_parameter(prefixed.name),
-        &situation,
-        |b, value| {
-            b.iter(|| siri_rs::to_string(black_box(value)).expect("the value writes"));
-        },
-    );
+    group.bench_with_input(BenchmarkId::from_parameter(prefixed.name), &situation, |b, value| {
+        b.iter(|| siri_rs::to_string(black_box(value)).expect("the value writes"));
+    });
 
     group.finish();
 }

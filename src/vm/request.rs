@@ -56,7 +56,11 @@ pub struct VehicleMonitoringRequest {
     #[serde(rename = "MaximumVehicles", default, skip_serializing_if = "Option::is_none")]
     pub maximum_vehicles: Option<u64>,
     /// How much detail to give per vehicle.
-    #[serde(rename = "VehicleMonitoringDetailLevel", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "VehicleMonitoringDetailLevel",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub vehicle_monitoring_detail_level: Option<VehicleMonitoringDetail>,
     /// How many calls before and after the current one to include.
     #[serde(rename = "MaximumNumberOfCalls", default, skip_serializing_if = "Option::is_none")]
@@ -106,10 +110,7 @@ impl VehicleMonitoringRequest {
     }
 
     /// A request for one named vehicle.
-    pub fn for_vehicle(
-        request_timestamp: DateTime<FixedOffset>,
-        vehicle_ref: impl Into<VehicleRef>,
-    ) -> Self {
+    pub fn for_vehicle(request_timestamp: DateTime<FixedOffset>, vehicle_ref: impl Into<VehicleRef>) -> Self {
         Self {
             vehicle_ref: Some(vehicle_ref.into()),
             ..Self::new(request_timestamp)
@@ -117,10 +118,7 @@ impl VehicleMonitoringRequest {
     }
 
     /// A request for every vehicle on one line.
-    pub fn for_line(
-        request_timestamp: DateTime<FixedOffset>,
-        line_ref: impl Into<LineRef>,
-    ) -> Self {
+    pub fn for_line(request_timestamp: DateTime<FixedOffset>, line_ref: impl Into<LineRef>) -> Self {
         Self {
             line_ref: Some(line_ref.into()),
             ..Self::new(request_timestamp)
@@ -225,16 +223,17 @@ mod tests {
         request.vehicle_monitoring_detail_level = Some(VehicleMonitoringDetail::Normal);
         request.maximum_vehicles = Some(20);
 
-        let xml = quick_xml::se::to_string_with_root("VehicleMonitoringRequest", &request)
-            .expect("request serialises");
+        let xml = quick_xml::se::to_string_with_root("VehicleMonitoringRequest", &request).expect("request serialises");
         let monitoring = xml.find("<VehicleMonitoringRef>").expect("topic is written");
         let vehicle = xml.find("<VehicleRef>").expect("vehicle is written");
         let direction = xml.find("<DirectionRef>").expect("direction is written");
         let maximum = xml.find("<MaximumVehicles>").expect("policy is written");
-        assert!(monitoring < vehicle && vehicle < direction && direction < maximum, "{xml}");
+        assert!(
+            monitoring < vehicle && vehicle < direction && direction < maximum,
+            "{xml}"
+        );
 
-        let read: VehicleMonitoringRequest =
-            quick_xml::de::from_str(&xml).expect("request round-trips");
+        let read: VehicleMonitoringRequest = quick_xml::de::from_str(&xml).expect("request round-trips");
         assert_eq!(read, request);
     }
 
@@ -245,10 +244,12 @@ mod tests {
             timestamp(),
             VehicleMonitoringRequest::new(timestamp()),
         );
-        let xml =
-            quick_xml::se::to_string_with_root("VehicleMonitoringSubscriptionRequest", &subscription)
-                .expect("subscription serialises");
-        assert!(xml.contains("<SubscriptionIdentifier>00000456</SubscriptionIdentifier>"), "{xml}");
+        let xml = quick_xml::se::to_string_with_root("VehicleMonitoringSubscriptionRequest", &subscription)
+            .expect("subscription serialises");
+        assert!(
+            xml.contains("<SubscriptionIdentifier>00000456</SubscriptionIdentifier>"),
+            "{xml}"
+        );
 
         let read: VehicleMonitoringSubscriptionRequest =
             quick_xml::de::from_str(&xml).expect("subscription round-trips");

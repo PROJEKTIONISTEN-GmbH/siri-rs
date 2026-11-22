@@ -6,13 +6,12 @@ use serde::{Deserialize, Serialize};
 use crate::enumerations::VehicleModesOfTransport;
 use crate::framework::{ErrorCondition, ServiceRequestError};
 use crate::model::{
-    Branding, BrandingRef, ConnectionLinkRef, DirectionRef, FramedVehicleJourneyRef,
-    GroupOfLinesRef, InterchangeJourney, InterchangeRef, JourneyPatternRef, LineRef, RouteRef,
-    StopPointRef,
+    Branding, BrandingRef, ConnectionLinkRef, DirectionRef, FramedVehicleJourneyRef, GroupOfLinesRef,
+    InterchangeJourney, InterchangeRef, JourneyPatternRef, LineRef, RouteRef, StopPointRef,
 };
 use crate::types::{
-    Duration, EndpointAddress, Extensions, ItemIdentifier, ItemRef, MessageRef,
-    NaturalLanguageString, ParticipantRef, SubscriptionFilterRef, SubscriptionRef,
+    Duration, EndpointAddress, Extensions, ItemIdentifier, ItemRef, MessageRef, NaturalLanguageString, ParticipantRef,
+    SubscriptionFilterRef, SubscriptionRef,
 };
 
 /// The connections planned over one connection link.
@@ -323,12 +322,7 @@ mod tests {
             timestamp(),
             vec![TimetabledFeederArrival {
                 visit_number: Some(2),
-                ..TimetabledFeederArrival::new(
-                    timestamp(),
-                    "98789",
-                    InterchangeJourney::new("123", "OUT"),
-                    timestamp(),
-                )
+                ..TimetabledFeederArrival::new(timestamp(), "98789", InterchangeJourney::new("123", "OUT"), timestamp())
             }],
         );
         delivery
@@ -341,15 +335,14 @@ mod tests {
                 journey_ref(),
             ));
 
-        let xml = quick_xml::se::to_string_with_root("ConnectionTimetableDelivery", &delivery)
-            .expect("delivery serialises");
+        let xml =
+            quick_xml::se::to_string_with_root("ConnectionTimetableDelivery", &delivery).expect("delivery serialises");
         let link = xml.find("<ConnectionLinkRef>").expect("the link is written");
         let journey = xml.find("<FeederJourney>").expect("the feeder is written");
         let arrival = xml.find("<AimedArrivalTime>").expect("the arrival is written");
         assert!(link < journey && journey < arrival, "{xml}");
 
-        let read: ConnectionTimetableDelivery =
-            quick_xml::de::from_str(&xml).expect("delivery round-trips");
+        let read: ConnectionTimetableDelivery = quick_xml::de::from_str(&xml).expect("delivery round-trips");
         assert_eq!(read, delivery);
     }
 }

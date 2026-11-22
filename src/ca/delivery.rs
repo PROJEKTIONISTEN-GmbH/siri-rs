@@ -5,8 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::framework::{ErrorCondition, ServiceRequestError};
 use crate::model::{
-    ControlActionRef, FacilityRef, FramedVehicleJourneyRef, Location, SituationRef, TypeOfValue,
-    VehicleRef,
+    ControlActionRef, FacilityRef, FramedVehicleJourneyRef, Location, SituationRef, TypeOfValue, VehicleRef,
 };
 use crate::types::{
     Duration, EndpointAddress, Extensions, ItemIdentifier, ItemRef, MessageQualifier, MessageRef,
@@ -79,18 +78,10 @@ pub struct ControlActionDelivery {
     #[serde(rename = "controlActions", default, skip_serializing_if = "Option::is_none")]
     pub control_actions: Option<ControlActions>,
     /// Actions grouped into sets, and the sets themselves.
-    #[serde(
-        rename = "groupsOfControlActions",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "groupsOfControlActions", default, skip_serializing_if = "Option::is_none")]
     pub groups_of_control_actions: Option<GroupsOfControlActions>,
     /// Actions the control room is taking back.
-    #[serde(
-        rename = "revokedControlActions",
-        default,
-        skip_serializing_if = "Option::is_none"
-    )]
+    #[serde(rename = "revokedControlActions", default, skip_serializing_if = "Option::is_none")]
     pub revoked_control_actions: Option<RevokedControlActions>,
     /// Messages exchanged with drivers.
     #[serde(rename = "driverMessages", default, skip_serializing_if = "Option::is_none")]
@@ -134,10 +125,7 @@ impl ControlActionDelivery {
     }
 
     /// A delivery carrying the given actions.
-    pub fn of_actions(
-        response_timestamp: DateTime<FixedOffset>,
-        control_action: Vec<ControlAction>,
-    ) -> Self {
+    pub fn of_actions(response_timestamp: DateTime<FixedOffset>, control_action: Vec<ControlAction>) -> Self {
         Self {
             control_actions: Some(ControlActions { control_action }),
             ..Self::new(response_timestamp)
@@ -624,25 +612,18 @@ mod tests {
                     DriverScope::for_vehicle("VEH-4711"),
                 )],
             }),
-            ..ControlActionDelivery::of_actions(
-                timestamp(),
-                vec![ControlAction::new(timestamp(), "CA-4711")],
-            )
+            ..ControlActionDelivery::of_actions(timestamp(), vec![ControlAction::new(timestamp(), "CA-4711")])
         };
 
-        let xml = quick_xml::se::to_string_with_root("ControlActionDelivery", &delivery)
-            .expect("delivery serialises");
+        let xml = quick_xml::se::to_string_with_root("ControlActionDelivery", &delivery).expect("delivery serialises");
         let actions = xml.find("<controlActions>").expect("the actions are written");
         let revoked = xml
             .find("<revokedControlActions>")
             .expect("the revocations are written");
-        let messages = xml
-            .find("<driverMessages>")
-            .expect("the driver messages are written");
+        let messages = xml.find("<driverMessages>").expect("the driver messages are written");
         assert!(actions < revoked && revoked < messages, "{xml}");
 
-        let read: ControlActionDelivery =
-            quick_xml::de::from_str(&xml).expect("delivery round-trips");
+        let read: ControlActionDelivery = quick_xml::de::from_str(&xml).expect("delivery round-trips");
         assert_eq!(read, delivery);
         assert_eq!(read.actions().len(), 1);
     }

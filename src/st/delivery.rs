@@ -6,12 +6,12 @@ use serde::{Deserialize, Serialize};
 use crate::enumerations::VehicleModesOfTransport;
 use crate::framework::{ErrorCondition, ServiceRequestError};
 use crate::model::{
-    Branding, BrandingRef, DirectionRef, FramedVehicleJourneyRef, GroupOfLinesRef,
-    JourneyPatternRef, LineRef, MonitoringRef, RouteRef, TargetedVehicleJourney,
+    Branding, BrandingRef, DirectionRef, FramedVehicleJourneyRef, GroupOfLinesRef, JourneyPatternRef, LineRef,
+    MonitoringRef, RouteRef, TargetedVehicleJourney,
 };
 use crate::types::{
-    Duration, EndpointAddress, Extensions, ItemIdentifier, ItemRef, MessageRef,
-    NaturalLanguageString, ParticipantRef, SubscriptionFilterRef, SubscriptionRef,
+    Duration, EndpointAddress, Extensions, ItemIdentifier, ItemRef, MessageRef, NaturalLanguageString, ParticipantRef,
+    SubscriptionFilterRef, SubscriptionRef,
 };
 
 /// The timetable at one monitoring point.
@@ -75,7 +75,11 @@ pub struct StopTimetableDelivery {
     #[serde(rename = "TimetabledStopVisit", default, skip_serializing_if = "Vec::is_empty")]
     pub timetabled_stop_visit: Vec<TimetabledStopVisit>,
     /// Visits the producer previously published and is now withdrawing.
-    #[serde(rename = "TimetabledStopVisitCancellation", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "TimetabledStopVisitCancellation",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub timetabled_stop_visit_cancellation: Vec<TimetabledStopVisitCancellation>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -84,10 +88,7 @@ pub struct StopTimetableDelivery {
 
 impl StopTimetableDelivery {
     /// A delivery carrying the given timetabled visits.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        timetabled_stop_visit: Vec<TimetabledStopVisit>,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, timetabled_stop_visit: Vec<TimetabledStopVisit>) -> Self {
         Self {
             version: None,
             response_timestamp,
@@ -276,16 +277,14 @@ mod tests {
                 "Out",
             ));
 
-        let xml = quick_xml::se::to_string_with_root("StopTimetableDelivery", &delivery)
-            .expect("delivery serialises");
+        let xml = quick_xml::se::to_string_with_root("StopTimetableDelivery", &delivery).expect("delivery serialises");
         let visit = xml.find("<TimetabledStopVisit>").expect("the visit is written");
         let cancellation = xml
             .find("<TimetabledStopVisitCancellation>")
             .expect("the cancellation is written");
         assert!(visit < cancellation, "{xml}");
 
-        let read: StopTimetableDelivery =
-            quick_xml::de::from_str(&xml).expect("delivery round-trips");
+        let read: StopTimetableDelivery = quick_xml::de::from_str(&xml).expect("delivery round-trips");
         assert_eq!(read, delivery);
     }
 }

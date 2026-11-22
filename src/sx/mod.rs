@@ -72,16 +72,12 @@ pub mod delivery;
 pub mod request;
 pub mod situation;
 
+pub use crate::model::RequestedLines;
 pub use action::{Actions, PublishingAction};
 pub use affects::AffectsScope;
 pub use consequence::{Consequence, PtConsequences};
-pub use delivery::{
-    Network, NetworkContext, SituationContext, SituationExchangeDelivery, Situations,
-};
-pub use crate::model::RequestedLines;
-pub use request::{
-    RoadFilter, SituationExchangeRequest, SituationExchangeSubscriptionRequest, SituationRoadFilter,
-};
+pub use delivery::{Network, NetworkContext, SituationContext, SituationExchangeDelivery, Situations};
+pub use request::{RoadFilter, SituationExchangeRequest, SituationExchangeSubscriptionRequest, SituationRoadFilter};
 pub use situation::{PtSituationElement, Reason, RoadSituationElement};
 
 impl crate::xml::SiriRoot for PtSituationElement {

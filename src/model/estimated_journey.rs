@@ -14,31 +14,25 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{
-    ArrivalBoardingActivity, CallStatus, DepartureBoardingActivity, FirstOrLastJourney,
-    InterchangeStatus, Occupancy, PredictionInaccurateReason, ProgressRate, QualityIndex,
-    VehicleModesOfTransport, VehicleStatus,
+    ArrivalBoardingActivity, CallStatus, DepartureBoardingActivity, FirstOrLastJourney, InterchangeStatus, Occupancy,
+    PredictionInaccurateReason, ProgressRate, QualityIndex, VehicleModesOfTransport, VehicleStatus,
 };
 use crate::model::call::StopAssignment;
 use crate::model::facility::{FacilityChange, FacilityCondition};
 use crate::model::formation::{
-    CompoundTrains, FormationAssignment, FormationCondition, PassengerCapacity, TrainElements,
-    Trains, VehicleOccupancy,
+    CompoundTrains, FormationAssignment, FormationCondition, PassengerCapacity, TrainElements, Trains, VehicleOccupancy,
 };
 use crate::model::journey::{
-    Branding, BrandingRef, ConnectingJourneyRef, DatedVehicleJourneyIndirectRef, GroupOfLinesRef,
-    JourneyParts, JourneyPlaceRef, JourneyRelations, PredictionQuality, SimpleContact,
-    TrainBlockPart, TrainNumbers, ViaName,
+    Branding, BrandingRef, ConnectingJourneyRef, DatedVehicleJourneyIndirectRef, GroupOfLinesRef, JourneyParts,
+    JourneyPlaceRef, JourneyRelations, PredictionQuality, SimpleContact, TrainBlockPart, TrainNumbers, ViaName,
 };
 use crate::model::location::Location;
 use crate::model::reference::{
-    BlockRef, ConnectionLinkRef, CourseOfJourneyRef, ControlActionRef, DatedVehicleJourneyRef,
-    DestinationRef, DirectionRef, FramedVehicleJourneyRef, InterchangeRef, JourneyPatternRef,
-    LineRef, OperatorRef, ProductCategoryRef, RouteRef, ServiceFeatureRef, SituationRef,
-    StopPointRef, VehicleFeatureRef, VehicleJourneyRef, VehicleRef,
+    BlockRef, ConnectionLinkRef, ControlActionRef, CourseOfJourneyRef, DatedVehicleJourneyRef, DestinationRef,
+    DirectionRef, FramedVehicleJourneyRef, InterchangeRef, JourneyPatternRef, LineRef, OperatorRef, ProductCategoryRef,
+    RouteRef, ServiceFeatureRef, SituationRef, StopPointRef, VehicleFeatureRef, VehicleJourneyRef, VehicleRef,
 };
-use crate::types::{
-    Duration, Empty, Extensions, NaturalLanguagePlaceName, NaturalLanguageString,
-};
+use crate::types::{Duration, Empty, Extensions, NaturalLanguagePlaceName, NaturalLanguageString};
 
 /// A journey as the operator now expects it to run.
 ///
@@ -71,10 +65,18 @@ pub struct EstimatedVehicleJourney {
     #[serde(rename = "DatedVehicleJourneyRef", default, skip_serializing_if = "Option::is_none")]
     pub dated_vehicle_journey_ref: Option<DatedVehicleJourneyRef>,
     /// The timetabled journey, named by where and when it runs.
-    #[serde(rename = "DatedVehicleJourneyIndirectRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DatedVehicleJourneyIndirectRef",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub dated_vehicle_journey_indirect_ref: Option<DatedVehicleJourneyIndirectRef>,
     /// The producer's own identifier for a journey that is in no timetable.
-    #[serde(rename = "EstimatedVehicleJourneyCode", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "EstimatedVehicleJourneyCode",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub estimated_vehicle_journey_code: Option<String>,
     /// Whether this journey is being run in addition to the timetable.
     #[serde(
@@ -137,7 +139,11 @@ pub struct EstimatedVehicleJourney {
     #[serde(rename = "OriginShortName", default, skip_serializing_if = "Vec::is_empty")]
     pub origin_short_name: Vec<NaturalLanguagePlaceName>,
     /// What is shown at the origin as the destination, one per language.
-    #[serde(rename = "DestinationDisplayAtOrigin", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "DestinationDisplayAtOrigin",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub destination_display_at_origin: Vec<NaturalLanguagePlaceName>,
     /// Places passed through that tell this journey apart from similar ones.
     #[serde(rename = "Via", default, skip_serializing_if = "Vec::is_empty")]
@@ -152,7 +158,11 @@ pub struct EstimatedVehicleJourney {
     #[serde(rename = "DestinationShortName", default, skip_serializing_if = "Vec::is_empty")]
     pub destination_short_name: Vec<NaturalLanguagePlaceName>,
     /// What is shown at the destination as the origin, one per language.
-    #[serde(rename = "OriginDisplayAtDestination", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "OriginDisplayAtDestination",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub origin_display_at_destination: Vec<NaturalLanguagePlaceName>,
     /// The operator running the journey.
     #[serde(rename = "OperatorRef", default, skip_serializing_if = "Option::is_none")]
@@ -264,7 +274,11 @@ pub struct EstimatedVehicleJourney {
     )]
     pub prediction_inaccurate: Option<bool>,
     /// Why they are unreliable.
-    #[serde(rename = "PredictionInaccurateReason", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "PredictionInaccurateReason",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub prediction_inaccurate_reason: Option<PredictionInaccurateReason>,
     /// Which system the real-time data came from.
     #[serde(rename = "DataSource", default, skip_serializing_if = "Option::is_none")]
@@ -333,7 +347,11 @@ pub struct EstimatedVehicleJourney {
     #[serde(rename = "VehicleRef", default, skip_serializing_if = "Option::is_none")]
     pub vehicle_ref: Option<VehicleRef>,
     /// Further journeys the same vehicle is running at the same time.
-    #[serde(rename = "AdditionalVehicleJourneyRef", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "AdditionalVehicleJourneyRef",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub additional_vehicle_journey_ref: Vec<FramedVehicleJourneyRef>,
     /// The driver on duty.
     #[serde(rename = "DriverRef", default, skip_serializing_if = "Option::is_none")]
@@ -509,11 +527,7 @@ impl EstimatedVehicleJourney {
         self.framed_vehicle_journey_ref
             .as_ref()
             .map(JourneyIdentity::Framed)
-            .or_else(|| {
-                self.dated_vehicle_journey_ref
-                    .as_ref()
-                    .map(JourneyIdentity::Dated)
-            })
+            .or_else(|| self.dated_vehicle_journey_ref.as_ref().map(JourneyIdentity::Dated))
             .or_else(|| {
                 self.estimated_vehicle_journey_code
                     .as_deref()
@@ -610,7 +624,11 @@ pub struct EstimatedCall {
     )]
     pub prediction_inaccurate: Option<bool>,
     /// Why they are unreliable.
-    #[serde(rename = "PredictionInaccurateReason", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "PredictionInaccurateReason",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub prediction_inaccurate_reason: Option<PredictionInaccurateReason>,
     /// How full the vehicle is expected to be here.
     #[serde(rename = "Occupancy", default, skip_serializing_if = "Option::is_none")]
@@ -688,10 +706,18 @@ pub struct EstimatedCall {
     )]
     pub latest_expected_arrival_time: Option<DateTime<FixedOffset>>,
     /// How much confidence to put in the expected arrival.
-    #[serde(rename = "ExpectedArrivalPredictionQuality", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExpectedArrivalPredictionQuality",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub expected_arrival_prediction_quality: Option<PredictionQuality>,
     /// That the arrival cannot be predicted at all, instead of the times above.
-    #[serde(rename = "ArrivalPredictionUnknown", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ArrivalPredictionUnknown",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub arrival_prediction_unknown: Option<Empty>,
     /// How the arrival stands against the timetable.
     #[serde(rename = "ArrivalStatus", default, skip_serializing_if = "Option::is_none")]
@@ -717,10 +743,18 @@ pub struct EstimatedCall {
     #[serde(rename = "ArrivalStopAssignment", default, skip_serializing_if = "Vec::is_empty")]
     pub arrival_stop_assignment: Vec<StopAssignment>,
     /// Where each part of the train stands on arrival.
-    #[serde(rename = "ArrivalFormationAssignment", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "ArrivalFormationAssignment",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub arrival_formation_assignment: Vec<FormationAssignment>,
     /// Which way round the vehicle stands on arrival, one text per language.
-    #[serde(rename = "ArrivalOrientationRelativeToQuay", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "ArrivalOrientationRelativeToQuay",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub arrival_orientation_relative_to_quay: Vec<NaturalLanguageString>,
     /// The operators whose tickets are valid on arrival.
     #[serde(rename = "ArrivalOperatorRefs", default, skip_serializing_if = "Vec::is_empty")]
@@ -758,10 +792,18 @@ pub struct EstimatedCall {
     )]
     pub earliest_expected_departure_time: Option<DateTime<FixedOffset>>,
     /// How much confidence to put in the expected departure.
-    #[serde(rename = "ExpectedDeparturePredictionQuality", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExpectedDeparturePredictionQuality",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub expected_departure_prediction_quality: Option<PredictionQuality>,
     /// That the departure cannot be predicted at all, instead of the times above.
-    #[serde(rename = "DeparturePredictionUnknown", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DeparturePredictionUnknown",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub departure_prediction_unknown: Option<Empty>,
     /// When passengers must be aboard by, as planned.
     #[serde(
@@ -783,7 +825,11 @@ pub struct EstimatedCall {
     #[serde(rename = "DepartureStatus", default, skip_serializing_if = "Option::is_none")]
     pub departure_status: Option<CallStatus>,
     /// Why the departure was cancelled, one per language.
-    #[serde(rename = "DepartureCancellationReason", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "DepartureCancellationReason",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub departure_cancellation_reason: Vec<NaturalLanguageString>,
     /// How near departure is, in words for a display.
     #[serde(rename = "DepartureProximityText", default, skip_serializing_if = "Vec::is_empty")]
@@ -803,22 +849,46 @@ pub struct EstimatedCall {
     #[serde(rename = "DepartureStopAssignment", default, skip_serializing_if = "Vec::is_empty")]
     pub departure_stop_assignment: Vec<StopAssignment>,
     /// Where each part of the train stands for departure.
-    #[serde(rename = "DepartureFormationAssignment", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "DepartureFormationAssignment",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub departure_formation_assignment: Vec<FormationAssignment>,
     /// Which way round the vehicle stands for departure, one text per language.
-    #[serde(rename = "DepartureOrientationRelativeToQuay", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "DepartureOrientationRelativeToQuay",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub departure_orientation_relative_to_quay: Vec<NaturalLanguageString>,
     /// How full the vehicle is expected to be when it leaves.
-    #[serde(rename = "ExpectedDepartureOccupancy", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "ExpectedDepartureOccupancy",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub expected_departure_occupancy: Vec<VehicleOccupancy>,
     /// How many passengers the vehicle is expected to be able to take on departure.
-    #[serde(rename = "ExpectedDepartureCapacities", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "ExpectedDepartureCapacities",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub expected_departure_capacities: Vec<PassengerCapacity>,
     /// How full the vehicle was when it left, instead of the expected figures.
-    #[serde(rename = "RecordedDepartureOccupancy", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "RecordedDepartureOccupancy",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub recorded_departure_occupancy: Vec<VehicleOccupancy>,
     /// How many passengers the vehicle could take when it left.
-    #[serde(rename = "RecordedDepartureCapacities", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "RecordedDepartureCapacities",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub recorded_departure_capacities: Vec<PassengerCapacity>,
     /// The operators whose tickets are valid on departure.
     #[serde(rename = "DepartureOperatorRefs", default, skip_serializing_if = "Vec::is_empty")]
@@ -975,7 +1045,11 @@ pub struct RecordedCall {
     )]
     pub prediction_inaccurate: Option<bool>,
     /// Why they are unreliable.
-    #[serde(rename = "PredictionInaccurateReason", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "PredictionInaccurateReason",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub prediction_inaccurate_reason: Option<PredictionInaccurateReason>,
     /// How full the vehicle was here.
     #[serde(rename = "Occupancy", default, skip_serializing_if = "Option::is_none")]
@@ -1076,10 +1150,18 @@ pub struct RecordedCall {
     #[serde(rename = "ArrivalStopAssignment", default, skip_serializing_if = "Vec::is_empty")]
     pub arrival_stop_assignment: Vec<StopAssignment>,
     /// Where each part of the train stood on arrival.
-    #[serde(rename = "ArrivalFormationAssignment", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "ArrivalFormationAssignment",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub arrival_formation_assignment: Vec<FormationAssignment>,
     /// Which way round the vehicle stood on arrival, one text per language.
-    #[serde(rename = "ArrivalOrientationRelativeToQuay", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "ArrivalOrientationRelativeToQuay",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub arrival_orientation_relative_to_quay: Vec<NaturalLanguageString>,
     /// The operators whose tickets were valid on arrival.
     #[serde(rename = "ArrivalOperatorRefs", default, skip_serializing_if = "Vec::is_empty")]
@@ -1120,7 +1202,11 @@ pub struct RecordedCall {
     #[serde(rename = "DepartureStatus", default, skip_serializing_if = "Option::is_none")]
     pub departure_status: Option<CallStatus>,
     /// Why the departure was cancelled, one per language.
-    #[serde(rename = "DepartureCancellationReason", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "DepartureCancellationReason",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub departure_cancellation_reason: Vec<NaturalLanguageString>,
     /// How near departure was, in words for a display.
     #[serde(rename = "DepartureProximityText", default, skip_serializing_if = "Vec::is_empty")]
@@ -1137,16 +1223,32 @@ pub struct RecordedCall {
     #[serde(rename = "DepartureStopAssignment", default, skip_serializing_if = "Vec::is_empty")]
     pub departure_stop_assignment: Vec<StopAssignment>,
     /// Where each part of the train stood for departure.
-    #[serde(rename = "DepartureFormationAssignment", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "DepartureFormationAssignment",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub departure_formation_assignment: Vec<FormationAssignment>,
     /// Which way round the vehicle stood for departure, one text per language.
-    #[serde(rename = "DepartureOrientationRelativeToQuay", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "DepartureOrientationRelativeToQuay",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub departure_orientation_relative_to_quay: Vec<NaturalLanguageString>,
     /// How full the vehicle was when it left.
-    #[serde(rename = "RecordedDepartureOccupancy", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "RecordedDepartureOccupancy",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub recorded_departure_occupancy: Vec<VehicleOccupancy>,
     /// How many passengers the vehicle could take when it left.
-    #[serde(rename = "RecordedDepartureCapacities", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "RecordedDepartureCapacities",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub recorded_departure_capacities: Vec<PassengerCapacity>,
     /// The operators whose tickets were valid on departure.
     #[serde(rename = "DepartureOperatorRefs", default, skip_serializing_if = "Vec::is_empty")]
@@ -1205,7 +1307,11 @@ pub struct EstimatedServiceJourneyInterchange {
     #[serde(rename = "DistributorJourneyRef", default, skip_serializing_if = "Option::is_none")]
     pub distributor_journey_ref: Option<ConnectingJourneyRef>,
     /// Where they leave from.
-    #[serde(rename = "DistributorDepartureStopRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DistributorDepartureStopRef",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub distributor_departure_stop_ref: Option<StopPointRef>,
     /// Which visit to that stop the departure is.
     #[serde(rename = "DistributorVisitNumber", default, skip_serializing_if = "Option::is_none")]
@@ -1280,7 +1386,11 @@ pub struct EstimatedServiceJourneyInterchange {
     #[serde(rename = "MaximumWaitTime", default, skip_serializing_if = "Option::is_none")]
     pub maximum_wait_time: Option<Duration>,
     /// The longest it will wait without a controller deciding.
-    #[serde(rename = "MaximumAutomaticWaitTime", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MaximumAutomaticWaitTime",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub maximum_automatic_wait_time: Option<Duration>,
     /// How long the transfer normally takes.
     #[serde(rename = "StandardTransferTime", default, skip_serializing_if = "Option::is_none")]
@@ -1307,7 +1417,12 @@ pub struct WillWait {
     /// The schema offers this element under two spellings, one of them a
     /// misspelling it keeps for backward compatibility; both are read, and the
     /// corrected spelling is what gets written.
-    #[serde(rename = "DriverHasAcknowledgedWillWait", alias = "DriverHasAcknowledgeWIllWait", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "DriverHasAcknowledgedWillWait",
+        alias = "DriverHasAcknowledgeWIllWait",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub driver_has_acknowledged_will_wait: Option<bool>,
 }
 
@@ -1376,13 +1491,10 @@ mod tests {
             ..EstimatedCall::at("00002")
         };
 
-        let xml = quick_xml::se::to_string_with_root("EstimatedCall", &call)
-            .expect("the call serialises");
+        let xml = quick_xml::se::to_string_with_root("EstimatedCall", &call).expect("the call serialises");
         let arrival = xml.find("<ExpectedArrivalTime>").expect("arrival is written");
         let platform = xml.find("<ArrivalPlatformName").expect("platform is written");
-        let departure = xml
-            .find("<AimedDepartureTime>")
-            .expect("departure is written");
+        let departure = xml.find("<AimedDepartureTime>").expect("departure is written");
         assert!(arrival < platform && platform < departure, "{xml}");
 
         let read: EstimatedCall = quick_xml::de::from_str(&xml).expect("the call round-trips");
@@ -1393,10 +1505,7 @@ mod tests {
     fn a_call_reports_whether_it_is_being_added_or_skipped() {
         let call = EstimatedCall::at("00003");
         assert_eq!(call.alteration(), None);
-        assert_eq!(
-            call.clone().cancelled().alteration(),
-            Some(CallAlteration::Cancelled)
-        );
+        assert_eq!(call.clone().cancelled().alteration(), Some(CallAlteration::Cancelled));
 
         let mut extra = call;
         extra.extra_call = Some(true);

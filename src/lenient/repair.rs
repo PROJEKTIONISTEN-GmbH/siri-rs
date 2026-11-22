@@ -303,8 +303,7 @@ fn report_contained(text: &str, target: &Target, scope: &Scope<'_>, origin: &Fin
         return;
     }
     for found in document::records_in(scope.records, text, &scope.path) {
-        let inside = target.is_root
-            || (found.range.start > target.range.start && found.range.end <= target.range.end);
+        let inside = target.is_root || (found.range.start > target.range.start && found.range.end <= target.range.end);
         if !inside {
             continue;
         }
@@ -330,7 +329,11 @@ fn leave_out_the_interrupted_run(
     scope: &Scope<'_>,
     findings: &mut Findings,
 ) -> bool {
-    let parent = if target.is_root { scope.name.as_str() } else { target.name.as_str() };
+    let parent = if target.is_root {
+        scope.name.as_str()
+    } else {
+        target.name.as_str()
+    };
     let Some(record) = record_kind(scope, parent, field) else {
         return false;
     };

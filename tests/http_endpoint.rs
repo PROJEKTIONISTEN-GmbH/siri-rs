@@ -46,11 +46,8 @@ async fn a_fetched_delivery_subscription_runs_its_full_cycle_over_http() {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     let wire = Wire::default();
     let mut consumer = ConsumerEndpoint::start(Consumer::<SituationExchange>::new("PASSENGER-APP"), wire.clone()).await;
-    let producer = ProducerEndpoint::start(
-        ProducerConfig::new("MY-AGENCY").with_fetched_delivery(),
-        wire.clone(),
-    )
-    .await;
+    let producer =
+        ProducerEndpoint::start(ProducerConfig::new("MY-AGENCY").with_fetched_delivery(), wire.clone()).await;
 
     let now = Utc::now().fixed_offset();
     let subscribe = consumer.subscribe("disruptions", now + Duration::hours(1), now);
@@ -117,8 +114,7 @@ async fn a_direct_delivery_producer_pushes_and_then_beats_over_http() {
     )
     .await;
     let producer = ProducerEndpoint::start(
-        ProducerConfig::new("MY-AGENCY")
-            .with_heartbeat(SiriDuration::parse("PT1S").expect("valid duration")),
+        ProducerConfig::new("MY-AGENCY").with_heartbeat(SiriDuration::parse("PT1S").expect("valid duration")),
         wire.clone(),
     )
     .await;
@@ -130,16 +126,18 @@ async fn a_direct_delivery_producer_pushes_and_then_beats_over_http() {
 
     // This producer pushes: the delivery arrives at the consumer's address without
     // being asked for, and the consumer answers it with an acknowledgement.
-    let ConsumerEvent::Delivered { items: situations, reply, .. } = consumer.next_event().await else {
+    let ConsumerEvent::Delivered {
+        items: situations,
+        reply,
+        ..
+    } = consumer.next_event().await
+    else {
         panic!("a direct-delivery producer pushes its situations");
     };
     assert_eq!(numbers(&situations), ["2026-0041", "2026-0042"]);
     assert!(reply.is_some(), "this consumer confirms what it receives");
 
-    let ConsumerEvent::Alive {
-        service_started_time,
-    } = consumer.next_event().await
-    else {
+    let ConsumerEvent::Alive { service_started_time } = consumer.next_event().await else {
         panic!("the producer's timer sends a heartbeat");
     };
     assert!(
@@ -176,11 +174,7 @@ async fn a_service_request_is_answered_over_http_without_a_subscription() {
     let now = Utc::now().fixed_offset();
     let request = Siri::new(
         siri_rs::pubsub::PROTOCOL_VERSION,
-        siri_rs::framework::ServiceRequest::new(
-            now,
-            "PASSENGER-APP",
-            vec![SituationExchangeRequest::new(now).into()],
-        ),
+        siri_rs::framework::ServiceRequest::new(now, "PASSENGER-APP", vec![SituationExchangeRequest::new(now).into()]),
     );
     let answer = exchange(&reqwest::Client::new(), &producer.url, &request).await;
 
@@ -191,11 +185,7 @@ async fn a_service_request_is_answered_over_http_without_a_subscription() {
         panic!("a service request is answered with a delivery");
     };
     assert_eq!(numbers(&situations), ["2026-0041", "2026-0042"]);
-    assert_eq!(
-        producer.subscriptions(),
-        0,
-        "a direct request opens nothing"
-    );
+    assert_eq!(producer.subscriptions(), 0, "a direct request opens nothing");
 
     wire.assert_every_message_was_valid();
     assert_eq!(
@@ -233,12 +223,7 @@ fn disruptions(now: DateTime<FixedOffset>) -> Disruptions {
     ])
 }
 
-fn situation(
-    at: DateTime<FixedOffset>,
-    number: &str,
-    cause: AlertCause,
-    summary: &str,
-) -> PtSituationElement {
+fn situation(at: DateTime<FixedOffset>, number: &str, cause: AlertCause, summary: &str) -> PtSituationElement {
     let mut situation = PtSituationElement::new(
         at,
         number,
@@ -354,9 +339,7 @@ struct ProducerEndpoint {
 impl ProducerEndpoint {
     async fn start(config: ProducerConfig, wire: Wire) -> Self {
         let now = Utc::now().fixed_offset();
-        let producer = Arc::new(Mutex::new(
-            Producer::new(config, disruptions(now)).started_at(now),
-        ));
+        let producer = Arc::new(Mutex::new(Producer::new(config, disruptions(now)).started_at(now)));
         let state = ProducerState {
             producer: producer.clone(),
             wire,
@@ -365,9 +348,7 @@ impl ProducerEndpoint {
         let (address, listener) = bind().await;
         let app = Router::new().route("/siri", post(answer).with_state(state.clone()));
         tokio::spawn(async move {
-            axum::serve(listener, app)
-                .await
-                .expect("the producer serves");
+            axum::serve(listener, app).await.expect("the producer serves");
         });
         tokio::spawn(deliver_when_due(state));
 
@@ -418,11 +399,7 @@ async fn deliver_when_due(state: ProducerState) {
     loop {
         ticker.tick().await;
         let now = Utc::now().fixed_offset();
-        let due = state
-            .producer
-            .lock()
-            .expect("the producer is usable")
-            .poll(now);
+        let due = state.producer.lock().expect("the producer is usable").poll(now);
         for outbound in due {
             send(&state, &client, &outbound).await;
         }
@@ -449,9 +426,9 @@ async fn send(state: &ProducerState, client: &reqwest::Client, outbound: &Outbou
     let acknowledgement = match response {
         Ok(response) => response.text().await.expect("a readable answer"),
         Err(complaint) => {
-            state.wire.failed(format!(
-                "the consumer at {address} refused a message: {complaint}"
-            ));
+            state
+                .wire
+                .failed(format!("the consumer at {address} refused a message: {complaint}"));
             return;
         }
     };
@@ -489,9 +466,7 @@ struct ConsumerEndpoint {
 impl ConsumerEndpoint {
     async fn start(consumer: Consumer<SituationExchange>, wire: Wire) -> Self {
         let (address, listener) = bind().await;
-        let consumer = Arc::new(Mutex::new(
-            consumer.at_address(format!("http://{address}/siri")),
-        ));
+        let consumer = Arc::new(Mutex::new(consumer.at_address(format!("http://{address}/siri"))));
         let (events, received) = mpsc::unbounded_channel();
         let state = ConsumerState {
             consumer: consumer.clone(),
@@ -501,9 +476,7 @@ impl ConsumerEndpoint {
 
         let app = Router::new().route("/siri", post(receive).with_state(state));
         tokio::spawn(async move {
-            axum::serve(listener, app)
-                .await
-                .expect("the consumer serves");
+            axum::serve(listener, app).await.expect("the consumer serves");
         });
 
         Self {
@@ -519,22 +492,16 @@ impl ConsumerEndpoint {
         initial_termination_time: DateTime<FixedOffset>,
         now: DateTime<FixedOffset>,
     ) -> Siri {
-        self.consumer
-            .lock()
-            .expect("the consumer is usable")
-            .subscribe(
-                identifier,
-                initial_termination_time,
-                SituationExchangeRequest::new(now),
-                now,
-            )
+        self.consumer.lock().expect("the consumer is usable").subscribe(
+            identifier,
+            initial_termination_time,
+            SituationExchangeRequest::new(now),
+            now,
+        )
     }
 
     fn terminate_all(&self, now: DateTime<FixedOffset>) -> Siri {
-        self.consumer
-            .lock()
-            .expect("the consumer is usable")
-            .terminate_all(now)
+        self.consumer.lock().expect("the consumer is usable").terminate_all(now)
     }
 
     /// Posts a message to the producer and reads the answer.
@@ -633,9 +600,7 @@ fn refused(wire: &Wire, complaint: String) -> Response {
 
 /// A listener on a port the operating system picked, so tests can run in parallel.
 async fn bind() -> (std::net::SocketAddr, TcpListener) {
-    let listener = TcpListener::bind("127.0.0.1:0")
-        .await
-        .expect("a free local port");
+    let listener = TcpListener::bind("127.0.0.1:0").await.expect("a free local port");
     let address = listener.local_addr().expect("the listener is bound");
     (address, listener)
 }

@@ -16,12 +16,10 @@ use crate::enumerations::{
 };
 use crate::model::call::PlannedStopAssignment;
 use crate::model::formation::FormationAssignment;
-use crate::model::journey::{
-    Branding, BrandingRef, GroupOfLinesRef, JourneyPlaceRef, SimpleContact, ViaName,
-};
+use crate::model::journey::{Branding, BrandingRef, GroupOfLinesRef, JourneyPlaceRef, SimpleContact, ViaName};
 use crate::model::reference::{
-    DestinationRef, DirectionRef, FramedVehicleJourneyRef, JourneyPatternRef, LineRef, OperatorRef,
-    ProductCategoryRef, RouteRef, ServiceFeatureRef, StopPointRef, VehicleFeatureRef,
+    DestinationRef, DirectionRef, FramedVehicleJourneyRef, JourneyPatternRef, LineRef, OperatorRef, ProductCategoryRef,
+    RouteRef, ServiceFeatureRef, StopPointRef, VehicleFeatureRef,
 };
 use crate::types::{Duration, NaturalLanguagePlaceName, NaturalLanguageString};
 
@@ -94,7 +92,11 @@ pub struct TargetedVehicleJourney {
     #[serde(rename = "OriginShortName", default, skip_serializing_if = "Vec::is_empty")]
     pub origin_short_name: Vec<NaturalLanguagePlaceName>,
     /// What is shown at the origin as the destination, one per language.
-    #[serde(rename = "DestinationDisplayAtOrigin", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "DestinationDisplayAtOrigin",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub destination_display_at_origin: Vec<NaturalLanguagePlaceName>,
     /// Places passed through that tell this journey apart from similar ones.
     #[serde(rename = "Via", default, skip_serializing_if = "Vec::is_empty")]
@@ -109,7 +111,11 @@ pub struct TargetedVehicleJourney {
     #[serde(rename = "DestinationShortName", default, skip_serializing_if = "Vec::is_empty")]
     pub destination_short_name: Vec<NaturalLanguagePlaceName>,
     /// What is shown at the destination as the origin, one per language.
-    #[serde(rename = "OriginDisplayAtDestination", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "OriginDisplayAtDestination",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub origin_display_at_destination: Vec<NaturalLanguagePlaceName>,
     /// The journey's own name, one per language.
     #[serde(rename = "VehicleJourneyName", default, skip_serializing_if = "Vec::is_empty")]
@@ -258,7 +264,11 @@ pub struct TargetedCall {
     #[serde(rename = "ArrivalStopAssignment", default, skip_serializing_if = "Vec::is_empty")]
     pub arrival_stop_assignment: Vec<PlannedStopAssignment>,
     /// Where each part of the train is planned to stand on arrival.
-    #[serde(rename = "ArrivalFormationAssignment", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "ArrivalFormationAssignment",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub arrival_formation_assignment: Vec<FormationAssignment>,
     /// The operators whose tickets are valid on arrival.
     #[serde(rename = "ArrivalOperatorRefs", default, skip_serializing_if = "Vec::is_empty")]
@@ -286,7 +296,11 @@ pub struct TargetedCall {
     #[serde(rename = "DepartureStopAssignment", default, skip_serializing_if = "Vec::is_empty")]
     pub departure_stop_assignment: Vec<PlannedStopAssignment>,
     /// Where each part of the train is planned to stand for departure.
-    #[serde(rename = "DepartureFormationAssignment", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "DepartureFormationAssignment",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub departure_formation_assignment: Vec<FormationAssignment>,
     /// The operators whose tickets are valid on departure.
     #[serde(rename = "DepartureOperatorRefs", default, skip_serializing_if = "Vec::is_empty")]
@@ -359,16 +373,17 @@ mod tests {
             ..TargetedVehicleJourney::new("Line123", "Out")
         };
 
-        let xml = quick_xml::se::to_string_with_root("TargetedVehicleJourney", &journey)
-            .expect("journey serialises");
+        let xml = quick_xml::se::to_string_with_root("TargetedVehicleJourney", &journey).expect("journey serialises");
         let line = xml.find("<LineRef>").expect("the line is written");
         let published = xml.find("<PublishedLineName").expect("the line name is written");
         let destination = xml.find("<DestinationName").expect("the destination is written");
         let call = xml.find("<TargetedCall>").expect("the call is written");
-        assert!(line < published && published < destination && destination < call, "{xml}");
+        assert!(
+            line < published && published < destination && destination < call,
+            "{xml}"
+        );
 
-        let read: TargetedVehicleJourney =
-            quick_xml::de::from_str(&xml).expect("journey round-trips");
+        let read: TargetedVehicleJourney = quick_xml::de::from_str(&xml).expect("journey round-trips");
         assert_eq!(read, journey);
     }
 }

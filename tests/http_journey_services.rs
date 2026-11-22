@@ -12,12 +12,10 @@ mod support;
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 
 use siri_rs::et::EstimatedTimetableRequest;
-use siri_rs::model::{
-    EstimatedCall, EstimatedVehicleJourney, Location, MonitoredVehicleJourney, Position,
-};
+use siri_rs::model::{EstimatedCall, EstimatedVehicleJourney, Location, MonitoredVehicleJourney, Position};
 use siri_rs::pubsub::{
-    Consumer, ConsumerEvent, EstimatedTimetable, EstimatedTimetableSource, ProducerConfig,
-    VehicleMonitoring, VehicleMonitoringSource,
+    Consumer, ConsumerEvent, EstimatedTimetable, EstimatedTimetableSource, ProducerConfig, VehicleMonitoring,
+    VehicleMonitoringSource,
 };
 use siri_rs::vm::{VehicleActivity, VehicleMonitoringRequest};
 use support::http::{ConsumerEndpoint, ProducerEndpoint, Wire};
@@ -28,8 +26,7 @@ async fn an_estimated_timetable_subscription_runs_its_full_cycle_over_http() {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     let wire = Wire::default();
     let mut consumer =
-        ConsumerEndpoint::start(Consumer::<EstimatedTimetable>::new("PASSENGER-APP"), wire.clone())
-            .await;
+        ConsumerEndpoint::start(Consumer::<EstimatedTimetable>::new("PASSENGER-APP"), wire.clone()).await;
     let producer = ProducerEndpoint::start(
         ProducerConfig::new("MY-AGENCY").with_fetched_delivery(),
         RunningJourneys(vec![delayed_journey(), cancelled_journey()]),
@@ -167,8 +164,7 @@ async fn a_vehicle_monitoring_subscription_is_pushed_and_updated_over_http() {
 async fn a_vehicle_monitoring_request_is_answered_over_http_without_a_subscription() {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     let wire = Wire::default();
-    let mut consumer =
-        ConsumerEndpoint::start(Consumer::<VehicleMonitoring>::new("MAP"), wire.clone()).await;
+    let mut consumer = ConsumerEndpoint::start(Consumer::<VehicleMonitoring>::new("MAP"), wire.clone()).await;
     let producer = ProducerEndpoint::start(
         ProducerConfig::new("MY-AGENCY"),
         TrackedVehicles(vec![vehicle_at(9.7411, 52.3759)]),
@@ -224,9 +220,7 @@ impl VehicleMonitoringSource for TrackedVehicles {
             Some(wanted) => self
                 .0
                 .iter()
-                .filter(|activity| {
-                    activity.monitored_vehicle_journey.vehicle_ref.as_ref() == Some(wanted)
-                })
+                .filter(|activity| activity.monitored_vehicle_journey.vehicle_ref.as_ref() == Some(wanted))
                 .cloned()
                 .collect(),
             None => self.0.clone(),
@@ -268,9 +262,7 @@ fn position_of(activity: &VehicleActivity) -> (f64, f64) {
         .and_then(Location::position)
     {
         Some(Position::Wgs84 {
-            longitude,
-            latitude,
-            ..
+            longitude, latitude, ..
         }) => (longitude, latitude),
         other => panic!("a tracked vehicle has a WGS 84 position, got {other:?}"),
     }

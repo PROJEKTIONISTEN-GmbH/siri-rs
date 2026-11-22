@@ -8,18 +8,15 @@ use crate::cm::ConnectionMonitoringSubscriptionRequest;
 use crate::ct::ConnectionTimetableSubscriptionRequest;
 use crate::et::EstimatedTimetableSubscriptionRequest;
 use crate::fm::FacilityMonitoringSubscriptionRequest;
-use crate::framework::error_condition::{
-    ApplicationError, ErrorCondition, ServiceRequestError, TerminationError,
-};
+use crate::framework::error_condition::{ApplicationError, ErrorCondition, ServiceRequestError, TerminationError};
 use crate::gm::GeneralMessageSubscriptionRequest;
 use crate::pt::ProductionTimetableSubscriptionRequest;
 use crate::sm::StopMonitoringSubscriptionRequest;
 use crate::st::StopTimetableSubscriptionRequest;
 use crate::sx::SituationExchangeSubscriptionRequest;
 use crate::types::{
-    Duration, Empty, EndpointAddress, Extensions, MessageQualifier, MessageRef,
-    NaturalLanguageString, ParticipantRef, SubscriptionFilterRef, SubscriptionQualifier,
-    SubscriptionRef,
+    Duration, Empty, EndpointAddress, Extensions, MessageQualifier, MessageRef, NaturalLanguageString, ParticipantRef,
+    SubscriptionFilterRef, SubscriptionQualifier, SubscriptionRef,
 };
 use crate::vm::VehicleMonitoringSubscriptionRequest;
 
@@ -54,7 +51,11 @@ pub struct SubscriptionRequest {
     #[serde(rename = "ConsumerAddress", default, skip_serializing_if = "Option::is_none")]
     pub consumer_address: Option<EndpointAddress>,
     /// Filter shared by the subscriptions in this request.
-    #[serde(rename = "SubscriptionFilterIdentifier", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "SubscriptionFilterIdentifier",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub subscription_filter_identifier: Option<String>,
     /// Settings that apply to every subscription in this request.
     #[serde(rename = "SubscriptionContext", default, skip_serializing_if = "Option::is_none")]
@@ -252,7 +253,11 @@ pub struct SubscriptionResponse {
     #[serde(rename = "ResponseStatus")]
     pub response_status: Vec<StatusResponse>,
     /// Where to send later subscription management requests.
-    #[serde(rename = "SubscriptionManagerAddress", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "SubscriptionManagerAddress",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub subscription_manager_address: Option<EndpointAddress>,
     /// When the producer's service last started.
     #[serde(
@@ -338,10 +343,7 @@ pub struct StatusResponse {
 
 impl StatusResponse {
     /// A status saying the subscription was accepted.
-    pub fn accepted(
-        response_timestamp: DateTime<FixedOffset>,
-        subscription_ref: impl Into<SubscriptionRef>,
-    ) -> Self {
+    pub fn accepted(response_timestamp: DateTime<FixedOffset>, subscription_ref: impl Into<SubscriptionRef>) -> Self {
         Self {
             response_timestamp,
             request_message_ref: None,
@@ -437,10 +439,7 @@ pub enum TerminationScope<'a> {
 
 impl TerminateSubscriptionRequest {
     /// A request closing every subscription the requestor holds.
-    pub fn all(
-        request_timestamp: DateTime<FixedOffset>,
-        requestor_ref: impl Into<ParticipantRef>,
-    ) -> Self {
+    pub fn all(request_timestamp: DateTime<FixedOffset>, requestor_ref: impl Into<ParticipantRef>) -> Self {
         Self {
             request_timestamp,
             account_id: None,
@@ -566,10 +565,7 @@ pub struct TerminationResponseStatus {
 
 impl TerminationResponseStatus {
     /// A status saying the subscription was closed.
-    pub fn terminated(
-        response_timestamp: DateTime<FixedOffset>,
-        subscription_ref: impl Into<SubscriptionRef>,
-    ) -> Self {
+    pub fn terminated(response_timestamp: DateTime<FixedOffset>, subscription_ref: impl Into<SubscriptionRef>) -> Self {
         Self {
             response_timestamp: Some(response_timestamp),
             request_message_ref: None,
@@ -608,7 +604,11 @@ pub struct SubscriptionTerminatedNotification {
     #[serde(rename = "Address", default, skip_serializing_if = "Option::is_none")]
     pub address: Option<EndpointAddress>,
     /// Identifier the producer puts on this message.
-    #[serde(rename = "ResponseMessageIdentifier", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ResponseMessageIdentifier",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub response_message_identifier: Option<MessageQualifier>,
     /// The message this notification relates to.
     #[serde(rename = "RequestMessageRef", default, skip_serializing_if = "Option::is_none")]

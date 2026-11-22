@@ -68,19 +68,14 @@ fn an_extension_payload_reaches_the_reader_whole() {
             )
         })
         .collect();
-    assert_eq!(
-        values,
-        [("MaximumAge", "15".to_owned()), ("Language", "EN".to_owned())]
-    );
+    assert_eq!(values, [("MaximumAge", "15".to_owned()), ("Language", "EN".to_owned())]);
 }
 
 #[test]
 fn an_extension_payload_survives_the_round_trip_the_conformance_suite_measures() {
     let original = extensions_fixture();
-    let written = siri_rs::to_string_pretty(
-        &siri_rs::from_str::<Siri>(&original).expect("the fixture reads"),
-    )
-    .expect("the message writes");
+    let written = siri_rs::to_string_pretty(&siri_rs::from_str::<Siri>(&original).expect("the fixture reads"))
+        .expect("the message writes");
 
     compare(&parse(&original), &parse(&written)).expect("the payload comes back unchanged");
     assert!(written.contains("<Setting name=\"MaximumAge\" unit=\"minutes\">15</Setting>"));
@@ -114,16 +109,12 @@ fn a_qualified_extension_payload_keeps_its_namespace() {
         .children_named("Telemetry")
         .next()
         .expect("the payload carries the default-declared subtree");
-    assert_eq!(
-        telemetry.attribute("xmlns"),
-        Some("http://example.org/siri/telemetry")
-    );
+    assert_eq!(telemetry.attribute("xmlns"), Some("http://example.org/siri/telemetry"));
 }
 
 #[test]
 fn an_embedded_datex_record_reaches_the_reader_whole() {
-    let situation: RoadSituationElement =
-        siri_rs::from_str(&datex_fixture()).expect("the fixture reads");
+    let situation: RoadSituationElement = siri_rs::from_str(&datex_fixture()).expect("the fixture reads");
 
     let road = situation
         .affects
@@ -164,10 +155,9 @@ fn an_embedded_datex_record_survives_the_round_trip_and_stays_schema_valid() {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
 
     let original = datex_fixture();
-    let written = siri_rs::to_string_pretty(
-        &siri_rs::from_str::<RoadSituationElement>(&original).expect("the fixture reads"),
-    )
-    .expect("the situation writes");
+    let written =
+        siri_rs::to_string_pretty(&siri_rs::from_str::<RoadSituationElement>(&original).expect("the fixture reads"))
+            .expect("the situation writes");
 
     compare(&parse(&original), &parse(&written)).expect("the DATEX record comes back unchanged");
     validate(&written).expect("the written document is valid SIRI");
@@ -234,15 +224,11 @@ fn a_payload_a_consumer_knows_reads_into_a_type_of_its_own() {
 /// reaches the wire as the elements that type describes.
 #[test]
 fn a_payload_built_from_a_consumers_type_is_written_into_the_document() {
-    let mut request = CheckStatusRequest::new(
-        "2004-12-17T09:30:47-05:00".parse().expect("a valid instant"),
-        "EREWHON",
-    );
+    let mut request = CheckStatusRequest::new("2004-12-17T09:30:47-05:00".parse().expect("a valid instant"), "EREWHON");
     let mut extensions = Extensions::default();
     extensions.content.push(Node::Element {
         name: "OperatorSettings".to_owned(),
-        content: Extensions::from_payload(&operator_settings())
-            .expect("the settings write into a subtree"),
+        content: Extensions::from_payload(&operator_settings()).expect("the settings write into a subtree"),
     });
     request.extensions = Some(extensions);
 
@@ -307,8 +293,7 @@ fn a_document_built_to_carry_only_extensions_is_written_as_one() {
     let mut extensions = Extensions::default();
     extensions.content.push(Node::Element {
         name: "OperatorSettings".to_owned(),
-        content: Extensions::from_payload(&operator_settings())
-            .expect("the settings write into a subtree"),
+        content: Extensions::from_payload(&operator_settings()).expect("the settings write into a subtree"),
     });
     let message = Siri::new("2.1", extensions);
 

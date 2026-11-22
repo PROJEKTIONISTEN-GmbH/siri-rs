@@ -15,8 +15,7 @@ use chrono::{DateTime, Duration, FixedOffset};
 use criterion::{criterion_group, criterion_main, BatchSize, BenchmarkId, Criterion};
 use siri_rs::framework::SubscriptionRequest;
 use siri_rs::pubsub::{
-    Consumer, ConsumerEvent, Producer, ProducerConfig, Service, SituationExchange, SituationSource,
-    SubscriptionParts,
+    Consumer, ConsumerEvent, Producer, ProducerConfig, Service, SituationExchange, SituationSource, SubscriptionParts,
 };
 use siri_rs::sx::{PtSituationElement, SituationExchangeRequest};
 use siri_rs::Siri;
@@ -47,11 +46,7 @@ fn handle(c: &mut Criterion) {
     group.bench_function("service-request", |b| {
         b.iter_batched_ref(
             || producer_holding(&situations, 0),
-            |producer| {
-                producer
-                    .handle(&request, now())
-                    .expect("a service request is answered")
-            },
+            |producer| producer.handle(&request, now()).expect("a service request is answered"),
             BatchSize::SmallInput,
         );
     });
@@ -91,12 +86,9 @@ fn poll(c: &mut Criterion) {
 /// What the producer publishes: the situations of an official delivery, read back
 /// out of it with a consumer.
 fn published_situations() -> Vec<PtSituationElement> {
-    let delivery: Siri =
-        siri_rs::from_str(&support::default_bound_situation().xml).expect("the fixture reads");
+    let delivery: Siri = siri_rs::from_str(&support::default_bound_situation().xml).expect("the fixture reads");
     let mut consumer = Consumer::<SituationExchange>::new("BENCH");
-    let ConsumerEvent::Delivered { items, .. } = consumer
-        .handle(&delivery, now())
-        .expect("the delivery is understood")
+    let ConsumerEvent::Delivered { items, .. } = consumer.handle(&delivery, now()).expect("the delivery is understood")
     else {
         panic!("the fixture is a situation delivery");
     };
@@ -114,14 +106,8 @@ impl SituationSource for Published {
 }
 
 /// A producer holding `held` open subscriptions, each owed a delivery.
-fn producer_holding(
-    situations: &[PtSituationElement],
-    held: usize,
-) -> Producer<Published, SituationExchange> {
-    let mut producer = Producer::new(
-        ProducerConfig::new("HUB"),
-        Published(situations.to_owned()),
-    );
+fn producer_holding(situations: &[PtSituationElement], held: usize) -> Producer<Published, SituationExchange> {
+    let mut producer = Producer::new(ProducerConfig::new("HUB"), Published(situations.to_owned()));
     if held > 0 {
         producer
             .handle(&subscription_request(held), now())
@@ -143,10 +129,7 @@ fn subscription_request(count: usize) -> Siri {
             })
         })
         .collect();
-    Siri::new(
-        "2.1",
-        SubscriptionRequest::new(now(), "PASSENGER-APP", subscriptions),
-    )
+    Siri::new("2.1", SubscriptionRequest::new(now(), "PASSENGER-APP", subscriptions))
 }
 
 /// A direct request for the situations, outside any subscription.

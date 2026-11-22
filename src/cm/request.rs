@@ -5,9 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::enumerations::ConnectionMonitoringDetail;
 use crate::model::{ConnectionLinkRef, DatedVehicleJourneyRef, DirectionRef, LineRef};
-use crate::types::{
-    Duration, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier,
-};
+use crate::types::{Duration, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier};
 
 /// A request for the connections being watched over one connection link.
 ///
@@ -133,7 +131,10 @@ pub struct ConnectingJourneyFilter {
     #[serde(rename = "VisitNumber", default, skip_serializing_if = "Option::is_none")]
     pub visit_number: Option<u64>,
     /// When the timetable has the feeder arriving.
-    #[serde(rename = "TimetabledArrivalTime", deserialize_with = "crate::xml::date_time::required")]
+    #[serde(
+        rename = "TimetabledArrivalTime",
+        deserialize_with = "crate::xml::date_time::required"
+    )]
     pub timetabled_arrival_time: DateTime<FixedOffset>,
 }
 
@@ -255,11 +256,8 @@ mod tests {
         );
         assert!(matches!(by_journey.scope(), Some(ConnectionScope::Journeys(f)) if f.len() == 1));
 
-        let by_time = ConnectionMonitoringRequest::for_line(
-            timestamp(),
-            "EH00002",
-            ConnectingTimeFilter::new("LINE77", "OUT"),
-        );
+        let by_time =
+            ConnectionMonitoringRequest::for_line(timestamp(), "EH00002", ConnectingTimeFilter::new("LINE77", "OUT"));
         assert!(matches!(by_time.scope(), Some(ConnectionScope::Time(f)) if f.line_ref.as_str() == "LINE77"));
 
         let unscoped = ConnectionMonitoringRequest::for_journeys(timestamp(), "EH0", Vec::new());
@@ -271,15 +269,11 @@ mod tests {
         let request = ConnectionMonitoringRequest {
             preview_interval: Some(Duration::parse("PT10M").expect("valid duration")),
             connection_monitoring_detail_level: Some(ConnectionMonitoringDetail::Full),
-            ..ConnectionMonitoringRequest::for_line(
-                timestamp(),
-                "EH00002",
-                ConnectingTimeFilter::new("LINE77", "OUT"),
-            )
+            ..ConnectionMonitoringRequest::for_line(timestamp(), "EH00002", ConnectingTimeFilter::new("LINE77", "OUT"))
         };
 
-        let xml = quick_xml::se::to_string_with_root("ConnectionMonitoringRequest", &request)
-            .expect("request serialises");
+        let xml =
+            quick_xml::se::to_string_with_root("ConnectionMonitoringRequest", &request).expect("request serialises");
         let preview = xml.find("<PreviewInterval>").expect("the window is written");
         let link = xml.find("<ConnectionLinkRef>").expect("the link is written");
         let filter = xml.find("<ConnectingTimeFilter>").expect("the filter is written");
@@ -288,8 +282,7 @@ mod tests {
             .expect("the policy is written");
         assert!(preview < link && link < filter && filter < detail, "{xml}");
 
-        let read: ConnectionMonitoringRequest =
-            quick_xml::de::from_str(&xml).expect("request round-trips");
+        let read: ConnectionMonitoringRequest = quick_xml::de::from_str(&xml).expect("request round-trips");
         assert_eq!(read, request);
     }
 }

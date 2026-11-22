@@ -85,34 +85,19 @@ mod tests {
         assert_eq!(first_illegal("é\u{1f}"), Some((2, '\u{1f}')));
         assert_eq!(first_illegal("a\u{FFFE}"), Some((1, '\u{FFFE}')));
         assert_eq!(first_illegal("\u{FFFF}"), Some((0, '\u{FFFF}')));
-        assert_eq!(
-            first_illegal("\t\n\r \u{FEFF}\u{FFFD}\u{F000}\u{10FFFF}"),
-            None
-        );
+        assert_eq!(first_illegal("\t\n\r \u{FEFF}\u{FFFD}\u{F000}\u{10FFFF}"), None);
     }
 
     #[test]
     fn a_reference_counts_only_where_it_is_markup() {
         assert_eq!(first_illegal_reference("<a>x&#1;</a>"), Some((4, '\u{1}')));
-        assert_eq!(
-            first_illegal_reference("<a b=\"&#x1F;\"/>"),
-            Some((6, '\u{1f}'))
-        );
-        assert_eq!(
-            first_illegal_reference("<a>&#xFFFE;</a>"),
-            Some((3, '\u{FFFE}'))
-        );
+        assert_eq!(first_illegal_reference("<a b=\"&#x1F;\"/>"), Some((6, '\u{1f}')));
+        assert_eq!(first_illegal_reference("<a>&#xFFFE;</a>"), Some((3, '\u{FFFE}')));
         assert_eq!(
             first_illegal_reference("<a><!-- &#1; --><![CDATA[&#1;]]><?p &#1;?></a>"),
             None
         );
-        assert_eq!(
-            first_illegal_reference("<a>&#9;&#10;&#13;&#xE9;&#65533;</a>"),
-            None
-        );
-        assert_eq!(
-            first_illegal_reference("<a>&#;&#x;&#12a;&#99999999999;</a>"),
-            None
-        );
+        assert_eq!(first_illegal_reference("<a>&#9;&#10;&#13;&#xE9;&#65533;</a>"), None);
+        assert_eq!(first_illegal_reference("<a>&#;&#x;&#12a;&#99999999999;</a>"), None);
     }
 }

@@ -15,13 +15,11 @@ use serde::{Deserialize, Serialize};
 use crate::enumerations::{FirstOrLastJourney, VehicleModesOfTransport};
 use crate::model::facility::{FacilityChange, FacilityCondition};
 use crate::model::formation::FormationCondition;
-use crate::model::journey::{
-    Branding, BrandingRef, GroupOfLinesRef, JourneyPlaceRef, SimpleContact, ViaName,
-};
+use crate::model::journey::{Branding, BrandingRef, GroupOfLinesRef, JourneyPlaceRef, SimpleContact, ViaName};
 use crate::model::reference::{
-    BlockRef, ControlActionRef, CourseOfJourneyRef, DestinationRef, DirectionRef,
-    FramedVehicleJourneyRef, JourneyPatternRef, LineRef, OperatorRef, ProductCategoryRef, RouteRef,
-    ServiceFeatureRef, SituationRef, VehicleFeatureRef, VehicleJourneyRef, VehicleRef,
+    BlockRef, ControlActionRef, CourseOfJourneyRef, DestinationRef, DirectionRef, FramedVehicleJourneyRef,
+    JourneyPatternRef, LineRef, OperatorRef, ProductCategoryRef, RouteRef, ServiceFeatureRef, SituationRef,
+    VehicleFeatureRef, VehicleJourneyRef, VehicleRef,
 };
 use crate::types::{Extensions, NaturalLanguagePlaceName, NaturalLanguageString};
 
@@ -94,7 +92,11 @@ pub struct InterchangeJourney {
     #[serde(rename = "OriginShortName", default, skip_serializing_if = "Vec::is_empty")]
     pub origin_short_name: Vec<NaturalLanguagePlaceName>,
     /// What is shown at the origin as the destination, one per language.
-    #[serde(rename = "DestinationDisplayAtOrigin", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "DestinationDisplayAtOrigin",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub destination_display_at_origin: Vec<NaturalLanguagePlaceName>,
     /// Places passed through that tell this journey apart from similar ones.
     #[serde(rename = "Via", default, skip_serializing_if = "Vec::is_empty")]
@@ -109,7 +111,11 @@ pub struct InterchangeJourney {
     #[serde(rename = "DestinationShortName", default, skip_serializing_if = "Vec::is_empty")]
     pub destination_short_name: Vec<NaturalLanguagePlaceName>,
     /// What is shown at the destination as the origin, one per language.
-    #[serde(rename = "OriginDisplayAtDestination", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "OriginDisplayAtDestination",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub origin_display_at_destination: Vec<NaturalLanguagePlaceName>,
     /// The journey's own name, one per language.
     #[serde(rename = "VehicleJourneyName", default, skip_serializing_if = "Vec::is_empty")]
@@ -183,7 +189,11 @@ pub struct InterchangeJourney {
     #[serde(rename = "VehicleRef", default, skip_serializing_if = "Option::is_none")]
     pub vehicle_ref: Option<VehicleRef>,
     /// Further journeys the same vehicle is running at the same time.
-    #[serde(rename = "AdditionalVehicleJourneyRef", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "AdditionalVehicleJourneyRef",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub additional_vehicle_journey_ref: Vec<FramedVehicleJourneyRef>,
     /// The driver on duty.
     #[serde(rename = "DriverRef", default, skip_serializing_if = "Option::is_none")]
@@ -286,8 +296,7 @@ mod tests {
             ..InterchangeJourney::new("123", "OUT")
         };
 
-        let xml = quick_xml::se::to_string_with_root("FeederJourney", &journey)
-            .expect("journey serialises");
+        let xml = quick_xml::se::to_string_with_root("FeederJourney", &journey).expect("journey serialises");
         let published = xml.find("<PublishedLineName").expect("the line name is written");
         let block = xml.find("<BlockRef>").expect("the block is written");
         let departure = xml.find("<AimedDepartureTime>").expect("the departure is written");

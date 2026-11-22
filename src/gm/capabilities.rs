@@ -4,12 +4,10 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::framework::{
-    CapabilityRequestPolicy, ErrorCondition, GeneralInteractionCapability, GeneralPermissions,
-    PermissionScope, PermissionVersionRef, ServiceRequestError, TransportDescription,
+    CapabilityRequestPolicy, ErrorCondition, GeneralInteractionCapability, GeneralPermissions, PermissionScope,
+    PermissionVersionRef, ServiceRequestError, TransportDescription,
 };
-use crate::types::{
-    DefaultedBoolean, Duration, Empty, EndpointAddress, Extensions, MessageRef, ParticipantRef,
-};
+use crate::types::{DefaultedBoolean, Duration, Empty, EndpointAddress, Extensions, MessageRef, ParticipantRef};
 use crate::xml::SiriRoot;
 
 use super::InfoChannelRef;
@@ -54,7 +52,11 @@ pub struct GeneralMessageCapabilitiesResponse {
     )]
     pub general_message_service_capabilities: Option<GeneralMessageServiceCapabilities>,
     /// What participants are allowed to see.
-    #[serde(rename = "GeneralMessagePermissions", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "GeneralMessagePermissions",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub general_message_permissions: Option<GeneralMessagePermissions>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -63,10 +65,7 @@ pub struct GeneralMessageCapabilitiesResponse {
 
 impl GeneralMessageCapabilitiesResponse {
     /// A successful answer describing the given capabilities.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        capabilities: GeneralMessageServiceCapabilities,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, capabilities: GeneralMessageServiceCapabilities) -> Self {
         Self {
             version: None,
             response_timestamp,

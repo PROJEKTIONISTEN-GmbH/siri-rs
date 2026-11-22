@@ -102,11 +102,7 @@ impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::Xml(e) => write!(f, "malformed XML: {e}"),
-            Error::Deserialize {
-                path,
-                offset,
-                source,
-            } => {
+            Error::Deserialize { path, offset, source } => {
                 write!(f, "cannot read SIRI document")?;
                 if !path.is_empty() {
                     write!(f, " at {path}")?;
@@ -124,7 +120,11 @@ impl fmt::Display for Error {
                 write!(f, "<{element}> is in no namespace, not in {}", crate::NAMESPACE)
             }
             Error::UnexpectedNamespace { element, found } => {
-                write!(f, "<{element}> is in the namespace {found}, not in {}", crate::NAMESPACE)
+                write!(
+                    f,
+                    "<{element}> is in the namespace {found}, not in {}",
+                    crate::NAMESPACE
+                )
             }
             Error::ContentAfterRoot { offset: Some(offset) } => {
                 write!(f, "the document goes on after its root element (byte {offset})")

@@ -47,10 +47,7 @@ debug_without_account_key!(DataReadyNotification {
 
 impl DataReadyNotification {
     /// A notification from `producer_ref`.
-    pub fn new(
-        request_timestamp: DateTime<FixedOffset>,
-        producer_ref: impl Into<ParticipantRef>,
-    ) -> Self {
+    pub fn new(request_timestamp: DateTime<FixedOffset>, producer_ref: impl Into<ParticipantRef>) -> Self {
         Self {
             request_timestamp,
             account_id: None,
@@ -97,10 +94,7 @@ pub struct DataReadyAcknowledgement {
 
 impl DataReadyAcknowledgement {
     /// An acknowledgement saying the notification was accepted.
-    pub fn accepted(
-        response_timestamp: DateTime<FixedOffset>,
-        consumer_ref: impl Into<ParticipantRef>,
-    ) -> Self {
+    pub fn accepted(response_timestamp: DateTime<FixedOffset>, consumer_ref: impl Into<ParticipantRef>) -> Self {
         Self {
             response_timestamp,
             consumer_ref: Some(consumer_ref.into()),
@@ -165,10 +159,7 @@ impl DataSupplyRequest {
     ///
     /// A fetch that answers one particular announcement names it in
     /// `notification_ref`; one that does not leaves the element out.
-    pub fn new(
-        request_timestamp: DateTime<FixedOffset>,
-        consumer_ref: impl Into<ParticipantRef>,
-    ) -> Self {
+    pub fn new(request_timestamp: DateTime<FixedOffset>, consumer_ref: impl Into<ParticipantRef>) -> Self {
         Self {
             request_timestamp,
             account_id: None,
@@ -217,10 +208,7 @@ pub struct DataReceivedAcknowledgement {
 
 impl DataReceivedAcknowledgement {
     /// An acknowledgement saying the delivery was processed successfully.
-    pub fn accepted(
-        response_timestamp: DateTime<FixedOffset>,
-        consumer_ref: impl Into<ParticipantRef>,
-    ) -> Self {
+    pub fn accepted(response_timestamp: DateTime<FixedOffset>, consumer_ref: impl Into<ParticipantRef>) -> Self {
         Self {
             response_timestamp,
             consumer_ref: Some(consumer_ref.into()),

@@ -10,22 +10,21 @@
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
-use crate::enumerations::{CommunicationsTransportMethod, CompressionMethod};
 use crate::cm::ConnectionMonitoringCapabilitiesResponse;
 use crate::ct::ConnectionTimetableCapabilitiesResponse;
+use crate::enumerations::{CommunicationsTransportMethod, CompressionMethod};
 use crate::et::EstimatedTimetableCapabilitiesResponse;
 use crate::fm::FacilityMonitoringCapabilitiesResponse;
+use crate::framework::error_condition::{ErrorCondition, ServiceRequestError};
 use crate::gm::GeneralMessageCapabilitiesResponse;
+use crate::model::{ConnectionLinkRef, DirectionRef, LineRef, MonitoringRef, OperatorRef};
 use crate::pt::ProductionTimetableCapabilitiesResponse;
 use crate::sm::StopMonitoringCapabilitiesResponse;
 use crate::st::StopTimetableCapabilitiesResponse;
-use crate::vm::VehicleMonitoringCapabilitiesResponse;
-use crate::framework::error_condition::{ErrorCondition, ServiceRequestError};
-use crate::model::{ConnectionLinkRef, DirectionRef, LineRef, MonitoringRef, OperatorRef};
 use crate::types::{
-    DefaultedBoolean, Duration, Empty, EndpointAddress, Extensions, MessageQualifier, MessageRef,
-    ParticipantRef,
+    DefaultedBoolean, Duration, Empty, EndpointAddress, Extensions, MessageQualifier, MessageRef, ParticipantRef,
 };
+use crate::vm::VehicleMonitoringCapabilitiesResponse;
 use crate::xml::SiriRoot;
 
 siri_ref! {
@@ -194,7 +193,11 @@ pub struct CapabilitiesResponse {
     #[serde(rename = "Address", default, skip_serializing_if = "Option::is_none")]
     pub address: Option<EndpointAddress>,
     /// Identifier the producer puts on this message.
-    #[serde(rename = "ResponseMessageIdentifier", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ResponseMessageIdentifier",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub response_message_identifier: Option<MessageQualifier>,
     /// The capabilities request this answers.
     #[serde(rename = "RequestMessageRef", default, skip_serializing_if = "Option::is_none")]
@@ -374,10 +377,7 @@ pub struct SituationExchangeCapabilitiesResponse {
 
 impl SituationExchangeCapabilitiesResponse {
     /// A successful answer describing the given capabilities.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        capabilities: SituationExchangeServiceCapabilities,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, capabilities: SituationExchangeServiceCapabilities) -> Self {
         Self {
             version: None,
             response_timestamp,
@@ -767,10 +767,7 @@ pub struct SituationExchangePermission {
 
 impl SituationExchangePermission {
     /// A permission entry applying to every participant that has no entry of its own.
-    pub fn for_all_participants(
-        operator_permissions: OperatorPermissions,
-        line_permissions: LinePermissions,
-    ) -> Self {
+    pub fn for_all_participants(operator_permissions: OperatorPermissions, line_permissions: LinePermissions) -> Self {
         Self {
             scope: PermissionScope::AllParticipants(Empty::new()),
             general_capabilities: None,
@@ -1233,14 +1230,10 @@ mod tests {
 
     #[test]
     fn a_capability_response_is_read_as_a_document_of_its_own() {
-        let response: SituationExchangeCapabilitiesResponse =
-            crate::from_str(CAPABILITY_RESPONSE).unwrap();
+        let response: SituationExchangeCapabilitiesResponse = crate::from_str(CAPABILITY_RESPONSE).unwrap();
 
         assert!(response.is_success());
-        let capabilities = response
-            .situation_exchange_service_capabilities
-            .as_ref()
-            .unwrap();
+        let capabilities = response.situation_exchange_service_capabilities.as_ref().unwrap();
         let interaction = &capabilities.general_interaction.as_ref().unwrap().interaction;
         assert!(interaction.request_response && interaction.publish_subscribe);
 
@@ -1260,8 +1253,7 @@ mod tests {
 
     #[test]
     fn permissions_distinguish_the_default_entry_from_a_named_participant() {
-        let response: SituationExchangeCapabilitiesResponse =
-            crate::from_str(CAPABILITY_RESPONSE).unwrap();
+        let response: SituationExchangeCapabilitiesResponse = crate::from_str(CAPABILITY_RESPONSE).unwrap();
         let permissions = response.situation_exchange_permissions.unwrap();
         let entries = permissions.situation_exchange_permission;
 
@@ -1284,8 +1276,7 @@ mod tests {
 
     #[test]
     fn a_capability_response_survives_a_round_trip() {
-        let response: SituationExchangeCapabilitiesResponse =
-            crate::from_str(CAPABILITY_RESPONSE).unwrap();
+        let response: SituationExchangeCapabilitiesResponse = crate::from_str(CAPABILITY_RESPONSE).unwrap();
         let written = crate::to_string(&response).unwrap();
         let reread: SituationExchangeCapabilitiesResponse = crate::from_str(&written).unwrap();
         assert_eq!(response, reread);
@@ -1298,12 +1289,12 @@ mod tests {
             timestamp,
             "12345",
             vec![
-                CapabilitiesRequestPayload::ProductionTimetableCapabilitiesRequest(
-                    ServiceCapabilitiesRequest::new(timestamp),
-                ),
-                CapabilitiesRequestPayload::SituationExchangeCapabilitiesRequest(
-                    ServiceCapabilitiesRequest::new(timestamp),
-                ),
+                CapabilitiesRequestPayload::ProductionTimetableCapabilitiesRequest(ServiceCapabilitiesRequest::new(
+                    timestamp,
+                )),
+                CapabilitiesRequestPayload::SituationExchangeCapabilitiesRequest(ServiceCapabilitiesRequest::new(
+                    timestamp,
+                )),
             ],
         );
 
@@ -1326,9 +1317,7 @@ mod tests {
                 EstimatedTimetableCapabilitiesResponse::new(
                     timestamp,
                     crate::et::EstimatedTimetableServiceCapabilities {
-                        topic_filtering: Some(
-                            crate::et::EstimatedTimetableTopicFiltering::by_operator_and_line(),
-                        ),
+                        topic_filtering: Some(crate::et::EstimatedTimetableTopicFiltering::by_operator_and_line()),
                         request_policy: Some(CapabilityRequestPolicy::in_language("en-uk")),
                         ..Default::default()
                     },
@@ -1355,8 +1344,7 @@ mod tests {
     #[test]
     fn a_timetable_permission_grants_operators_lines_and_connection_links() {
         let permission = ConnectionServicePermission::for_all_participants();
-        let xml =
-            quick_xml::se::to_string_with_root("EstimatedTimetablePermission", &permission).unwrap();
+        let xml = quick_xml::se::to_string_with_root("EstimatedTimetablePermission", &permission).unwrap();
         let operators = xml.find("<OperatorPermissions>").expect("operators are written");
         let lines = xml.find("<LinePermissions>").expect("lines are written");
         let links = xml

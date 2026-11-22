@@ -70,15 +70,13 @@ pub mod request;
 
 pub use capabilities::{
     StopMonitoringCapabilitiesResponse, StopMonitoringPermissions, StopMonitoringRequestPolicy,
-    StopMonitoringResponseFeatures, StopMonitoringServiceCapabilities,
-    StopMonitoringServicePermission, StopMonitoringTopicFiltering,
+    StopMonitoringResponseFeatures, StopMonitoringServiceCapabilities, StopMonitoringServicePermission,
+    StopMonitoringTopicFiltering,
 };
 pub use delivery::{
-    DeliveryVariant, MonitoredStopVisit, MonitoredStopVisitCancellation, ServiceException,
-    StopLineNotice, StopLineNoticeCancellation, StopMonitoringDelivery, StopNotice,
-    StopNoticeCancellation,
+    DeliveryVariant, MonitoredStopVisit, MonitoredStopVisitCancellation, ServiceException, StopLineNotice,
+    StopLineNoticeCancellation, StopMonitoringDelivery, StopNotice, StopNoticeCancellation,
 };
 pub use request::{
-    StopMonitoringFilter, StopMonitoringMultipleRequest, StopMonitoringRequest,
-    StopMonitoringSubscriptionRequest,
+    StopMonitoringFilter, StopMonitoringMultipleRequest, StopMonitoringRequest, StopMonitoringSubscriptionRequest,
 };

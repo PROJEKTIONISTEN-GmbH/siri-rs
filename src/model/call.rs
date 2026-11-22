@@ -49,22 +49,42 @@ pub struct StopAssignment {
     #[serde(rename = "QuayType", default, skip_serializing_if = "Option::is_none")]
     pub quay_type: Option<TypeOfNestedQuay>,
     /// The boarding position the vehicle is planned to come to rest at.
-    #[serde(rename = "AimedBoardingPositionRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedBoardingPositionRef",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_boarding_position_ref: Option<BoardingPositionRef>,
     /// Names of the planned boarding position, one per language.
     #[serde(rename = "AimedBoardingPositionName", default, skip_serializing_if = "Vec::is_empty")]
     pub aimed_boarding_position_name: Vec<NaturalLanguageString>,
     /// The boarding position the vehicle is now expected at.
-    #[serde(rename = "ExpectedBoardingPositionRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ExpectedBoardingPositionRef",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub expected_boarding_position_ref: Option<BoardingPositionRef>,
     /// Names of the expected boarding position, one per language.
-    #[serde(rename = "ExpectedBoardingPositionName", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "ExpectedBoardingPositionName",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub expected_boarding_position_name: Vec<NaturalLanguageString>,
     /// The boarding position the vehicle came to rest at.
-    #[serde(rename = "ActualBoardingPositionRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ActualBoardingPositionRef",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub actual_boarding_position_ref: Option<BoardingPositionRef>,
     /// Names of the boarding position used, one per language.
-    #[serde(rename = "ActualBoardingPositionName", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "ActualBoardingPositionName",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub actual_boarding_position_name: Vec<NaturalLanguageString>,
     /// The area boarding is planned to happen within.
     #[serde(rename = "AimedFlexibleArea", default, skip_serializing_if = "Option::is_none")]
@@ -163,7 +183,11 @@ pub struct PlannedStopAssignment {
     #[serde(rename = "QuayType", default, skip_serializing_if = "Option::is_none")]
     pub quay_type: Option<TypeOfNestedQuay>,
     /// The boarding position the vehicle is planned to come to rest at.
-    #[serde(rename = "AimedBoardingPositionRef", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "AimedBoardingPositionRef",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub aimed_boarding_position_ref: Option<BoardingPositionRef>,
     /// Names of the planned boarding position, one per language.
     #[serde(rename = "AimedBoardingPositionName", default, skip_serializing_if = "Vec::is_empty")]
@@ -191,12 +215,9 @@ impl PlannedStopAssignment {
     /// Which alternative of the schema's choice this assignment carries, or `None`
     /// when it names neither.
     pub fn place(&self) -> Option<StandingPlace> {
-        if self.aimed_quay_ref.is_some() || !self.aimed_quay_name.is_empty() || self.quay_type.is_some()
-        {
+        if self.aimed_quay_ref.is_some() || !self.aimed_quay_name.is_empty() || self.quay_type.is_some() {
             Some(StandingPlace::Quay)
-        } else if self.aimed_boarding_position_ref.is_some()
-            || !self.aimed_boarding_position_name.is_empty()
-        {
+        } else if self.aimed_boarding_position_ref.is_some() || !self.aimed_boarding_position_name.is_empty() {
             Some(StandingPlace::BoardingPosition)
         } else {
             None
@@ -249,10 +270,7 @@ mod tests {
             Some(StandingPlace::BoardingPosition)
         );
         assert_eq!(StopAssignment::default().place(), None);
-        assert_eq!(
-            PlannedStopAssignment::at_quay("Q1").place(),
-            Some(StandingPlace::Quay)
-        );
+        assert_eq!(PlannedStopAssignment::at_quay("Q1").place(), Some(StandingPlace::Quay));
         assert_eq!(PlannedStopAssignment::default().place(), None);
     }
 }

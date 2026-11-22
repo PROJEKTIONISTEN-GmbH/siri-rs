@@ -10,8 +10,8 @@ use crate::sx::action::Actions;
 use crate::sx::affects::AffectedOperator;
 use crate::sx::situation::{PtSituationElement, RoadSituationElement};
 use crate::types::{
-    CountryRef, Duration, EndpointAddress, Extensions, MessageRef, NaturalLanguageString,
-    ParticipantRef, SubscriptionFilterRef, SubscriptionRef,
+    CountryRef, Duration, EndpointAddress, Extensions, MessageRef, NaturalLanguageString, ParticipantRef,
+    SubscriptionFilterRef, SubscriptionRef,
 };
 
 /// The situations a producer is publishing.
@@ -83,10 +83,7 @@ pub struct SituationExchangeDelivery {
 
 impl SituationExchangeDelivery {
     /// A delivery carrying the given public transport situations.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        situations: Vec<PtSituationElement>,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, situations: Vec<PtSituationElement>) -> Self {
         Self {
             version: None,
             response_timestamp,

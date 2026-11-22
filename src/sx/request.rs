@@ -4,15 +4,15 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{
-    AccessModes, AirSubmodesOfTransport, BusSubmodesOfTransport, CoachSubmodesOfTransport,
-    Direction, MetroSubmodesOfTransport, Predictability, RailSubmodesOfTransport, ScopeType,
-    Severity, TelecabinSubmodesOfTransport, TramSubmodesOfTransport, VehicleModesOfTransport,
-    VerificationStatus, WaterSubmodesOfTransport, WorkflowStatus,
+    AccessModes, AirSubmodesOfTransport, BusSubmodesOfTransport, CoachSubmodesOfTransport, Direction,
+    MetroSubmodesOfTransport, Predictability, RailSubmodesOfTransport, ScopeType, Severity,
+    TelecabinSubmodesOfTransport, TramSubmodesOfTransport, VehicleModesOfTransport, VerificationStatus,
+    WaterSubmodesOfTransport, WorkflowStatus,
 };
 use crate::model::{
-    ConnectionLinkRef, FacilityRef, FramedVehicleJourneyRef, InterchangeRef, LineRef,
-    Location, OperationalUnitRef, OperatorRef, PassengerAccessibilityNeeds, RequestedLines,
-    StopPlaceComponentRef, StopPlaceRef, StopPointRef, Submode, VehicleJourneyRef, VehicleRef,
+    ConnectionLinkRef, FacilityRef, FramedVehicleJourneyRef, InterchangeRef, LineRef, Location, OperationalUnitRef,
+    OperatorRef, PassengerAccessibilityNeeds, RequestedLines, StopPlaceComponentRef, StopPlaceRef, StopPointRef,
+    Submode, VehicleJourneyRef, VehicleRef,
 };
 use crate::types::{
     CountryRef, Duration, Extensions, HalfOpenTimestampInputRange, MessageQualifier, ParticipantRef,
@@ -242,7 +242,11 @@ pub struct SituationExchangeRequest {
     )]
     pub include_translations: Option<bool>,
     /// At most this many situations.
-    #[serde(rename = "MaximumNumberOfSituationElements", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MaximumNumberOfSituationElements",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub maximum_number_of_situation_elements: Option<u64>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -336,7 +340,11 @@ pub struct RoadFilter {
     #[serde(rename = "directionBound", default, skip_serializing_if = "Option::is_none")]
     pub direction_bound: Option<Direction>,
     /// A point along the road the filter is anchored to.
-    #[serde(rename = "referencePointIdentifier", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "referencePointIdentifier",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub reference_point_identifier: Option<String>,
 }
 
@@ -408,8 +416,7 @@ mod tests {
     #[test]
     fn an_unfiltered_request_writes_only_its_timestamp() {
         let request = SituationExchangeRequest::new(timestamp());
-        let xml = quick_xml::se::to_string_with_root("SituationExchangeRequest", &request)
-            .expect("request serialises");
+        let xml = quick_xml::se::to_string_with_root("SituationExchangeRequest", &request).expect("request serialises");
         assert_eq!(
             xml,
             "<SituationExchangeRequest><RequestTimestamp>2004-12-17T09:30:47-05:00\
@@ -424,8 +431,7 @@ mod tests {
         request.line_ref = vec![LineRef::new("52")];
         request.severity = Some(Severity::Severe);
 
-        let xml = quick_xml::se::to_string_with_root("SituationExchangeRequest", &request)
-            .expect("request serialises");
+        let xml = quick_xml::se::to_string_with_root("SituationExchangeRequest", &request).expect("request serialises");
         let severity = xml.find("<Severity>").expect("severity is written");
         let scope = xml.find("<Scope>").expect("scope is written");
         let line = xml.find("<LineRef>").expect("line is written");
@@ -450,10 +456,12 @@ mod tests {
             timestamp(),
             SituationExchangeRequest::new(timestamp()),
         );
-        let xml =
-            quick_xml::se::to_string_with_root("SituationExchangeSubscriptionRequest", &subscription)
-                .expect("subscription serialises");
-        assert!(xml.contains("<SubscriptionIdentifier>000234</SubscriptionIdentifier>"), "{xml}");
+        let xml = quick_xml::se::to_string_with_root("SituationExchangeSubscriptionRequest", &subscription)
+            .expect("subscription serialises");
+        assert!(
+            xml.contains("<SubscriptionIdentifier>000234</SubscriptionIdentifier>"),
+            "{xml}"
+        );
         assert!(xml.contains("<SituationExchangeRequest>"), "{xml}");
 
         let read: SituationExchangeSubscriptionRequest =

@@ -4,9 +4,7 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::model::{LineRef, OperationalUnitRef, OperatorRef, RequestedLines};
-use crate::types::{
-    Duration, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier,
-};
+use crate::types::{Duration, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier};
 
 /// A request for the control actions a producer holds.
 ///
@@ -164,10 +162,7 @@ pub struct ControlActionMultipleRequest {
 
 impl ControlActionMultipleRequest {
     /// A request carrying the given filters.
-    pub fn new(
-        request_timestamp: DateTime<FixedOffset>,
-        control_action_filter: Vec<ControlActionFilter>,
-    ) -> Self {
+    pub fn new(request_timestamp: DateTime<FixedOffset>, control_action_filter: Vec<ControlActionFilter>) -> Self {
         Self {
             version: None,
             request_timestamp,
@@ -343,8 +338,7 @@ mod tests {
             ..ControlActionRequest::new(timestamp())
         };
 
-        let xml = quick_xml::se::to_string_with_root("ControlActionRequest", &request)
-            .expect("request serialises");
+        let xml = quick_xml::se::to_string_with_root("ControlActionRequest", &request).expect("request serialises");
         let operator = xml.find("<OperatorRef>").expect("the topic is written");
         let messages = xml
             .find("<IncludeDriverMessages>")
@@ -354,8 +348,7 @@ mod tests {
             .expect("the policy is written");
         assert!(operator < messages && messages < maximum, "{xml}");
 
-        let read: ControlActionRequest =
-            quick_xml::de::from_str(&xml).expect("request round-trips");
+        let read: ControlActionRequest = quick_xml::de::from_str(&xml).expect("request round-trips");
         assert_eq!(read, request);
     }
 
@@ -376,10 +369,7 @@ mod tests {
             }),
             ..ControlActionRequest::new(timestamp())
         };
-        assert!(matches!(
-            one_direction.line_scope(),
-            Some(LineScope::Directions(_))
-        ));
+        assert!(matches!(one_direction.line_scope(), Some(LineScope::Directions(_))));
         assert_eq!(ControlActionRequest::new(timestamp()).line_scope(), None);
     }
 
@@ -393,12 +383,11 @@ mod tests {
             ],
         );
 
-        let xml = quick_xml::se::to_string_with_root("ControlActionMultipleRequest", &request)
-            .expect("request serialises");
+        let xml =
+            quick_xml::se::to_string_with_root("ControlActionMultipleRequest", &request).expect("request serialises");
         assert_eq!(xml.matches("<ControlActionFilter>").count(), 2, "{xml}");
         assert_eq!(
-            quick_xml::de::from_str::<ControlActionMultipleRequest>(&xml)
-                .expect("request round-trips"),
+            quick_xml::de::from_str::<ControlActionMultipleRequest>(&xml).expect("request round-trips"),
             request
         );
     }

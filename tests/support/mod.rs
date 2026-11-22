@@ -90,16 +90,14 @@ fn fixtures_under(directory: &str) -> Vec<Fixture> {
                 .expect("fixture lives under the fixture root")
                 .to_string_lossy()
                 .into_owned(),
-            xml: std::fs::read_to_string(&path)
-                .unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display())),
+            xml: std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("cannot read {}: {e}", path.display())),
             path,
         })
         .collect()
 }
 
 fn collect_xml(dir: &Path, out: &mut Vec<PathBuf>) {
-    for entry in std::fs::read_dir(dir).unwrap_or_else(|e| panic!("cannot read {}: {e}", dir.display()))
-    {
+    for entry in std::fs::read_dir(dir).unwrap_or_else(|e| panic!("cannot read {}: {e}", dir.display())) {
         let path = entry.expect("readable directory entry").path();
         if path.is_dir() {
             collect_xml(&path, out);
@@ -114,9 +112,7 @@ pub fn root_element(xml: &str) -> String {
     let mut reader = quick_xml::Reader::from_str(xml);
     loop {
         match reader.read_event().expect("fixture is well-formed XML") {
-            Event::Start(e) | Event::Empty(e) => {
-                return String::from_utf8_lossy(e.local_name().as_ref()).into_owned()
-            }
+            Event::Start(e) | Event::Empty(e) => return String::from_utf8_lossy(e.local_name().as_ref()).into_owned(),
             Event::Eof => panic!("document has no elements"),
             _ => {}
         }
@@ -146,39 +142,21 @@ fn rewrite<T: siri_rs::SiriRoot + std::fmt::Debug>(xml: &str) -> Result<String, 
 pub fn round_trip(root: &str, xml: &str) -> Result<String, String> {
     let written = match root {
         "Siri" => rewrite::<Siri>(xml),
-        "ConnectionMonitoringCapabilitiesResponse" => {
-            rewrite::<ConnectionMonitoringCapabilitiesResponse>(xml)
-        }
-        "ConnectionTimetableCapabilitiesResponse" => {
-            rewrite::<ConnectionTimetableCapabilitiesResponse>(xml)
-        }
+        "ConnectionMonitoringCapabilitiesResponse" => rewrite::<ConnectionMonitoringCapabilitiesResponse>(xml),
+        "ConnectionTimetableCapabilitiesResponse" => rewrite::<ConnectionTimetableCapabilitiesResponse>(xml),
         "ControlActionCapabilitiesResponse" => rewrite::<ControlActionCapabilitiesResponse>(xml),
-        "EstimatedTimetableCapabilitiesResponse" => {
-            rewrite::<EstimatedTimetableCapabilitiesResponse>(xml)
-        }
-        "FacilityMonitoringCapabilitiesResponse" => {
-            rewrite::<FacilityMonitoringCapabilitiesResponse>(xml)
-        }
+        "EstimatedTimetableCapabilitiesResponse" => rewrite::<EstimatedTimetableCapabilitiesResponse>(xml),
+        "FacilityMonitoringCapabilitiesResponse" => rewrite::<FacilityMonitoringCapabilitiesResponse>(xml),
         "GeneralMessageCapabilitiesResponse" => rewrite::<GeneralMessageCapabilitiesResponse>(xml),
-        "ProductionTimetableCapabilitiesResponse" => {
-            rewrite::<ProductionTimetableCapabilitiesResponse>(xml)
-        }
+        "ProductionTimetableCapabilitiesResponse" => rewrite::<ProductionTimetableCapabilitiesResponse>(xml),
         "PtSituationElement" => rewrite::<PtSituationElement>(xml),
         "RoadSituationElement" => rewrite::<RoadSituationElement>(xml),
-        "SituationExchangeCapabilitiesResponse" => {
-            rewrite::<SituationExchangeCapabilitiesResponse>(xml)
-        }
+        "SituationExchangeCapabilitiesResponse" => rewrite::<SituationExchangeCapabilitiesResponse>(xml),
         "StopMonitoringCapabilitiesResponse" => rewrite::<StopMonitoringCapabilitiesResponse>(xml),
         "StopMonitoringPermissions" => rewrite::<StopMonitoringPermissions>(xml),
         "StopTimetableCapabilitiesResponse" => rewrite::<StopTimetableCapabilitiesResponse>(xml),
-        "VehicleMonitoringCapabilitiesResponse" => {
-            rewrite::<VehicleMonitoringCapabilitiesResponse>(xml)
-        }
-        other => {
-            return Err(format!(
-                "no document type is registered for root element <{other}>"
-            ))
-        }
+        "VehicleMonitoringCapabilitiesResponse" => rewrite::<VehicleMonitoringCapabilitiesResponse>(xml),
+        other => return Err(format!("no document type is registered for root element <{other}>")),
     };
     written.map_err(|error| format!("cannot round-trip: {error}"))
 }
@@ -414,8 +392,7 @@ fn validate_against(xml: &str, schema: PathBuf) -> Result<(), String> {
     if output.status.success() {
         Ok(())
     } else {
-        Err(String::from_utf8_lossy(&output.stderr)
-            .replace(&file.to_string_lossy().to_string(), "<document>"))
+        Err(String::from_utf8_lossy(&output.stderr).replace(&file.to_string_lossy().to_string(), "<document>"))
     }
 }
 

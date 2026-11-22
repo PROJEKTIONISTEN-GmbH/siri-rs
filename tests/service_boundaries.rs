@@ -12,8 +12,8 @@ use siri_rs::et::EstimatedTimetableRequest;
 use siri_rs::framework::{ServiceDelivery, ServiceDeliveryPayload};
 use siri_rs::model::EstimatedVehicleJourney;
 use siri_rs::pubsub::{
-    Consumer, ConsumerEvent, EstimatedTimetable, EstimatedTimetableSource, Producer, ProducerConfig,
-    SituationExchange, VehicleMonitoring,
+    Consumer, ConsumerEvent, EstimatedTimetable, EstimatedTimetableSource, Producer, ProducerConfig, SituationExchange,
+    VehicleMonitoring,
 };
 use siri_rs::sx::SituationExchangeRequest;
 use siri_rs::vm::{VehicleMonitoringDelivery, VehicleMonitoringRequest};
@@ -59,7 +59,10 @@ fn a_producer_refuses_a_subscription_meant_for_another_service() {
         .response_status;
     assert_eq!(statuses.len(), 1);
     assert_eq!(statuses[0].subscription_ref.as_str(), "disruptions");
-    assert!(!statuses[0].is_accepted(), "a producer that does not serve the service says so");
+    assert!(
+        !statuses[0].is_accepted(),
+        "a producer that does not serve the service says so"
+    );
     let reason = statuses[0]
         .error_condition
         .as_ref()
@@ -111,9 +114,7 @@ fn a_producer_answers_a_request_for_the_service_it_does_serve() {
         .handle(&request, now())
         .expect("the request is understood")
         .expect("a service request is answered");
-    let ConsumerEvent::Delivered { items, .. } = consumer
-        .handle(&delivery, now())
-        .expect("the delivery is understood")
+    let ConsumerEvent::Delivered { items, .. } = consumer.handle(&delivery, now()).expect("the delivery is understood")
     else {
         panic!("a service request is answered with a delivery");
     };

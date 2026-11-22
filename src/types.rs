@@ -61,7 +61,12 @@ siri_ref! {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct NaturalLanguageString {
     /// The `xml:lang` tag of this text, e.g. `DE`.
-    #[serde(rename = "@xml:lang", alias = "@lang", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "@xml:lang",
+        alias = "@lang",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub lang: Option<String>,
     /// The text itself; empty when the element has no content.
     #[serde(rename = "$text", default)]
@@ -106,7 +111,12 @@ pub type NaturalLanguagePlaceName = NaturalLanguageString;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct DefaultedText {
     /// The `xml:lang` tag of this text.
-    #[serde(rename = "@xml:lang", alias = "@lang", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "@xml:lang",
+        alias = "@lang",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub lang: Option<String>,
     /// Whether the text replaces the value that would otherwise be derived.
     #[serde(rename = "@overridden", default, skip_serializing_if = "Option::is_none")]
@@ -864,10 +874,7 @@ struct Nested {
 impl<'de> DeserializeSeed<'de> for Nested {
     type Value = AnyContent;
 
-    fn deserialize<D: Deserializer<'de>>(
-        self,
-        deserializer: D,
-    ) -> std::result::Result<AnyContent, D::Error> {
+    fn deserialize<D: Deserializer<'de>>(self, deserializer: D) -> std::result::Result<AnyContent, D::Error> {
         deserializer.deserialize_map(self)
     }
 }
@@ -900,9 +907,7 @@ impl<'de> Visitor<'de> for Nested {
             } else if key == "$text" {
                 element.content.push(Node::Text(map.next_value()?));
             } else {
-                let content = map.next_value_seed(Nested {
-                    depth: self.depth + 1,
-                })?;
+                let content = map.next_value_seed(Nested { depth: self.depth + 1 })?;
                 element.content.push(Node::Element { name: key, content });
             }
         }
@@ -941,8 +946,7 @@ mod tests {
     fn a_language_tag_survives_being_read_back() {
         // The deserialiser matches attributes by local name while the serialiser
         // writes the qualified one, so the field needs both spellings.
-        let read: NaturalLanguageString =
-            quick_xml::de::from_str(r#"<Name xml:lang="EN">Express</Name>"#).unwrap();
+        let read: NaturalLanguageString = quick_xml::de::from_str(r#"<Name xml:lang="EN">Express</Name>"#).unwrap();
         assert_eq!(read, NaturalLanguageString::with_lang("EN", "Express"));
         assert_eq!(
             quick_xml::se::to_string_with_root("Name", &read).unwrap(),
@@ -950,8 +954,7 @@ mod tests {
         );
 
         let text: DefaultedText =
-            quick_xml::de::from_str(r#"<Summary xml:lang="DE" overridden="true">Hallo</Summary>"#)
-                .unwrap();
+            quick_xml::de::from_str(r#"<Summary xml:lang="DE" overridden="true">Hallo</Summary>"#).unwrap();
         assert_eq!(text.lang.as_deref(), Some("DE"));
         assert_eq!(text.overridden, Some(true));
     }
@@ -962,9 +965,7 @@ mod tests {
         assert_eq!(zoned.as_str(), "2001-12-17T14:20:00+01:00");
         assert_eq!(
             zoned.instant(),
-            Some(
-                chrono::DateTime::parse_from_rfc3339("2001-12-17T14:20:00+01:00").unwrap()
-            )
+            Some(chrono::DateTime::parse_from_rfc3339("2001-12-17T14:20:00+01:00").unwrap())
         );
 
         let local = Timestamp::parse("2001-12-17T14:20:00").unwrap();
@@ -1059,10 +1060,7 @@ mod tests {
             // both sides of the point.
             "PT1.5H", "PT1.S", "PT.5S",
         ] {
-            assert!(
-                Duration::parse(lexical).is_err(),
-                "{lexical:?} should not parse"
-            );
+            assert!(Duration::parse(lexical).is_err(), "{lexical:?} should not parse");
         }
     }
 

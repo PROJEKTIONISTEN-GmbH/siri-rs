@@ -11,9 +11,7 @@ mod support;
 use chrono::{DateTime, Duration, FixedOffset, Utc};
 
 use siri_rs::model::{MonitoredCall, MonitoredVehicleJourney};
-use siri_rs::pubsub::{
-    Consumer, ConsumerEvent, ProducerConfig, StopMonitoring, StopMonitoringSource,
-};
+use siri_rs::pubsub::{Consumer, ConsumerEvent, ProducerConfig, StopMonitoring, StopMonitoringSource};
 use siri_rs::sm::{MonitoredStopVisit, StopMonitoringRequest};
 use siri_rs::types::NaturalLanguageString;
 use support::http::{ConsumerEndpoint, ProducerEndpoint, Wire};
@@ -27,14 +25,9 @@ const KROEPCKE: &str = "de:03241:101";
 async fn a_departure_board_is_answered_over_http_without_a_subscription() {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     let wire = Wire::default();
-    let mut consumer =
-        ConsumerEndpoint::start(Consumer::<StopMonitoring>::new("DISPLAY"), wire.clone()).await;
-    let producer = ProducerEndpoint::start(
-        ProducerConfig::new("MY-AGENCY"),
-        DepartureBoard(board()),
-        wire.clone(),
-    )
-    .await;
+    let mut consumer = ConsumerEndpoint::start(Consumer::<StopMonitoring>::new("DISPLAY"), wire.clone()).await;
+    let producer =
+        ProducerEndpoint::start(ProducerConfig::new("MY-AGENCY"), DepartureBoard(board()), wire.clone()).await;
 
     let now = Utc::now().fixed_offset();
     let request = consumer.request(StopMonitoringRequest::at_stop(now, KROEPCKE), now);
@@ -66,14 +59,9 @@ async fn a_departure_board_is_answered_over_http_without_a_subscription() {
 async fn a_polled_board_is_narrowed_to_the_line_the_request_names() {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     let wire = Wire::default();
-    let mut consumer =
-        ConsumerEndpoint::start(Consumer::<StopMonitoring>::new("DISPLAY"), wire.clone()).await;
-    let producer = ProducerEndpoint::start(
-        ProducerConfig::new("MY-AGENCY"),
-        DepartureBoard(board()),
-        wire.clone(),
-    )
-    .await;
+    let mut consumer = ConsumerEndpoint::start(Consumer::<StopMonitoring>::new("DISPLAY"), wire.clone()).await;
+    let producer =
+        ProducerEndpoint::start(ProducerConfig::new("MY-AGENCY"), DepartureBoard(board()), wire.clone()).await;
 
     let now = Utc::now().fixed_offset();
     let request = consumer.request(
@@ -102,12 +90,8 @@ async fn a_stop_monitoring_subscription_is_pushed_and_updated_over_http() {
         wire.clone(),
     )
     .await;
-    let producer = ProducerEndpoint::start(
-        ProducerConfig::new("MY-AGENCY"),
-        DepartureBoard(board()),
-        wire.clone(),
-    )
-    .await;
+    let producer =
+        ProducerEndpoint::start(ProducerConfig::new("MY-AGENCY"), DepartureBoard(board()), wire.clone()).await;
 
     let now = Utc::now().fixed_offset();
     let subscribe = consumer.subscribe(
@@ -175,9 +159,7 @@ impl StopMonitoringSource for DepartureBoard {
             .filter(|visit| {
                 visit.monitoring_ref.as_ref() == Some(&request.monitoring_ref)
                     && match &request.line_ref {
-                        Some(wanted) => {
-                            visit.monitored_vehicle_journey.line_ref.as_ref() == Some(wanted)
-                        }
+                        Some(wanted) => visit.monitored_vehicle_journey.line_ref.as_ref() == Some(wanted),
                         None => true,
                     }
             })
@@ -224,11 +206,7 @@ fn departures(visits: &[MonitoredStopVisit]) -> Vec<(&str, &str)> {
         .map(|visit| {
             let journey = &visit.monitored_vehicle_journey;
             (
-                journey
-                    .line_ref
-                    .as_ref()
-                    .map(|line| line.as_str())
-                    .unwrap_or_default(),
+                journey.line_ref.as_ref().map(|line| line.as_str()).unwrap_or_default(),
                 journey
                     .destination_name
                     .first()

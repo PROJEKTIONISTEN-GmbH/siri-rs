@@ -18,23 +18,18 @@ mod support;
 use chrono::{DateTime, Duration, FixedOffset};
 
 use siri_rs::ca::{
-    CallCancellationAction, CancelledConnection, ChangeOfJourneyTiming, ChangeOfStopPointStatus,
-    ChangedPoint, ControlAction, ControlActionCapabilitiesResponse, ControlActionDelivery,
-    ControlActionFilter, ControlActionKind, ControlActionMultipleRequest, ControlActionReason,
-    ControlActionRequest, ControlActionServiceCapabilities, ControlActionSubscriptionRequest,
-    ControlActions,
-    AddedControlActions, DatedCallRef, DriverMessage, DriverMessages, DriverScope,
-    ExtraConnection,
-    FlexibleJourneyActivation, GroupOfControlActions, GroupsOfControlActions, JourneyCreation,
-    JourneyEnd, JourneyPatternModification, JourneyScope, JourneyStart, MessageContents,
-    MiddleCall, ModifiedConnection, PointInJourneyPatternRef, RelativeTime, RemovedControlActions,
-    RevokedControlAction,
-    RevokedControlActions, SituationDescription, StopPointStatusTimeScope, StopRefs, TargetPoint,
+    AddedControlActions, CallCancellationAction, CancelledConnection, ChangeOfJourneyTiming, ChangeOfStopPointStatus,
+    ChangedPoint, ControlAction, ControlActionCapabilitiesResponse, ControlActionDelivery, ControlActionFilter,
+    ControlActionKind, ControlActionMultipleRequest, ControlActionReason, ControlActionRequest,
+    ControlActionServiceCapabilities, ControlActionSubscriptionRequest, ControlActions, DatedCallRef, DriverMessage,
+    DriverMessages, DriverScope, ExtraConnection, FlexibleJourneyActivation, GroupOfControlActions,
+    GroupsOfControlActions, JourneyCreation, JourneyEnd, JourneyPatternModification, JourneyScope, JourneyStart,
+    MessageContents, MiddleCall, ModifiedConnection, PointInJourneyPatternRef, RelativeTime, RemovedControlActions,
+    RevokedControlAction, RevokedControlActions, SituationDescription, StopPointStatusTimeScope, StopRefs, TargetPoint,
     VehicleDetecting, VehicleDetectings, VehicleWorkAssignment,
 };
 use siri_rs::enumerations::{
-    ChangeModel, ChangeOfJourneyTimingType, ControlActionReasonCategory, StopPlaceStatus,
-    TypeOfActivatedJourney,
+    ChangeModel, ChangeOfJourneyTimingType, ControlActionReasonCategory, StopPlaceStatus, TypeOfActivatedJourney,
 };
 use siri_rs::framework::{ServiceDelivery, ServiceRequest, SubscriptionRequest};
 use siri_rs::model::{FramedVehicleJourneyRef, ValidityCondition};
@@ -118,10 +113,7 @@ fn every_kind_of_control_action_is_valid_and_reads_back() {
             }),
             ..ControlActionDelivery::new(now())
         };
-        let message = Siri::new(
-            VERSION,
-            ServiceDelivery::new(now(), "MY-AGENCY", vec![delivery.into()]),
-        );
+        let message = Siri::new(VERSION, ServiceDelivery::new(now(), "MY-AGENCY", vec![delivery.into()]));
 
         assert_valid(&message, name);
         assert_eq!(read_back(&message), message, "{name} does not read back");
@@ -177,27 +169,20 @@ fn a_delivery_carries_groups_revocations_messages_and_detections() {
         ..ControlActionDelivery::new(now())
     };
 
-    let message = Siri::new(
-        VERSION,
-        ServiceDelivery::new(now(), "MY-AGENCY", vec![delivery.into()]),
-    );
+    let message = Siri::new(VERSION, ServiceDelivery::new(now(), "MY-AGENCY", vec![delivery.into()]));
     assert_valid(&message, "a delivery of every payload kind");
     assert_eq!(read_back(&message), message);
 }
 
 #[test]
 fn the_capabilities_of_a_control_action_service_are_valid_and_read_back() {
-    let response = ControlActionCapabilitiesResponse::new(
-        now(),
-        ControlActionServiceCapabilities::default(),
-    );
+    let response = ControlActionCapabilitiesResponse::new(now(), ControlActionServiceCapabilities::default());
 
     let xml = siri_rs::to_string(&response).expect("the response is writable");
     if let Err(complaint) = validate_with_substitution_groups(&xml) {
         panic!("the capabilities response is not valid SIRI:\n{xml}\n{complaint}");
     }
-    let read: ControlActionCapabilitiesResponse =
-        siri_rs::from_str(&xml).expect("the response reads back");
+    let read: ControlActionCapabilitiesResponse = siri_rs::from_str(&xml).expect("the response reads back");
     assert_eq!(read, response);
     assert_eq!(
         ControlActionCapabilitiesResponse::ELEMENT_NAME,
@@ -208,14 +193,10 @@ fn the_capabilities_of_a_control_action_service_are_valid_and_read_back() {
 /// One control action per alternative of the schema's choice, with the name the
 /// accessor is expected to report.
 fn every_action() -> Vec<(&'static str, ControlAction)> {
-    let action = || {
-        ControlAction {
-            reason: Some(ControlActionReason::new(
-                ControlActionReasonCategory::VehicleBreakdown,
-            )),
-            source_note: Some(NaturalLanguageString::new("Reported by the duty officer")),
-            ..ControlAction::new(now(), "CA-4711")
-        }
+    let action = || ControlAction {
+        reason: Some(ControlActionReason::new(ControlActionReasonCategory::VehicleBreakdown)),
+        source_note: Some(NaturalLanguageString::new("Reported by the duty officer")),
+        ..ControlAction::new(now(), "CA-4711")
     };
     let journey = || FramedVehicleJourneyRef {
         data_frame_ref: "2026-03-04".into(),
@@ -323,9 +304,7 @@ fn every_action() -> Vec<(&'static str, ControlAction)> {
             "InterchangeCreation",
             ControlAction {
                 interchange_creation: Some(ExtraConnection {
-                    min_change_duration: Some(
-                        SiriDuration::parse("PT2M").expect("valid duration"),
-                    ),
+                    min_change_duration: Some(SiriDuration::parse("PT2M").expect("valid duration")),
                     stay_seated: Some(false),
                     ..ExtraConnection::new(
                         call(),
@@ -351,10 +330,7 @@ fn every_action() -> Vec<(&'static str, ControlAction)> {
             ControlAction {
                 interchange_modification: Some(ModifiedConnection {
                     wait_for_feeder_until_date_time: Some(now() + Duration::minutes(6)),
-                    ..ModifiedConnection::new(
-                        call(),
-                        DatedCallRef::at_stop(journey(), "de:03241:102"),
-                    )
+                    ..ModifiedConnection::new(call(), DatedCallRef::at_stop(journey(), "de:03241:102"))
                 }),
                 ..action()
             },

@@ -61,26 +61,23 @@ pub mod delivery;
 pub mod request;
 
 pub use action::{
-    CallCancellationAction, CallsBetweenPoints, CancelledConnection, ChangeOfJourneyTiming,
-    ChangeOfStopPointStatus, ChangedPoint, ChangedPoints, ControlAction, ControlActionKind,
-    ControlActionReason, DatedCallRef, ExtraConnection, FlexibleJourneyActivation, JourneyCreation,
-    JourneyEnd, JourneyPatternModification, JourneyScope, JourneyStart, MiddleCall,
-    ModifiedConnection, Place, PointInJourneyPatternRef, RelativeTime, SelectedCalls,
-    SituationDescription, StopPointStatusTimeScope, StopRefs, TargetPoint, TimedCalls,
-    VehicleWorkAssignment,
+    CallCancellationAction, CallsBetweenPoints, CancelledConnection, ChangeOfJourneyTiming, ChangeOfStopPointStatus,
+    ChangedPoint, ChangedPoints, ControlAction, ControlActionKind, ControlActionReason, DatedCallRef, ExtraConnection,
+    FlexibleJourneyActivation, JourneyCreation, JourneyEnd, JourneyPatternModification, JourneyScope, JourneyStart,
+    MiddleCall, ModifiedConnection, Place, PointInJourneyPatternRef, RelativeTime, SelectedCalls, SituationDescription,
+    StopPointStatusTimeScope, StopRefs, TargetPoint, TimedCalls, VehicleWorkAssignment,
 };
 pub use capabilities::{
     ControlActionCapabilitiesResponse, ControlActionPermissions, ControlActionRequestPolicy,
-    ControlActionResponseFeatures, ControlActionServiceCapabilities,
-    ControlActionServicePermission, ControlActionTopicFiltering,
+    ControlActionResponseFeatures, ControlActionServiceCapabilities, ControlActionServicePermission,
+    ControlActionTopicFiltering,
 };
 pub use delivery::{
-    AddedControlActions, ControlActionDelivery, ControlActions, DriverMessage, DriverMessages,
-    DriverScope, GroupOfControlActions, GroupsOfControlActions, MessageContents,
-    RemovedControlActions, RevokedControlAction, RevokedControlActions, VehicleDetecting,
-    VehicleDetectings,
+    AddedControlActions, ControlActionDelivery, ControlActions, DriverMessage, DriverMessages, DriverScope,
+    GroupOfControlActions, GroupsOfControlActions, MessageContents, RemovedControlActions, RevokedControlAction,
+    RevokedControlActions, VehicleDetecting, VehicleDetectings,
 };
 pub use request::{
-    ControlActionFilter, ControlActionMultipleRequest, ControlActionRequest,
-    ControlActionSubscriptionRequest, LineScope,
+    ControlActionFilter, ControlActionMultipleRequest, ControlActionRequest, ControlActionSubscriptionRequest,
+    LineScope,
 };

@@ -6,8 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::framework::{ErrorCondition, ServiceRequestError};
 use crate::model::{EstimatedServiceJourneyInterchange, EstimatedVehicleJourney, VersionRef};
 use crate::types::{
-    Duration, EndpointAddress, Extensions, MessageRef, ParticipantRef, SubscriptionFilterRef,
-    SubscriptionRef,
+    Duration, EndpointAddress, Extensions, MessageRef, ParticipantRef, SubscriptionFilterRef, SubscriptionRef,
 };
 
 /// The real-time timetable a producer is publishing.
@@ -79,10 +78,7 @@ pub struct EstimatedTimetableDelivery {
 
 impl EstimatedTimetableDelivery {
     /// A delivery carrying the given journeys as one version frame.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        journeys: Vec<EstimatedVehicleJourney>,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, journeys: Vec<EstimatedVehicleJourney>) -> Self {
         Self {
             version: None,
             response_timestamp,
@@ -97,10 +93,7 @@ impl EstimatedTimetableDelivery {
             valid_until: None,
             shortest_possible_cycle: None,
             default_language: None,
-            estimated_journey_version_frame: vec![EstimatedVersionFrame::new(
-                response_timestamp,
-                journeys,
-            )],
+            estimated_journey_version_frame: vec![EstimatedVersionFrame::new(response_timestamp, journeys)],
             extensions: None,
         }
     }
@@ -127,7 +120,11 @@ pub struct EstimatedVersionFrame {
     #[serde(rename = "EstimatedVehicleJourney")]
     pub estimated_vehicle_journey: Vec<EstimatedVehicleJourney>,
     /// The interchanges planned around them, as now expected to work out.
-    #[serde(rename = "EstimatedServiceJourneyInterchange", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(
+        rename = "EstimatedServiceJourneyInterchange",
+        default,
+        skip_serializing_if = "Vec::is_empty"
+    )]
     pub estimated_service_journey_interchange: Vec<EstimatedServiceJourneyInterchange>,
 }
 
@@ -169,8 +166,8 @@ mod tests {
             ..EstimatedTimetableDelivery::new(timestamp(), vec![journey("00008")])
         };
 
-        let xml = quick_xml::se::to_string_with_root("EstimatedTimetableDelivery", &delivery)
-            .expect("delivery serialises");
+        let xml =
+            quick_xml::se::to_string_with_root("EstimatedTimetableDelivery", &delivery).expect("delivery serialises");
         let subscriber = xml.find("<SubscriberRef>").expect("subscriber is written");
         let status = xml.find("<Status>").expect("status is written");
         let frame = xml
@@ -178,8 +175,7 @@ mod tests {
             .expect("the frame is written");
         assert!(subscriber < status && status < frame, "{xml}");
 
-        let read: EstimatedTimetableDelivery =
-            quick_xml::de::from_str(&xml).expect("delivery round-trips");
+        let read: EstimatedTimetableDelivery = quick_xml::de::from_str(&xml).expect("delivery round-trips");
         assert_eq!(read, delivery);
     }
 

@@ -12,18 +12,15 @@ use chrono::{DateTime, Duration, FixedOffset};
 use siri_rs::enumerations::{AlertCause, Severity, SituationSourceType, WorkflowStatus};
 use siri_rs::et::{EstimatedTimetableRequest, EstimatedTimetableSubscriptionRequest};
 use siri_rs::framework::{
-    DataReadyNotification, DeliveryError, ErrorCodeDetail, ErrorCondition, ServiceDelivery,
-    ServiceDeliveryPayload, ServiceRequestError, SubscriptionRequest, TerminateSubscriptionRequest,
-    TerminationError,
+    DataReadyNotification, DeliveryError, ErrorCodeDetail, ErrorCondition, ServiceDelivery, ServiceDeliveryPayload,
+    ServiceRequestError, SubscriptionRequest, TerminateSubscriptionRequest, TerminationError,
 };
 use siri_rs::pubsub::{
-    Consumer, ConsumerEvent, Outbound, Producer, ProducerConfig, SituationExchange,
-    SituationSource, SubscriptionState,
+    Consumer, ConsumerEvent, Outbound, Producer, ProducerConfig, SituationExchange, SituationSource, SubscriptionState,
 };
 use siri_rs::sx::situation::SituationSource as Source;
 use siri_rs::sx::{
-    PtSituationElement, SituationExchangeDelivery, SituationExchangeRequest,
-    SituationExchangeSubscriptionRequest,
+    PtSituationElement, SituationExchangeDelivery, SituationExchangeRequest, SituationExchangeSubscriptionRequest,
 };
 use siri_rs::types::{DefaultedText, Duration as SiriDuration, HalfOpenTimestampOutputRange};
 use siri_rs::Siri;
@@ -101,9 +98,8 @@ fn a_direct_delivery_subscription_runs_its_full_cycle() {
         .expect("a subscription request is answered");
     exchanged("SubscriptionResponse", &response);
 
-    let ConsumerEvent::Subscribed { outcomes } = consumer
-        .handle(&response, now)
-        .expect("the consumer reads the answer")
+    let ConsumerEvent::Subscribed { outcomes } =
+        consumer.handle(&response, now).expect("the consumer reads the answer")
     else {
         panic!("a subscription response is a subscription outcome");
     };
@@ -122,7 +118,11 @@ fn a_direct_delivery_subscription_runs_its_full_cycle() {
     );
     exchanged("ServiceDelivery", &outbound[0].message);
 
-    let ConsumerEvent::Delivered { items: situations, reply, .. } = consumer
+    let ConsumerEvent::Delivered {
+        items: situations,
+        reply,
+        ..
+    } = consumer
         .handle(&outbound[0].message, now)
         .expect("the consumer reads the delivery")
     else {
@@ -188,11 +188,7 @@ fn a_fetched_delivery_subscription_announces_before_it_delivers() {
     assert_eq!(outbound.len(), 1);
     exchanged("DataReadyNotification", &outbound[0].message);
     assert!(
-        outbound[0]
-            .message
-            .payload
-            .as_data_ready_notification()
-            .is_some(),
+        outbound[0].message.payload.as_data_ready_notification().is_some(),
         "a fetched-delivery producer announces rather than pushes"
     );
 
@@ -215,7 +211,11 @@ fn a_fetched_delivery_subscription_announces_before_it_delivers() {
         .expect("a data supply request is answered");
     exchanged("ServiceDelivery", &delivery);
 
-    let ConsumerEvent::Delivered { items: situations, reply, .. } = consumer
+    let ConsumerEvent::Delivered {
+        items: situations,
+        reply,
+        ..
+    } = consumer
         .handle(&delivery, now)
         .expect("the consumer reads the delivery")
     else {
@@ -287,9 +287,7 @@ fn every_subscription_is_delivered_to_the_subscriber_that_opened_it() {
                 .payload
                 .as_service_delivery()
                 .expect("a due subscription is delivered to");
-            let ServiceDeliveryPayload::SituationExchangeDelivery(situations) = &delivery.deliveries
-                [0]
-            else {
+            let ServiceDeliveryPayload::SituationExchangeDelivery(situations) = &delivery.deliveries[0] else {
                 panic!("a situation exchange producer delivers situations");
             };
             (
@@ -319,7 +317,10 @@ fn every_subscription_is_delivered_to_the_subscriber_that_opened_it() {
         "a delivery settles every subscription it went to"
     );
 
-    producer.source_mut().0.push(situation(now, "2026-0042", Severity::Severe));
+    producer
+        .source_mut()
+        .0
+        .push(situation(now, "2026-0042", Severity::Severe));
     producer.data_changed();
     assert_eq!(
         producer.poll(now).len(),
@@ -445,8 +446,7 @@ fn a_heartbeat_reaches_every_subscriber() {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     let now = now();
     let mut producer = Producer::new(
-        ProducerConfig::new("MY-AGENCY")
-            .with_heartbeat(SiriDuration::parse("PT5M").expect("valid duration")),
+        ProducerConfig::new("MY-AGENCY").with_heartbeat(SiriDuration::parse("PT5M").expect("valid duration")),
         Disruptions(Vec::new()),
     );
     let [mut board, mut app] = subscribe_two_consumers(&mut producer, now);
@@ -483,7 +483,12 @@ fn a_request_that_mixes_services_is_answered_entry_by_entry() {
         Disruptions(vec![situation(now, "2026-0041", Severity::Normal)]),
     );
     let mut app = Consumer::<SituationExchange>::new("PASSENGER-APP");
-    let subscribe = app.subscribe("lifts", now + Duration::hours(12), SituationExchangeRequest::new(now), now);
+    let subscribe = app.subscribe(
+        "lifts",
+        now + Duration::hours(12),
+        SituationExchangeRequest::new(now),
+        now,
+    );
     let response = producer
         .handle(&subscribe, now)
         .expect("the producer answers")
@@ -546,7 +551,11 @@ fn a_request_that_mixes_services_is_answered_entry_by_entry() {
         [("PASSENGER-APP", "lifts"), ("DEPARTURE-BOARD", "lifts")],
         "the entry that was accepted is held, the refused one is not, and the app's is untouched"
     );
-    assert_eq!(producer.poll(now).len(), 2, "both held subscriptions are owed a delivery");
+    assert_eq!(
+        producer.poll(now).len(),
+        2,
+        "both held subscriptions are owed a delivery"
+    );
 }
 
 #[test]
@@ -579,10 +588,7 @@ fn a_fetch_that_finds_nothing_waiting_is_answered_with_a_document_the_schema_acc
         .expect("the producer answers")
         .expect("a data supply request is answered");
     exchanged("ServiceDelivery with nothing to supply", &again);
-    let ConsumerEvent::Delivered { items, .. } = board
-        .handle(&again, now)
-        .expect("the board reads the answer")
-    else {
+    let ConsumerEvent::Delivered { items, .. } = board.handle(&again, now).expect("the board reads the answer") else {
         panic!("a data supply request is answered with a delivery");
     };
     assert!(items.is_empty(), "there was nothing to supply");
@@ -645,9 +651,8 @@ fn terminating_a_subscription_the_subscriber_does_not_hold_is_reported_as_unknow
         statuses[0].error_condition
     );
 
-    let ConsumerEvent::Terminated { subscription_refs } = app
-        .handle(&confirmation, now)
-        .expect("the app reads the answer")
+    let ConsumerEvent::Terminated { subscription_refs } =
+        app.handle(&confirmation, now).expect("the app reads the answer")
     else {
         panic!("a termination response confirms terminations");
     };
@@ -706,9 +711,7 @@ fn a_delivery_that_reports_a_failure_is_not_read_as_a_delivery_of_nothing() {
     let message = Siri::new(siri_rs::pubsub::PROTOCOL_VERSION, failed);
     exchanged("ServiceDelivery reporting a failure", &message);
 
-    let event = consumer
-        .handle(&message, now)
-        .expect("the consumer reads the delivery");
+    let event = consumer.handle(&message, now).expect("the consumer reads the delivery");
     let reported = format!("{event:?}");
     assert!(
         reported.contains("the situation store is being rebuilt"),
@@ -728,7 +731,11 @@ fn a_delivery_that_reports_a_failure_is_not_read_as_a_delivery_of_nothing() {
             .and_then(|condition| condition.description.as_deref()),
         Some("the situation store is being rebuilt")
     );
-    assert_eq!(outcome.deliveries.len(), 1, "one situation exchange delivery in the message");
+    assert_eq!(
+        outcome.deliveries.len(),
+        1,
+        "one situation exchange delivery in the message"
+    );
     assert!(outcome.deliveries[0].status, "the delivery itself claimed nothing");
 }
 
@@ -753,9 +760,8 @@ fn a_delivery_whose_part_failed_names_the_subscription_and_the_reason() {
     );
     exchanged("ServiceDelivery whose delivery failed", &message);
 
-    let ConsumerEvent::Delivered { items, outcome, .. } = consumer
-        .handle(&message, now)
-        .expect("the consumer reads the delivery")
+    let ConsumerEvent::Delivered { items, outcome, .. } =
+        consumer.handle(&message, now).expect("the consumer reads the delivery")
     else {
         panic!("a service delivery is reported as a delivery");
     };
@@ -821,9 +827,8 @@ fn a_subscription_that_has_already_lapsed_is_refused() {
         .expect("a subscription request is answered");
     exchanged("SubscriptionResponse", &response);
 
-    let ConsumerEvent::Subscribed { outcomes } = consumer
-        .handle(&response, now)
-        .expect("the consumer reads the answer")
+    let ConsumerEvent::Subscribed { outcomes } =
+        consumer.handle(&response, now).expect("the consumer reads the answer")
     else {
         panic!("a subscription response is a subscription outcome");
     };
@@ -856,12 +861,7 @@ fn a_lapsed_subscription_is_ended_by_the_producer() {
     let outbound = producer.poll(later);
     let ended = outbound
         .iter()
-        .find(|out| {
-            out.message
-                .payload
-                .as_subscription_terminated_notification()
-                .is_some()
-        })
+        .find(|out| out.message.payload.as_subscription_terminated_notification().is_some())
         .expect("a lapsed subscription is reported to its subscriber");
     exchanged("SubscriptionTerminatedNotification", &ended.message);
 
@@ -881,8 +881,7 @@ fn a_heartbeat_is_sent_no_faster_than_its_interval() {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     let now = now();
     let mut producer = Producer::new(
-        ProducerConfig::new("MY-AGENCY")
-            .with_heartbeat(SiriDuration::parse("PT5M").expect("valid duration")),
+        ProducerConfig::new("MY-AGENCY").with_heartbeat(SiriDuration::parse("PT5M").expect("valid duration")),
         Disruptions(Vec::new()),
     )
     .started_at(now - Duration::hours(6));
@@ -907,9 +906,7 @@ fn a_heartbeat_is_sent_no_faster_than_its_interval() {
         .expect("the first poll sends a heartbeat");
     exchanged("HeartbeatNotification", &heartbeat.message);
 
-    let ConsumerEvent::Alive {
-        service_started_time,
-    } = consumer
+    let ConsumerEvent::Alive { service_started_time } = consumer
         .handle(&heartbeat.message, now)
         .expect("the consumer reads the heartbeat")
     else {
@@ -944,11 +941,7 @@ fn a_direct_request_is_answered_with_a_delivery() {
 
     let request = Siri::new(
         siri_rs::pubsub::PROTOCOL_VERSION,
-        siri_rs::framework::ServiceRequest::new(
-            now,
-            "PASSENGER-APP",
-            vec![SituationExchangeRequest::new(now).into()],
-        ),
+        siri_rs::framework::ServiceRequest::new(now, "PASSENGER-APP", vec![SituationExchangeRequest::new(now).into()]),
     );
     exchanged("ServiceRequest", &request);
 
@@ -971,8 +964,7 @@ fn a_check_status_request_reports_when_the_service_started() {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     let now = now();
     let started = now - Duration::hours(6);
-    let mut producer =
-        Producer::new(ProducerConfig::new("MY-AGENCY"), Disruptions(Vec::new())).started_at(started);
+    let mut producer = Producer::new(ProducerConfig::new("MY-AGENCY"), Disruptions(Vec::new())).started_at(started);
 
     let request = Siri::new(
         siri_rs::pubsub::PROTOCOL_VERSION,

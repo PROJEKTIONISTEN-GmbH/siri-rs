@@ -40,11 +40,7 @@ pub(crate) mod space_separated {
         S: Serializer,
         T: std::fmt::Display,
     {
-        let joined = values
-            .iter()
-            .map(T::to_string)
-            .collect::<Vec<_>>()
-            .join(" ");
+        let joined = values.iter().map(T::to_string).collect::<Vec<_>>().join(" ");
         serializer.serialize_str(&joined)
     }
 

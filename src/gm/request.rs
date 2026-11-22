@@ -51,10 +51,7 @@ impl GeneralMessageRequest {
     }
 
     /// A request for the named channels only.
-    pub fn on_channels(
-        request_timestamp: DateTime<FixedOffset>,
-        info_channel_ref: Vec<InfoChannelRef>,
-    ) -> Self {
+    pub fn on_channels(request_timestamp: DateTime<FixedOffset>, info_channel_ref: Vec<InfoChannelRef>) -> Self {
         Self {
             info_channel_ref,
             ..Self::new(request_timestamp)
@@ -117,18 +114,14 @@ mod tests {
     #[test]
     fn a_request_naming_no_channel_asks_for_all_of_them() {
         let all = GeneralMessageRequest::new(timestamp());
-        let xml = quick_xml::se::to_string_with_root("GeneralMessageRequest", &all)
-            .expect("request serialises");
+        let xml = quick_xml::se::to_string_with_root("GeneralMessageRequest", &all).expect("request serialises");
         assert!(!xml.contains("InfoChannelRef"), "{xml}");
 
-        let narrowed =
-            GeneralMessageRequest::on_channels(timestamp(), vec![InfoChannelRef::new("WARNING")]);
-        let xml = quick_xml::se::to_string_with_root("GeneralMessageRequest", &narrowed)
-            .expect("request serialises");
+        let narrowed = GeneralMessageRequest::on_channels(timestamp(), vec![InfoChannelRef::new("WARNING")]);
+        let xml = quick_xml::se::to_string_with_root("GeneralMessageRequest", &narrowed).expect("request serialises");
         assert!(xml.contains("<InfoChannelRef>WARNING</InfoChannelRef>"), "{xml}");
 
-        let read: GeneralMessageRequest =
-            quick_xml::de::from_str(&xml).expect("request round-trips");
+        let read: GeneralMessageRequest = quick_xml::de::from_str(&xml).expect("request round-trips");
         assert_eq!(read, narrowed);
     }
 }

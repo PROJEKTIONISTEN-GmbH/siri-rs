@@ -4,12 +4,8 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{StopMonitoringDetail, StopVisitType};
-use crate::model::{
-    DestinationRef, DirectionRef, LineRef, MaximumNumberOfCalls, MonitoringRef, OperatorRef,
-};
-use crate::types::{
-    Duration, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier,
-};
+use crate::model::{DestinationRef, DirectionRef, LineRef, MaximumNumberOfCalls, MonitoringRef, OperatorRef};
+use crate::types::{Duration, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier};
 
 /// A request for what is due at one monitoring point.
 ///
@@ -81,10 +77,18 @@ pub struct StopMonitoringRequest {
     #[serde(rename = "MaximumStopVisits", default, skip_serializing_if = "Option::is_none")]
     pub maximum_stop_visits: Option<u64>,
     /// At least this many visits for each line, whatever the overall cap.
-    #[serde(rename = "MinimumStopVisitsPerLine", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MinimumStopVisitsPerLine",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub minimum_stop_visits_per_line: Option<u64>,
     /// At least this many for each line and via point, instead of per line.
-    #[serde(rename = "MinimumStopVisitsPerLineVia", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MinimumStopVisitsPerLineVia",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub minimum_stop_visits_per_line_via: Option<u64>,
     /// How long texts may be, for a display with a fixed width.
     #[serde(
@@ -120,10 +124,7 @@ pub struct StopMonitoringRequest {
 
 impl StopMonitoringRequest {
     /// An unfiltered request for everything due at one monitoring point.
-    pub fn at_stop(
-        request_timestamp: DateTime<FixedOffset>,
-        monitoring_ref: impl Into<MonitoringRef>,
-    ) -> Self {
+    pub fn at_stop(request_timestamp: DateTime<FixedOffset>, monitoring_ref: impl Into<MonitoringRef>) -> Self {
         Self {
             version: None,
             request_timestamp,
@@ -172,10 +173,7 @@ pub struct StopMonitoringMultipleRequest {
 
 impl StopMonitoringMultipleRequest {
     /// A request carrying the given per-stop filters.
-    pub fn new(
-        request_timestamp: DateTime<FixedOffset>,
-        stop_monitoring_filter: Vec<StopMonitoringFilter>,
-    ) -> Self {
+    pub fn new(request_timestamp: DateTime<FixedOffset>, stop_monitoring_filter: Vec<StopMonitoringFilter>) -> Self {
         Self {
             version: None,
             request_timestamp,
@@ -245,10 +243,18 @@ pub struct StopMonitoringFilter {
     #[serde(rename = "MaximumStopVisits", default, skip_serializing_if = "Option::is_none")]
     pub maximum_stop_visits: Option<u64>,
     /// At least this many visits for each line, whatever the overall cap.
-    #[serde(rename = "MinimumStopVisitsPerLine", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MinimumStopVisitsPerLine",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub minimum_stop_visits_per_line: Option<u64>,
     /// At least this many for each line and via point, instead of per line.
-    #[serde(rename = "MinimumStopVisitsPerLineVia", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "MinimumStopVisitsPerLineVia",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub minimum_stop_visits_per_line_via: Option<u64>,
     /// How long texts may be, for a display with a fixed width.
     #[serde(
@@ -384,16 +390,17 @@ mod tests {
             ..StopMonitoringRequest::at_stop(timestamp(), "EH00001")
         };
 
-        let xml = quick_xml::se::to_string_with_root("StopMonitoringRequest", &request)
-            .expect("request serialises");
+        let xml = quick_xml::se::to_string_with_root("StopMonitoringRequest", &request).expect("request serialises");
         let preview = xml.find("<PreviewInterval>").expect("the window is written");
         let monitoring = xml.find("<MonitoringRef>").expect("the topic is written");
         let visit_types = xml.find("<StopVisitTypes>").expect("the visit types are written");
         let maximum = xml.find("<MaximumStopVisits>").expect("the policy is written");
-        assert!(preview < monitoring && monitoring < visit_types && visit_types < maximum, "{xml}");
+        assert!(
+            preview < monitoring && monitoring < visit_types && visit_types < maximum,
+            "{xml}"
+        );
 
-        let read: StopMonitoringRequest =
-            quick_xml::de::from_str(&xml).expect("request round-trips");
+        let read: StopMonitoringRequest = quick_xml::de::from_str(&xml).expect("request round-trips");
         assert_eq!(read, request);
     }
 
@@ -410,12 +417,11 @@ mod tests {
             ],
         );
 
-        let xml = quick_xml::se::to_string_with_root("StopMonitoringMultipleRequest", &request)
-            .expect("request serialises");
+        let xml =
+            quick_xml::se::to_string_with_root("StopMonitoringMultipleRequest", &request).expect("request serialises");
         assert_eq!(xml.matches("<StopMonitoringFIlter>").count(), 2, "{xml}");
 
-        let read: StopMonitoringMultipleRequest =
-            quick_xml::de::from_str(&xml).expect("request round-trips");
+        let read: StopMonitoringMultipleRequest = quick_xml::de::from_str(&xml).expect("request round-trips");
         assert_eq!(read, request);
     }
 }

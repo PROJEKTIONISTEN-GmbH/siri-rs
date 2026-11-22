@@ -7,13 +7,9 @@
 //! added without the token-list reader fails a test rather than a user's feed.
 
 use chrono::{DateTime, FixedOffset};
-use siri_rs::enumerations::{
-    DayType, FacilityStatus, RoutePointType, ScopeType, ServiceCondition, WorkflowStatus,
-};
+use siri_rs::enumerations::{DayType, FacilityStatus, RoutePointType, ScopeType, ServiceCondition, WorkflowStatus};
 use siri_rs::model::{DataFrameRef, DatedVehicleJourneyRef, FramedVehicleJourneyRef};
-use siri_rs::sx::affects::{
-    AffectedCall, AffectedFacility, AffectedStopPoint, AffectedVehicleJourney,
-};
+use siri_rs::sx::affects::{AffectedCall, AffectedFacility, AffectedStopPoint, AffectedVehicleJourney};
 use siri_rs::sx::consequence::Consequence;
 use siri_rs::sx::request::SituationExchangeRequest;
 use siri_rs::sx::situation::SituationRepetitions;
@@ -24,8 +20,7 @@ where
     T: serde::Serialize + serde::de::DeserializeOwned + PartialEq + std::fmt::Debug,
 {
     let xml = quick_xml::se::to_string_with_root(root, value).expect("value serialises");
-    let read: T = quick_xml::de::from_str(&xml)
-        .unwrap_or_else(|error| panic!("{root} reads back from {xml}: {error}"));
+    let read: T = quick_xml::de::from_str(&xml).unwrap_or_else(|error| panic!("{root} reads back from {xml}: {error}"));
     assert_eq!(&read, value, "{root} survives the round trip: {xml}");
     xml
 }
@@ -60,10 +55,7 @@ fn an_affected_vehicle_journey_keeps_every_journey_condition_it_lists() {
 #[test]
 fn an_affected_facility_keeps_every_status_it_lists() {
     let facility = AffectedFacility {
-        facility_status: vec![
-            FacilityStatus::NotAvailable,
-            FacilityStatus::PartiallyAvailable,
-        ],
+        facility_status: vec![FacilityStatus::NotAvailable, FacilityStatus::PartiallyAvailable],
         ..Default::default()
     };
 

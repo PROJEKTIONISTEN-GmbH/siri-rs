@@ -5,10 +5,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::enumerations::StopMonitoringDetail;
 use crate::framework::{
-    CoordinateFormat, ErrorCondition, GeneralInteractionCapability, GeneralPermissions,
-    LinePermissions, MonitoringCapabilityAccessControl, OperatorPermissions, PermissionScope,
-    PermissionVersionRef, ServiceRequestError, StopMonitorPermissions, SubscriptionPolicyCapability,
-    TransportDescription,
+    CoordinateFormat, ErrorCondition, GeneralInteractionCapability, GeneralPermissions, LinePermissions,
+    MonitoringCapabilityAccessControl, OperatorPermissions, PermissionScope, PermissionVersionRef, ServiceRequestError,
+    StopMonitorPermissions, SubscriptionPolicyCapability, TransportDescription,
 };
 use crate::types::{Duration, Empty, EndpointAddress, Extensions, MessageRef, ParticipantRef};
 use crate::xml::SiriRoot;
@@ -53,7 +52,11 @@ pub struct StopMonitoringCapabilitiesResponse {
     )]
     pub stop_monitoring_service_capabilities: Option<StopMonitoringServiceCapabilities>,
     /// What participants are allowed to see.
-    #[serde(rename = "StopMonitoringPermissions", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "StopMonitoringPermissions",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub stop_monitoring_permissions: Option<StopMonitoringPermissions>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -62,10 +65,7 @@ pub struct StopMonitoringCapabilitiesResponse {
 
 impl StopMonitoringCapabilitiesResponse {
     /// A successful answer describing the given capabilities.
-    pub fn new(
-        response_timestamp: DateTime<FixedOffset>,
-        capabilities: StopMonitoringServiceCapabilities,
-    ) -> Self {
+    pub fn new(response_timestamp: DateTime<FixedOffset>, capabilities: StopMonitoringServiceCapabilities) -> Self {
         Self {
             version: None,
             response_timestamp,

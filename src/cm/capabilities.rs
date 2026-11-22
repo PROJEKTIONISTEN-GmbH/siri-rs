@@ -4,9 +4,8 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::framework::{
-    ConnectionCapabilityAccessControl, ConnectionServicePermission, CoordinateFormat,
-    ErrorCondition, GeneralInteractionCapability, ServiceRequestError,
-    SubscriptionPolicyCapability, TransportDescription,
+    ConnectionCapabilityAccessControl, ConnectionServicePermission, CoordinateFormat, ErrorCondition,
+    GeneralInteractionCapability, ServiceRequestError, SubscriptionPolicyCapability, TransportDescription,
 };
 use crate::types::{Duration, Empty, EndpointAddress, Extensions, MessageRef, ParticipantRef};
 use crate::xml::SiriRoot;

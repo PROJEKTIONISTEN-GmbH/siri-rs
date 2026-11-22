@@ -93,18 +93,11 @@ impl<'de, T: Defaulted<'de>> Defaulted<'de> for Vec<T> {
 ///
 /// The enumerations are declared by a macro, which routes their reading here so
 /// that the token is not copied on the way.
-pub(crate) fn token<'de, D, T>(
-    deserializer: D,
-    default: &'static str,
-    from_token: fn(&str) -> T,
-) -> Result<T, D::Error>
+pub(crate) fn token<'de, D, T>(deserializer: D, default: &'static str, from_token: fn(&str) -> T) -> Result<T, D::Error>
 where
     D: Deserializer<'de>,
 {
-    deserializer.deserialize_str(Token {
-        default,
-        from_token,
-    })
+    deserializer.deserialize_str(Token { default, from_token })
 }
 
 /// The value of an `xsd:boolean` literal: `true` and `1`, or `false` and `0`.
@@ -207,11 +200,7 @@ impl<'de> Visitor<'de> for Text {
     }
 
     fn visit_string<E: de::Error>(self, text: String) -> Result<String, E> {
-        Ok(if text.is_empty() {
-            self.default.to_owned()
-        } else {
-            text
-        })
+        Ok(if text.is_empty() { self.default.to_owned() } else { text })
     }
 }
 
@@ -228,11 +217,7 @@ impl<'de, T> Visitor<'de> for Token<T> {
     }
 
     fn visit_str<E: de::Error>(self, text: &str) -> Result<T, E> {
-        Ok((self.from_token)(if text.is_empty() {
-            self.default
-        } else {
-            text
-        }))
+        Ok((self.from_token)(if text.is_empty() { self.default } else { text }))
     }
 }
 
@@ -350,7 +335,10 @@ mod tests {
     #[test]
     fn text_that_is_no_value_is_refused_as_before() {
         let error = read("<D><Flag>yes</Flag></D>").unwrap_err().to_string();
-        assert!(error.contains(r#"invalid type: string "yes", expected a boolean"#), "{error}");
+        assert!(
+            error.contains(r#"invalid type: string "yes", expected a boolean"#),
+            "{error}"
+        );
         let error = read("<D><Count>-1</Count></D>").unwrap_err().to_string();
         assert!(error.contains(r#"invalid type: string "-1""#), "{error}");
     }

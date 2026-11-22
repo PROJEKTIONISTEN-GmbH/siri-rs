@@ -4,12 +4,8 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{EstimatedTimetableDetail, VehicleModesOfTransport};
-use crate::model::{
-    LineDirection, OperatorRef, ProductCategoryRef, RequestedLines, StopPointRef, VersionRef,
-};
-use crate::types::{
-    Duration, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier,
-};
+use crate::model::{LineDirection, OperatorRef, ProductCategoryRef, RequestedLines, StopPointRef, VersionRef};
+use crate::types::{Duration, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier};
 
 /// A request for the real-time timetable a producer holds.
 ///
@@ -231,8 +227,8 @@ mod tests {
     #[test]
     fn an_unfiltered_request_writes_only_its_timestamp() {
         let request = EstimatedTimetableRequest::new(timestamp());
-        let xml = quick_xml::se::to_string_with_root("EstimatedTimetableRequest", &request)
-            .expect("request serialises");
+        let xml =
+            quick_xml::se::to_string_with_root("EstimatedTimetableRequest", &request).expect("request serialises");
         assert_eq!(
             xml,
             "<EstimatedTimetableRequest><RequestTimestamp>2004-12-17T09:30:47-05:00\
@@ -248,8 +244,8 @@ mod tests {
         request.operator_ref = vec![OperatorRef::new("SMOOTH")];
         request.estimated_timetable_detail_level = Some(EstimatedTimetableDetail::Calls);
 
-        let xml = quick_xml::se::to_string_with_root("EstimatedTimetableRequest", &request)
-            .expect("request serialises");
+        let xml =
+            quick_xml::se::to_string_with_root("EstimatedTimetableRequest", &request).expect("request serialises");
         let preview = xml.find("<PreviewInterval>").expect("preview is written");
         let operator = xml.find("<OperatorRef>").expect("operator is written");
         let lines = xml.find("<Lines>").expect("lines are written");
@@ -258,8 +254,7 @@ mod tests {
             .expect("detail level is written");
         assert!(preview < operator && operator < lines && lines < detail, "{xml}");
 
-        let read: EstimatedTimetableRequest =
-            quick_xml::de::from_str(&xml).expect("request round-trips");
+        let read: EstimatedTimetableRequest = quick_xml::de::from_str(&xml).expect("request round-trips");
         assert_eq!(read, request);
         assert_eq!(read.line_directions().len(), 1);
     }
@@ -271,12 +266,12 @@ mod tests {
             timestamp(),
             EstimatedTimetableRequest::new(timestamp()),
         );
-        let xml = quick_xml::se::to_string_with_root(
-            "EstimatedTimetableSubscriptionRequest",
-            &subscription,
-        )
-        .expect("subscription serialises");
-        assert!(xml.contains("<SubscriptionIdentifier>000765</SubscriptionIdentifier>"), "{xml}");
+        let xml = quick_xml::se::to_string_with_root("EstimatedTimetableSubscriptionRequest", &subscription)
+            .expect("subscription serialises");
+        assert!(
+            xml.contains("<SubscriptionIdentifier>000765</SubscriptionIdentifier>"),
+            "{xml}"
+        );
         assert!(xml.contains("<EstimatedTimetableRequest>"), "{xml}");
 
         let read: EstimatedTimetableSubscriptionRequest =

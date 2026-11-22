@@ -15,16 +15,12 @@ use chrono::{DateTime, FixedOffset};
 use serde::de::{self, Deserializer, Visitor};
 
 /// Reads a mandatory `xsd:dateTime` element.
-pub(crate) fn required<'de, D: Deserializer<'de>>(
-    deserializer: D,
-) -> Result<DateTime<FixedOffset>, D::Error> {
+pub(crate) fn required<'de, D: Deserializer<'de>>(deserializer: D) -> Result<DateTime<FixedOffset>, D::Error> {
     deserializer.deserialize_str(Timestamp)
 }
 
 /// Reads an optional `xsd:dateTime` element that is present.
-pub(crate) fn optional<'de, D: Deserializer<'de>>(
-    deserializer: D,
-) -> Result<Option<DateTime<FixedOffset>>, D::Error> {
+pub(crate) fn optional<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<DateTime<FixedOffset>>, D::Error> {
     required(deserializer).map(Some)
 }
 
@@ -76,12 +72,7 @@ fn is_date(date: &str) -> bool {
     let (Some(day), Some(month), Some(year)) = (parts.next(), parts.next(), parts.next()) else {
         return false;
     };
-    year.len() >= 4
-        && month.len() == 2
-        && day.len() == 2
-        && all_digits(year)
-        && all_digits(month)
-        && all_digits(day)
+    year.len() >= 4 && month.len() == 2 && day.len() == 2 && all_digits(year) && all_digits(month) && all_digits(day)
 }
 
 /// The clock time and the zone after it — `Z`, `+hh:mm`, `-hh:mm` or nothing.
@@ -122,11 +113,7 @@ mod tests {
 
     #[test]
     fn the_forms_not_read_are_named_and_no_others() {
-        for value in [
-            "2004-12-17T09:30:47",
-            "2004-12-17T09:30:47.250",
-            "-0044-03-15T12:00:00",
-        ] {
+        for value in ["2004-12-17T09:30:47", "2004-12-17T09:30:47.250", "-0044-03-15T12:00:00"] {
             assert!(
                 unread_form(value).is_some_and(|reason| reason.contains("time-zone offset")),
                 "{value}"

@@ -76,8 +76,8 @@ fn a_token_the_schema_does_not_list_survives_the_round_trip_unchanged() {
          </PtSituationElement>"
     );
 
-    let situation: PtSituationElement = siri_rs::from_str(&xml)
-        .expect("one token the schema does not list does not cost the document");
+    let situation: PtSituationElement =
+        siri_rs::from_str(&xml).expect("one token the schema does not list does not cost the document");
     let written = siri_rs::to_string(&situation).expect("the situation is writable");
     assert!(
         written.contains("<Severity>apocalyptic</Severity>"),
@@ -150,7 +150,9 @@ fn the_end_of_a_day_written_as_hour_24_is_refused_and_the_refusal_says_why() {
     assert!(validator_available(), "{VALIDATOR_MISSING}");
     validate(&xml).expect("the schema admits the end of a day as hour 24");
 
-    let message = siri_rs::from_str::<Siri>(&xml).expect_err("hour 24 is not read").to_string();
+    let message = siri_rs::from_str::<Siri>(&xml)
+        .expect_err("hour 24 is not read")
+        .to_string();
     assert!(message.contains("RequestTimestamp"), "names the field: {message}");
     assert!(message.contains("24:00:00"), "says why: {message}");
 }
@@ -185,9 +187,17 @@ fn heartbeat_under(root: &str, end: &str) -> String {
 #[test]
 fn a_document_in_another_namespace_or_in_none_is_refused() {
     for (label, root, end) in [
-        ("another namespace", r#"<Siri xmlns="urn:not-siri" version="2.0">"#, "</Siri>"),
+        (
+            "another namespace",
+            r#"<Siri xmlns="urn:not-siri" version="2.0">"#,
+            "</Siri>",
+        ),
         ("no namespace", r#"<Siri version="2.0">"#, "</Siri>"),
-        ("another namespace by prefix", r#"<s:Siri xmlns:s="urn:not-siri" version="2.0">"#, "</s:Siri>"),
+        (
+            "another namespace by prefix",
+            r#"<s:Siri xmlns:s="urn:not-siri" version="2.0">"#,
+            "</s:Siri>",
+        ),
     ] {
         let xml = heartbeat_under(root, end);
         let error = siri_rs::from_str::<Siri>(&xml).expect_err(label);
@@ -208,7 +218,10 @@ fn a_document_in_another_namespace_or_in_none_is_refused() {
     let error = siri_rs::from_str::<Siri>(&heartbeat_under(r#"<Siri xmlns="urn:not-siri">"#, "</Siri>"))
         .expect_err("another namespace");
     let message = error.to_string();
-    assert!(message.contains("urn:not-siri") && message.contains(siri_rs::NAMESPACE), "{message}");
+    assert!(
+        message.contains("urn:not-siri") && message.contains(siri_rs::NAMESPACE),
+        "{message}"
+    );
 }
 
 #[test]
@@ -221,7 +234,10 @@ fn the_siri_namespace_reads_whether_it_is_the_default_or_bound_to_a_prefix() {
         "</s:HeartbeatNotification></s:Siri>"
     );
     let expected = siri_rs::from_str::<Siri>(&by_default).expect("the default binding reads");
-    assert_eq!(siri_rs::from_str::<Siri>(by_prefix).expect("a prefix binding reads"), expected);
+    assert_eq!(
+        siri_rs::from_str::<Siri>(by_prefix).expect("a prefix binding reads"),
+        expected
+    );
 }
 
 #[test]
@@ -240,7 +256,10 @@ fn nothing_but_comments_and_processing_instructions_may_follow_the_root_element(
         );
         #[cfg(feature = "lenient")]
         assert!(
-            matches!(siri_rs::lenient::from_str(&xml), Err(siri_rs::Error::ContentAfterRoot { .. })),
+            matches!(
+                siri_rs::lenient::from_str(&xml),
+                Err(siri_rs::Error::ContentAfterRoot { .. })
+            ),
             "{tail}: the lenient reader refuses it too"
         );
     }
@@ -257,7 +276,10 @@ fn a_character_xml_does_not_allow_is_not_written() {
             matches!(error, siri_rs::Error::IllegalCharacter { character, .. } if character == illegal),
             "{value:?}: {error}"
         );
-        assert!(siri_rs::to_string_pretty(&Siri::new("2.0", heartbeat)).is_err(), "{value:?}");
+        assert!(
+            siri_rs::to_string_pretty(&Siri::new("2.0", heartbeat)).is_err(),
+            "{value:?}"
+        );
     }
 
     for allowed in ["P\tQ\r\nR", "P\u{e9}\u{fffd}\u{10ffff}"] {
@@ -270,7 +292,12 @@ fn a_character_xml_does_not_allow_is_not_written() {
 #[test]
 fn a_character_xml_does_not_allow_is_not_read() {
     let document = |producer: &str| heartbeat_under(&format!("<Siri {ROOT}>"), "</Siri>").replace("KUBRICK", producer);
-    for (producer, character) in [("P\u{1}Q", '\u{1}'), ("P&#1;Q", '\u{1}'), ("P&#x1F;Q", '\u{1f}'), ("P\u{ffff}Q", '\u{ffff}')] {
+    for (producer, character) in [
+        ("P\u{1}Q", '\u{1}'),
+        ("P&#1;Q", '\u{1}'),
+        ("P&#x1F;Q", '\u{1f}'),
+        ("P\u{ffff}Q", '\u{ffff}'),
+    ] {
         let xml = document(producer);
         let error = siri_rs::from_str::<Siri>(&xml).expect_err(producer);
         let at = xml.find(producer).expect("the producer is in the document") as u64 + 1;
@@ -320,10 +347,7 @@ fn a_fetch_that_names_no_consumer_is_refused_as_a_missing_element() {
 fn a_message_a_producer_cannot_answer_is_named_as_a_message_not_a_root_element() {
     let mut producer = Producer::new(ProducerConfig::new("MY-AGENCY"), Nothing);
     // A subscription response is what a producer sends, never what it receives.
-    let response = Siri::new(
-        "2.1",
-        SubscriptionResponse::new(now(), "OTHER-AGENCY", Vec::new()),
-    );
+    let response = Siri::new("2.1", SubscriptionResponse::new(now(), "OTHER-AGENCY", Vec::new()));
 
     let error = producer
         .handle(&response, now())

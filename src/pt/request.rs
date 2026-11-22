@@ -4,12 +4,8 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::VehicleModesOfTransport;
-use crate::model::{
-    LineDirection, OperatorRef, ProductCategoryRef, RequestedLines, StopPointRef, VersionRef,
-};
-use crate::types::{
-    ClosedTimestampRange, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier,
-};
+use crate::model::{LineDirection, OperatorRef, ProductCategoryRef, RequestedLines, StopPointRef, VersionRef};
+use crate::types::{ClosedTimestampRange, Extensions, MessageQualifier, ParticipantRef, SubscriptionQualifier};
 
 /// A request for the planned timetable a producer holds.
 ///
@@ -210,14 +206,13 @@ mod tests {
             .within(ClosedTimestampRange::between(timestamp(), timestamp()))
             .for_lines(vec![LineDirection::new("123")]);
 
-        let xml = quick_xml::se::to_string_with_root("ProductionTimetableRequest", &request)
-            .expect("request serialises");
+        let xml =
+            quick_xml::se::to_string_with_root("ProductionTimetableRequest", &request).expect("request serialises");
         let validity = xml.find("<ValidityPeriod>").expect("validity is written");
         let lines = xml.find("<Lines>").expect("lines are written");
         assert!(validity < lines, "{xml}");
 
-        let read: ProductionTimetableRequest =
-            quick_xml::de::from_str(&xml).expect("request round-trips");
+        let read: ProductionTimetableRequest = quick_xml::de::from_str(&xml).expect("request round-trips");
         assert_eq!(read, request);
     }
 
@@ -228,12 +223,12 @@ mod tests {
             timestamp(),
             ProductionTimetableRequest::new(timestamp()),
         );
-        let xml = quick_xml::se::to_string_with_root(
-            "ProductionTimetableSubscriptionRequest",
-            &subscription,
-        )
-        .expect("subscription serialises");
-        assert!(xml.contains("<SubscriptionIdentifier>0000456</SubscriptionIdentifier>"), "{xml}");
+        let xml = quick_xml::se::to_string_with_root("ProductionTimetableSubscriptionRequest", &subscription)
+            .expect("subscription serialises");
+        assert!(
+            xml.contains("<SubscriptionIdentifier>0000456</SubscriptionIdentifier>"),
+            "{xml}"
+        );
 
         let read: ProductionTimetableSubscriptionRequest =
             quick_xml::de::from_str(&xml).expect("subscription round-trips");

@@ -14,17 +14,17 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
 use crate::enumerations::{
-    AlertCause, Audience, DayType, ImageContent, InformationStatus, LinkContent,
-    ProbabilityOfOccurrence, PublicEventType, QualityIndex, RelatedTo, ReportType, ScopeType,
-    Sensitivity, Severity, SituationSourceType, SourceType, VerificationStatus, WorkflowStatus,
+    AlertCause, Audience, DayType, ImageContent, InformationStatus, LinkContent, ProbabilityOfOccurrence,
+    PublicEventType, QualityIndex, RelatedTo, ReportType, ScopeType, Sensitivity, Severity, SituationSourceType,
+    SourceType, VerificationStatus, WorkflowStatus,
 };
 use crate::model::ControlActionRef;
 use crate::sx::action::Actions;
 use crate::sx::affects::AffectsScope;
 use crate::sx::consequence::PtConsequences;
 use crate::types::{
-    AnyContent, CountryRef, DefaultedText, Extensions, HalfOpenTimestampOutputRange,
-    NaturalLanguageString, ParticipantRef,
+    AnyContent, CountryRef, DefaultedText, Extensions, HalfOpenTimestampOutputRange, NaturalLanguageString,
+    ParticipantRef,
 };
 
 pub use crate::model::{SituationFullRef, SituationNumber, SituationRef};
@@ -1188,10 +1188,7 @@ mod tests {
 
         // The alert cause outranks the superseded alternatives when both are given.
         reason.alert_cause = Some(AlertCause::LiftFailure);
-        assert_eq!(
-            reason.reason(),
-            Some(Reason::AlertCause(&AlertCause::LiftFailure))
-        );
+        assert_eq!(reason.reason(), Some(Reason::AlertCause(&AlertCause::LiftFailure)));
     }
 
     #[test]
@@ -1214,8 +1211,8 @@ mod tests {
         situation.progress = Some(WorkflowStatus::Published);
         situation.summary = vec![DefaultedText::with_lang("EN", "Lift out of service")];
 
-        let xml = quick_xml::se::to_string_with_root("PtSituationElement", &situation)
-            .expect("the situation serialises");
+        let xml =
+            quick_xml::se::to_string_with_root("PtSituationElement", &situation).expect("the situation serialises");
 
         let at = |tag: &str| xml.find(tag).unwrap_or_else(|| panic!("{tag} is written"));
         assert!(at("<CreationTime>") < at("<SituationNumber>"));
@@ -1235,17 +1232,14 @@ mod tests {
         situation.publication = vec!["publicTransport".to_owned()];
         situation.reason_name = vec![NaturalLanguageString::with_lang("EN", "Bridge works")];
         situation.repetitions = Some(SituationRepetitions::new(vec![DayType::Sunday]));
-        situation.info_links = Some(InfoLinks::new(vec![InfoLink::new(
-            "http://example.org/works",
+        situation.info_links = Some(InfoLinks::new(vec![InfoLink::new("http://example.org/works")]));
+        situation.secondary_reasons = Some(SecondaryReasons::new(vec![SituationReason::miscellaneous_reason(
+            "congestion",
         )]));
-        situation.secondary_reasons = Some(SecondaryReasons::new(vec![
-            SituationReason::miscellaneous_reason("congestion"),
-        ]));
 
-        let xml = quick_xml::se::to_string_with_root("PtSituationElement", &situation)
-            .expect("the situation serialises");
-        let parsed: PtSituationElement =
-            quick_xml::de::from_str(&xml).expect("the situation parses back");
+        let xml =
+            quick_xml::se::to_string_with_root("PtSituationElement", &situation).expect("the situation serialises");
+        let parsed: PtSituationElement = quick_xml::de::from_str(&xml).expect("the situation parses back");
 
         assert_eq!(parsed, situation);
         assert_eq!(

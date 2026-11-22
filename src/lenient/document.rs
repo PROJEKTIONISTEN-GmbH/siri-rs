@@ -332,7 +332,11 @@ fn record_at<'r>(records: &[&'r Record], chain: &[&str], name: &str) -> Option<&
 
 /// Whether the record's containers begin with `chain`.
 fn leads_through(record: &Record, chain: &[&str]) -> bool {
-    record.containers.iter().zip(chain).all(|(container, name)| container.name == *name)
+    record
+        .containers
+        .iter()
+        .zip(chain)
+        .all(|(container, name)| container.name == *name)
 }
 
 /// The text of the first element of the most telling name in `candidates` that
@@ -383,7 +387,8 @@ fn position(reader: &Reader<&[u8]>) -> usize {
 mod tests {
     use super::*;
 
-    const DOC: &str = "<Root>\n\t<A><X>1</X></A>\n\t<!--left out: B-->\n\t<B><Y/></B>\n\t<B><Y>2</Y><Y>3</Y></B>\n</Root>";
+    const DOC: &str =
+        "<Root>\n\t<A><X>1</X></A>\n\t<!--left out: B-->\n\t<B><Y/></B>\n\t<B><Y>2</Y><Y>3</Y></B>\n</Root>";
 
     fn step(name: &str, index: Option<usize>) -> Step {
         Step {
@@ -430,7 +435,10 @@ mod tests {
             .iter()
             .map(|child| (child.name.as_str(), child.place, child.left_out))
             .collect();
-        assert_eq!(listed, vec![("A", 0, false), ("B", 0, true), ("B", 1, false), ("B", 2, false)]);
+        assert_eq!(
+            listed,
+            vec![("A", 0, false), ("B", 0, true), ("B", 1, false), ("B", 2, false)]
+        );
         assert_eq!(&DOC[all[3].range.clone()], "<B><Y>2</Y><Y>3</Y></B>");
     }
 
@@ -478,10 +486,9 @@ mod tests {
         )
         .expect_err("the delivery's timestamp is empty");
         assert!(within_a_delivery(&inside.path));
-        let envelope = crate::xml::read::<crate::Siri>(
-            r#"<Siri><ServiceDelivery><ResponseTimestamp/></ServiceDelivery></Siri>"#,
-        )
-        .expect_err("the envelope's timestamp is empty");
+        let envelope =
+            crate::xml::read::<crate::Siri>(r#"<Siri><ServiceDelivery><ResponseTimestamp/></ServiceDelivery></Siri>"#)
+                .expect_err("the envelope's timestamp is empty");
         assert!(!within_a_delivery(&envelope.path));
     }
 }
