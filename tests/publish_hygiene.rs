@@ -3,10 +3,12 @@
 //!
 //! A library that ships with references to its authors' issue tracker, working
 //! directories or half-finished intentions reads as unfinished, and so does one whose
-//! front page sends the reader to an example that is not there. Both are cheap to
-//! check mechanically, so they are checked mechanically.
+//! front page sends the reader to an example that is not there, or whose source is
+//! laid out by rustfmt in one file and by hand in the next. All of it is cheap to
+//! check mechanically, so it is checked mechanically.
 
 use std::path::{Path, PathBuf};
+use std::process::Command;
 
 /// Substrings that must not appear in anything shipped.
 const FORBIDDEN: &[&str] = &[
@@ -332,4 +334,86 @@ fn section<'a>(manifest: &'a str, header: &str) -> &'a str {
     let rest = &manifest[start..];
     let end = rest.find("\n[").unwrap_or(rest.len());
     &rest[..end]
+}
+
+/// The source is laid out the way `rustfmt` lays it out, under the settings in
+/// `rustfmt.toml`, so that a change shows what it changes and nothing of how its
+/// author's editor wraps lines. The check runs the formatter in check mode over
+/// every source file, as `cargo fmt --check` does.
+#[test]
+fn the_source_is_laid_out_by_rustfmt() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut sources = Vec::new();
+    for directory in ["src", "tests", "examples", "benches"] {
+        collect_rust(&root.join(directory), &mut sources);
+    }
+    assert!(
+        sources.len() > 100,
+        "the scan found only {} source files",
+        sources.len()
+    );
+
+    let unformatted = laid_out_otherwise(root, &sources);
+    assert!(
+        unformatted.is_empty(),
+        "rustfmt lays these files out otherwise; run `cargo fmt`:\n{}",
+        unformatted
+            .iter()
+            .map(|path| path.display().to_string())
+            .collect::<Vec<_>>()
+            .join("\n")
+    );
+}
+
+/// The files of `sources` that `rustfmt`, run from `root`, would lay out
+/// otherwise, by their real paths: rustfmt names a file by its path with every
+/// symbolic link resolved.
+fn laid_out_otherwise(root: &Path, sources: &[PathBuf]) -> Vec<PathBuf> {
+    let output = Command::new("rustfmt")
+        .args(["--edition", "2021", "--check", "--files-with-diff"])
+        .args(sources)
+        .current_dir(root)
+        .output()
+        .unwrap_or_else(|e| panic!("rustfmt cannot be run ({e}); it comes with `rustup component add rustfmt`"));
+    let listed = String::from_utf8_lossy(&output.stdout);
+    // A file reached both by name and through a `mod` of another is listed twice.
+    let mut unformatted: Vec<PathBuf> = listed
+        .lines()
+        .map(|path| Path::new(path).canonicalize().unwrap_or_else(|_| PathBuf::from(path)))
+        .collect();
+    unformatted.sort();
+    unformatted.dedup();
+    assert!(
+        output.status.success() || !unformatted.is_empty(),
+        "rustfmt failed without naming a file:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    unformatted
+}
+
+fn collect_rust(dir: &Path, out: &mut Vec<PathBuf>) {
+    for entry in std::fs::read_dir(dir).unwrap_or_else(|e| panic!("cannot read {}: {e}", dir.display())) {
+        let path = entry.expect("readable directory entry").path();
+        if path.is_dir() {
+            collect_rust(&path, out);
+        } else if path.extension().is_some_and(|e| e == "rs") {
+            out.push(path);
+        }
+    }
+}
+
+#[test]
+fn the_check_would_catch_a_file_rustfmt_lays_out_otherwise() {
+    let root = Path::new(env!("CARGO_TARGET_TMPDIR"));
+    let wrapped = root.join("wrapped_by_hand.rs");
+    std::fs::write(&wrapped, "fn  main( ) { let answer=42 ; }\n").expect("a scratch file is writable");
+    let laid_out = root.join("laid_out.rs");
+    std::fs::write(&laid_out, "fn main() {\n    let answer = 42;\n}\n").expect("a scratch file is writable");
+
+    let unformatted = laid_out_otherwise(root, &[wrapped.clone(), laid_out]);
+
+    assert_eq!(
+        unformatted,
+        [wrapped.canonicalize().expect("the scratch file is there")]
+    );
 }
