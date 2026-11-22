@@ -181,7 +181,7 @@ second reader, behind a feature:
 
 ```text
 [dependencies]
-siri-rs = { version = "2.3", features = ["lenient"] }
+siri-rs = { version = "2.4", features = ["lenient"] }
 ```
 
 ```rust
@@ -209,6 +209,15 @@ the lenient reader does differently starts where the strict one fails:
   `<Cancellation>True</Cancellation>` cannot be read (`xsd:boolean` is lower case)
   would read as running. Such an element does not go alone; the element around it
   goes in its place, here the journey.
+- **It reads an estimated timetable of no journeys as one.** The schema demands
+  a journey in every `EstimatedJourneyVersionFrame`, so it has no form for an
+  Estimated Timetable delivery without one, and a producer asked for journeys it
+  has none of writes a frame that holds none — this crate's own producer does,
+  answering a request or a fetch. The lenient reader reads such a frame as
+  holding no journey and keeps the delivery around it, and does the same with a
+  frame whose every journey it leaves out. Each such frame is a `Finding` of its
+  own kind: its `discarded` is `Discarded::Nothing`, and
+  `findings.read_as_empty()` lists them.
 - **It reports every element left out.** Each `Finding` names the element that
   could not be read, in the path form the strict reader's errors use, the reason
   the reader gave, and what went for it — an element, or a unit with its
@@ -564,9 +573,10 @@ better read here than discovered:
   therefore sent nothing — no delivery, no data-ready notification — until it
   holds one. A request or a fetch has to be answered, and there the producer
   writes the delivery with an empty frame, which the schema rejects and this
-  crate's own reader, strict or lenient, refuses with
-  `missing field EstimatedVehicleJourney`. Tests record both; the other nine
-  services can say "nothing" validly.
+  crate's strict reader refuses with `missing field EstimatedVehicleJourney`. The
+  lenient reader reads it back as written, a delivery of no journeys, with a
+  finding for the frame. Tests record all three; the other nine services can say
+  "nothing" validly.
 - **A timestamp without a time-zone offset is not read, nor one at `24:00:00`.**
   XML Schema allows both: `2026-03-04T07:50:00` and the end of a day as hour 24.
   The first names no instant, and the crate does not guess the zone its producer

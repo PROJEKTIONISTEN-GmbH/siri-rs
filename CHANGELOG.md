@@ -1,5 +1,50 @@
 # Changelog
 
+## 2.4.0 — 2026-11-22
+
+What this crate's own producer writes for an estimated timetable of no
+journeys now reads back, leniently. Everything here is additive in the API; two
+changes of behaviour of the lenient reader are listed under *Changed*.
+
+### Added
+
+- **The lenient reader reads an estimated timetable of no journeys.** The
+  schema demands a journey in every `EstimatedJourneyVersionFrame`, so it has no
+  form for "no journeys", and a producer asked for journeys it has none of
+  writes a frame that holds none — this crate's own producer does, answering a
+  request or a fetch. `lenient::from_str` took that frame for a fault: it left
+  the frame out, and the delivery with it, and failed the document when that
+  delivery was its only one. It now reads the frame as holding no journey, keeps
+  the delivery, and reports the frame as a finding of a new kind,
+  `Discarded::Nothing`: the element was read, nothing was left out.
+  `Findings::read_as_empty` lists these findings; `len` and `by_reason` count
+  them, under the reason the strict reader gives, ``missing field
+  `EstimatedVehicleJourney` ``. The strict reader refuses such a frame as before,
+  with the feature on or off.
+
+### Changed
+
+- **A frame whose every journey the lenient reader leaves out is kept**, holding
+  none, and reported as above, after the findings for its journeys. The frame
+  went too before, and the delivery with it — or the document, where the
+  delivery was its only one.
+- **`Findings::elements` lists the findings of `Discarded::Element` only.** It
+  listed every finding that left out no unit, which now takes in the new kind.
+
+### Maintenance
+
+- The source is laid out by rustfmt, at the 120 columns it was written to
+  (`rustfmt.toml`); the publication checks among the tests hold it to that.
+- A CI workflow runs the tests with and without the `lenient` feature, rustfmt,
+  clippy in both variants, rustdoc with warnings denied, and checks the library
+  against the minimum supported Rust, 1.75.
+
+### Upgrading from 2.3
+
+- A `match` on `Discarded` needs a wildcard arm already, the enum being
+  non-exhaustive; one that takes every finding that is not a unit for an element
+  left out should match `Discarded::Nothing` for a frame read as holding none.
+
 ## 2.3.0 — 2026-11-21
 
 A review of 2.2.0 found that what arrives was not always handed on, that the
