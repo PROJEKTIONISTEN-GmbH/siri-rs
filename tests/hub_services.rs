@@ -200,6 +200,34 @@ fn an_estimated_timetable_delivery_cannot_carry_no_journeys() {
     );
 }
 
+/// What a producer whose source holds no journey answers a request with is the
+/// frame the schema rejects, and the strict reader rejects it too: the error
+/// names the frame and what it lacks. Reading it anyway is
+/// the lenient reader's business (`tests/lenient_findings.rs`); the strict one
+/// holds to the schema.
+#[test]
+fn the_strict_reader_refuses_a_frame_without_a_journey() {
+    let mut producer = Producer::new(ProducerConfig::new("MY-AGENCY"), Journeys(Vec::new()));
+    let mut consumer = Consumer::<EstimatedTimetable>::new("PASSENGER-APP");
+    let request = consumer.request(EstimatedTimetableRequest::new(now()), now());
+    let answer = producer
+        .handle(&request, now())
+        .expect("the request is understood")
+        .expect("a request is answered");
+    let xml = siri_rs::to_string(&answer).expect("a message is writable");
+
+    let Err(siri_rs::Error::Deserialize { path, offset, source }) = siri_rs::from_str::<Siri>(&xml) else {
+        panic!("the strict reader refuses a frame without a journey:\n{xml}");
+    };
+    assert_eq!(path, "ServiceDelivery.EstimatedTimetableDelivery[0].EstimatedJourneyVersionFrame[0]");
+    assert_eq!(source.to_string(), "missing field `EstimatedVehicleJourney`");
+    // The reader notices the missing journey at the frame's end tag, having
+    // already looked one event further: past the delivery's end tag.
+    let ends = "</EstimatedJourneyVersionFrame></EstimatedTimetableDelivery>";
+    let looked_to = xml.find(ends).expect("the frame ends the delivery") + ends.len();
+    assert_eq!(offset, Some(u64::try_from(looked_to).expect("fits")), "{xml}");
+}
+
 /// Since the schema has no form for an estimated timetable of no journeys, a
 /// producer whose source holds none for a subscription sends it nothing — in
 /// either delivery method — rather than a document no consumer can read, and

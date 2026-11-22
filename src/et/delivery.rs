@@ -181,6 +181,15 @@ mod tests {
     }
 
     #[test]
+    fn a_frame_without_a_journey_does_not_read() {
+        let error = quick_xml::de::from_str::<EstimatedVersionFrame>(
+            "<EstimatedJourneyVersionFrame><RecordedAtTime>2001-12-17T09:30:47-05:00</RecordedAtTime></EstimatedJourneyVersionFrame>",
+        )
+        .expect_err("the schema demands a journey in every frame");
+        assert_eq!(error.to_string(), "missing field `EstimatedVehicleJourney`");
+    }
+
+    #[test]
     fn the_journeys_of_every_frame_are_reported_together() {
         let mut delivery = EstimatedTimetableDelivery::new(timestamp(), vec![journey("00008")]);
         delivery

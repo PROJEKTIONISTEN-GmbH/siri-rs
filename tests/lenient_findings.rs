@@ -14,8 +14,13 @@ mod support;
 use std::collections::BTreeMap;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 
+use chrono::{DateTime, FixedOffset};
 use quick_xml::events::Event;
-use siri_rs::lenient::{self, Findings};
+use siri_rs::et::{EstimatedTimetableRequest, EstimatedVersionFrame};
+use siri_rs::framework::{DataSupplyRequest, ServiceDeliveryPayload, SiriPayload};
+use siri_rs::lenient::{self, Discarded, Findings};
+use siri_rs::model::EstimatedVehicleJourney;
+use siri_rs::pubsub::{Consumer, EstimatedTimetable, EstimatedTimetableSource, Producer, ProducerConfig, PROTOCOL_VERSION};
 use siri_rs::Siri;
 use support::mutation::{copy, element, emptied, insert_after, insert_before, remove, replace, with_text};
 
@@ -557,6 +562,174 @@ fn a_delivery_left_out_reports_every_record_in_it() {
             ("RoadSituationElement", &*format!("{delivery}.Situations.RoadSituationElement[0]"), Some("000354")),
         ]
     );
+}
+
+/// The frame of the estimated timetable example, where its journeys are.
+const ET_FRAME: &str = "ServiceDelivery.EstimatedTimetableDelivery[0].EstimatedJourneyVersionFrame";
+
+/// What the reader reports for a frame that holds no journey.
+const NO_JOURNEY: &str = "missing field `EstimatedVehicleJourney`";
+
+/// A producer whose source holds no journey answers a request, and a fetch, with
+/// an estimated timetable whose frame holds none: the schema has no form for
+/// "no journeys", and an answer is owed. The strict reader refuses what it
+/// wrote; the lenient reader reads it back as written — a delivery of no
+/// journeys — and counts the frame as a finding of its own kind, one that left
+/// nothing out.
+#[test]
+fn what_the_producer_writes_for_no_journeys_reads_back_as_written() {
+    let now = now();
+    let mut producer = Producer::new(ProducerConfig::new("MY-AGENCY"), NoJourneys);
+    let mut consumer = Consumer::<EstimatedTimetable>::new("PASSENGER-APP");
+    let request = consumer.request(EstimatedTimetableRequest::new(now), now);
+    let fetch = Siri::new(PROTOCOL_VERSION, DataSupplyRequest::new(now, "PASSENGER-APP"));
+
+    for (label, asked) in [("request", request), ("fetch", fetch)] {
+        let answer = producer
+            .handle(&asked, now)
+            .expect("the producer understands what it is asked")
+            .expect("the producer answers");
+        let xml = siri_rs::to_string(&answer).expect("the answer is writable");
+        let refusal = siri_rs::from_str::<Siri>(&xml).expect_err("the strict reader holds to the schema");
+        assert!(refusal.to_string().ends_with(NO_JOURNEY), "{label}: {refusal}");
+
+        let (read, findings) = lenient(&xml);
+
+        assert_eq!(read, answer, "{label}: read back as the producer wrote it");
+        assert_eq!(journeys(&read), Vec::<&str>::new(), "{label}");
+        let frame = format!("{ET_FRAME}[0]");
+        assert_eq!(findings.len(), 1, "{label}: {findings:?}");
+        let finding = findings.iter().next().expect("one finding");
+        assert_eq!(finding.path, frame, "{label}");
+        assert_eq!(finding.reason, NO_JOURNEY, "{label}");
+        assert!(matches!(&finding.discarded, Discarded::Nothing { path } if *path == frame), "{label}: {finding:?}");
+        assert_eq!(finding.discarded.path(), frame, "{label}");
+        assert!(!finding.discarded.is_unit(), "{label}");
+        assert_eq!(finding.discarded.unit_name(), None, "{label}");
+        assert_eq!(finding.discarded.identifier(), None, "{label}");
+        assert_eq!(findings.read_as_empty().count(), 1, "{label}");
+        assert_eq!(findings.units().count(), 0, "{label}");
+        assert_eq!(findings.elements().count(), 0, "{label}");
+        assert_eq!(findings.by_reason(), BTreeMap::from([(NO_JOURNEY, 1)]), "{label}");
+        assert_eq!(finding.to_string(), format!("{frame}: {NO_JOURNEY}; read as holding none"), "{label}");
+    }
+}
+
+/// A frame whose every journey is left out holds none either, and reads the same
+/// way: the delivery stays, with its frame and no journey in it, and the frame's
+/// finding follows those of its journeys.
+#[test]
+fn a_frame_whose_journeys_are_all_left_out_reads_as_holding_none() {
+    let example = fixture(ET);
+    let broken = remove(&remove(&example, "LineRef", 1), "LineRef", 0);
+
+    let (read, findings) = lenient(&broken);
+
+    let mut expected = strict(&example);
+    frames_of(&mut expected)[0].estimated_vehicle_journey.clear();
+    assert_eq!(read, expected);
+    let reported: Vec<(&str, &str, Option<&str>)> = findings
+        .iter()
+        .map(|finding| (finding.reason.as_str(), finding.discarded.path(), finding.discarded.identifier()))
+        .collect();
+    assert_eq!(
+        reported,
+        vec![
+            ("missing field `LineRef`", &*format!("{ET_JOURNEY}[0]"), Some("00008")),
+            ("missing field `LineRef`", &*format!("{ET_JOURNEY}[1]"), Some("00009")),
+            (NO_JOURNEY, &*format!("{ET_FRAME}[0]"), None),
+        ]
+    );
+    assert_eq!(findings.units().count(), 2);
+    assert_eq!(findings.read_as_empty().count(), 1);
+}
+
+/// A frame that arrives without a journey ahead of one whose journey is left out
+/// is reported first: the findings keep to the order of the document.
+#[test]
+fn a_frame_without_a_journey_is_reported_in_document_order() {
+    let example = fixture(ET);
+    let recorded = copy(&example, "RecordedAtTime", 0);
+    let empty_frame = format!("<EstimatedJourneyVersionFrame>{recorded}</EstimatedJourneyVersionFrame>");
+    let broken = remove(&insert_before(&example, "EstimatedJourneyVersionFrame", 0, &empty_frame), "LineRef", 1);
+
+    let (read, findings) = lenient(&broken);
+
+    let mut expected = strict(&remove(&example, "EstimatedVehicleJourney", 1));
+    let recorded_at = frames_of(&mut expected)[0].recorded_at_time;
+    frames_of(&mut expected).insert(0, EstimatedVersionFrame::new(recorded_at, Vec::new()));
+    assert_eq!(read, expected);
+    let reported: Vec<(&str, Option<&str>)> = findings
+        .iter()
+        .map(|finding| (finding.discarded.path(), finding.discarded.unit_name()))
+        .collect();
+    assert_eq!(
+        reported,
+        vec![
+            (&*format!("{ET_FRAME}[0]"), None),
+            (&*format!("{ET_FRAME}[1].EstimatedVehicleJourney[1]"), Some("EstimatedVehicleJourney")),
+        ]
+    );
+}
+
+/// A delivery left out for a fault of its own takes its frames with it: an empty
+/// frame in it is not reported as read, since nothing of it was.
+#[test]
+fn a_frame_without_a_journey_in_a_delivery_left_out_goes_with_the_delivery() {
+    let stop_monitoring = fixture(SM);
+    let timetable = copy(&fixture(ET), "EstimatedTimetableDelivery", 0);
+    let without_journeys = remove(&remove(&timetable, "EstimatedVehicleJourney", 1), "EstimatedVehicleJourney", 0);
+    let broken_delivery = emptied(&without_journeys, "ResponseTimestamp", 0);
+    let broken = insert_after(&stop_monitoring, "StopMonitoringDelivery", 0, &broken_delivery);
+
+    let (read, findings) = lenient(&broken);
+
+    assert_eq!(read, strict(&stop_monitoring));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    let finding = findings.iter().next().expect("one finding");
+    assert_eq!(finding.path, "ServiceDelivery.EstimatedTimetableDelivery[1].ResponseTimestamp");
+    assert_eq!(finding.discarded.unit_name(), Some("EstimatedTimetableDelivery"));
+    assert_eq!(findings.read_as_empty().count(), 0);
+}
+
+/// The version frames of the only delivery of a document that holds an
+/// estimated timetable.
+fn frames_of(siri: &mut Siri) -> &mut Vec<EstimatedVersionFrame> {
+    let SiriPayload::ServiceDelivery(delivery) = &mut siri.payload else {
+        panic!("a service delivery");
+    };
+    match &mut delivery.deliveries[0] {
+        ServiceDeliveryPayload::EstimatedTimetableDelivery(timetable) => &mut timetable.estimated_journey_version_frame,
+        other => panic!("an estimated timetable, not {other:?}"),
+    }
+}
+
+/// The journeys a document's estimated timetable carries, by their dated journey.
+fn journeys(siri: &Siri) -> Vec<&str> {
+    let delivery = siri.payload.as_service_delivery().expect("a service delivery");
+    delivery
+        .deliveries
+        .iter()
+        .filter_map(|payload| match payload {
+            ServiceDeliveryPayload::EstimatedTimetableDelivery(timetable) => Some(timetable),
+            _ => None,
+        })
+        .flat_map(|timetable| timetable.journeys())
+        .map(|journey| journey.dated_vehicle_journey_ref.as_ref().map_or("", |reference| reference.as_str()))
+        .collect()
+}
+
+fn now() -> DateTime<FixedOffset> {
+    DateTime::parse_from_rfc3339("2026-03-04T08:15:00+01:00").expect("valid instant")
+}
+
+/// A real-time system with no journey running.
+struct NoJourneys;
+
+impl EstimatedTimetableSource for NoJourneys {
+    fn journeys(&self, _request: &EstimatedTimetableRequest) -> Vec<EstimatedVehicleJourney> {
+        Vec::new()
+    }
 }
 
 #[test]
