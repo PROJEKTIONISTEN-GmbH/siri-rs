@@ -61,6 +61,18 @@
 //! A unit is never replaced by a guess. What does not read is left out; nothing
 //! is put in its place.
 //!
+//! # What is read as holding none
+//!
+//! One element lacking what the schema demands of it is read rather than left
+//! out: an `EstimatedJourneyVersionFrame` without an `EstimatedVehicleJourney`.
+//! The schema has no form for an estimated timetable of no journeys, so that is
+//! what a producer asked for journeys it has none of writes — this crate's own
+//! [`Producer`](crate::pubsub::Producer) does, answering a request or a fetch.
+//! Such a frame reads as a frame of no journeys, the delivery around it is kept,
+//! and the frame is a finding whose [`Discarded`] is [`Discarded::Nothing`]. A
+//! frame whose every journey is left out reads, and is reported, the same way,
+//! after the findings for its journeys. The strict reader refuses both.
+//!
 //! # What is never left out
 //!
 //! The envelope — `Siri`, `ServiceDelivery` and the latter's own elements such as
@@ -133,8 +145,11 @@
 //! ```
 
 mod document;
+mod frames;
 mod repair;
 mod units;
+
+pub(crate) use frames::read as version_frames;
 
 use std::borrow::Cow;
 use std::collections::BTreeMap;
@@ -172,7 +187,9 @@ pub fn from_str(xml: &str) -> Result<(Siri, Findings)> {
     let mut document = text.into_owned();
     let mut findings = Findings::default();
     repair::deliveries(&mut document, &mut findings)?;
-    let siri = xml::read_document::<Siri>(&document, false)?;
+    let siri = frames::admitting(findings.read_as_empty().next().is_some(), || {
+        xml::read_document::<Siri>(&document, false)
+    })?;
     Ok((siri, findings))
 }
 
@@ -191,7 +208,10 @@ pub struct Finding {
 
 impl fmt::Display for Finding {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "cannot read {}: {}; left out {}", self.path, self.reason, self.discarded)
+        match self.discarded {
+            Discarded::Nothing { .. } => write!(f, "{}: {}; read as holding none", self.path, self.reason),
+            _ => write!(f, "cannot read {}: {}; left out {}", self.path, self.reason, self.discarded),
+        }
     }
 }
 
@@ -217,13 +237,22 @@ pub enum Discarded {
         /// like — when the unit carries one.
         identifier: Option<String>,
     },
+    /// Nothing: the element lacks what the schema demands of it and is read as
+    /// holding none of it. The one such element is an `EstimatedJourneyVersionFrame`
+    /// without an `EstimatedVehicleJourney`, which is what a producer writes when
+    /// it is asked for journeys it has none of; it reads as a frame of no journeys.
+    Nothing {
+        /// The element's path from the document root.
+        path: String,
+    },
 }
 
 impl Discarded {
-    /// The path of what was left out, from the document root.
+    /// The path of what was left out, from the document root — or, where nothing
+    /// was, of the element read as holding none.
     pub fn path(&self) -> &str {
         match self {
-            Discarded::Element { path } | Discarded::Unit { path, .. } => path,
+            Discarded::Element { path } | Discarded::Unit { path, .. } | Discarded::Nothing { path } => path,
         }
     }
 
@@ -236,7 +265,7 @@ impl Discarded {
     pub fn unit_name(&self) -> Option<&str> {
         match self {
             Discarded::Unit { name, .. } => Some(name),
-            Discarded::Element { .. } => None,
+            Discarded::Element { .. } | Discarded::Nothing { .. } => None,
         }
     }
 
@@ -244,7 +273,7 @@ impl Discarded {
     pub fn identifier(&self) -> Option<&str> {
         match self {
             Discarded::Unit { identifier, .. } => identifier.as_deref(),
-            Discarded::Element { .. } => None,
+            Discarded::Element { .. } | Discarded::Nothing { .. } => None,
         }
     }
 }
@@ -263,6 +292,7 @@ impl fmt::Display for Discarded {
                 name,
                 identifier: None,
             } => write!(f, "the {name} at {path}"),
+            Discarded::Nothing { .. } => write!(f, "nothing"),
         }
     }
 }
@@ -301,7 +331,18 @@ impl Findings {
 
     /// The findings that left out an element inside a unit that was kept.
     pub fn elements(&self) -> impl Iterator<Item = &Finding> {
-        self.findings.iter().filter(|finding| !finding.discarded.is_unit())
+        self.findings
+            .iter()
+            .filter(|finding| matches!(finding.discarded, Discarded::Element { .. }))
+    }
+
+    /// The findings that left nothing out: an element read as holding none of
+    /// what the schema demands of it — a version frame of an estimated timetable
+    /// without a journey.
+    pub fn read_as_empty(&self) -> impl Iterator<Item = &Finding> {
+        self.findings
+            .iter()
+            .filter(|finding| matches!(finding.discarded, Discarded::Nothing { .. }))
     }
 
     /// How many findings there are for each reason, so that a stream's faults can
@@ -318,6 +359,11 @@ impl Findings {
     fn push(&mut self, finding: Finding) -> usize {
         self.findings.push(finding);
         self.findings.len() - 1
+    }
+
+    /// Puts a finding in at a position, ahead of the findings from there on.
+    fn insert(&mut self, at: usize, finding: Finding) {
+        self.findings.insert(at, finding);
     }
 }
 

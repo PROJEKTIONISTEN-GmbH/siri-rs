@@ -69,6 +69,8 @@ pub struct EstimatedTimetableDelivery {
     pub default_language: Option<String>,
     /// The journeys, grouped by the timetable version they were drawn from.
     #[serde(rename = "EstimatedJourneyVersionFrame")]
+    // The lenient reader may admit a frame without a journey here; nothing else does.
+    #[cfg_attr(feature = "lenient", serde(deserialize_with = "crate::lenient::version_frames"))]
     pub estimated_journey_version_frame: Vec<EstimatedVersionFrame>,
     /// Implementation-defined content.
     #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
@@ -120,7 +122,8 @@ pub struct EstimatedVersionFrame {
     /// The edition of the timetable the journeys were drawn from.
     #[serde(rename = "VersionRef", default, skip_serializing_if = "Option::is_none")]
     pub version_ref: Option<VersionRef>,
-    /// The journeys, at least one.
+    /// The journeys: at least one, as the schema demands, except in a frame the
+    /// lenient reader reports as holding none.
     #[serde(rename = "EstimatedVehicleJourney")]
     pub estimated_vehicle_journey: Vec<EstimatedVehicleJourney>,
     /// The interchanges planned around them, as now expected to work out.

@@ -14,6 +14,7 @@ use std::ops::Range;
 use serde::de::DeserializeOwned;
 
 use super::document::{self, Step};
+use super::frames;
 use super::units::{Record, DELIVERY_IDENTIFIERS, RECORDS, SERVICE_DELIVERY_FIELDS};
 use super::{Discarded, Finding, Findings};
 use crate::framework::ServiceDeliveryPayload;
@@ -208,8 +209,12 @@ pub(super) fn fragment<T: DeserializeOwned>(
 ) -> Outcome {
     let mut chain: Option<Chain> = None;
     loop {
-        let fault = match xml::read::<T>(text) {
-            Ok(_) => return Outcome::Kept,
+        let without_journeys = frames::without_journeys(text, scope);
+        let fault = match frames::admitting(!without_journeys.is_empty(), || xml::read::<T>(text)) {
+            Ok(_) => {
+                frames::report(&without_journeys, scope, findings);
+                return Outcome::Kept;
+            }
             Err(fault) => fault,
         };
         let reason = fault.source.to_string();

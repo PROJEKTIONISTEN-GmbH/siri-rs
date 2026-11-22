@@ -509,7 +509,8 @@ impl<Src: Source<Svc>, Svc: Service> Producer<Src, Svc> {
     /// delivery at all is not a document the schema accepts. Estimated Timetable
     /// has no such form — see [`Service::CAN_DELIVER_NOTHING`] — and a fetch has to
     /// be answered, so its empty delivery is written as the others are: a frame
-    /// without a journey, which the schema, and this crate's reader, refuse.
+    /// without a journey, which the schema and this crate's strict reader refuse,
+    /// and which the lenient reader reads back as written, with a finding.
     fn supply(&mut self, consumer: &ParticipantRef, now: DateTime<FixedOffset>) -> Siri {
         let waiting: Vec<usize> = self
             .subscriptions

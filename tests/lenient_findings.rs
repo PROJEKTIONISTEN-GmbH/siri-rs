@@ -704,6 +704,23 @@ fn frames_of(siri: &mut Siri) -> &mut Vec<EstimatedVersionFrame> {
     }
 }
 
+/// How many version frames of a document's estimated timetables hold no journey.
+fn frames_without_journeys(siri: &Siri) -> usize {
+    let Some(delivery) = siri.payload.as_service_delivery() else {
+        return 0;
+    };
+    delivery
+        .deliveries
+        .iter()
+        .filter_map(|payload| match payload {
+            ServiceDeliveryPayload::EstimatedTimetableDelivery(timetable) => Some(timetable),
+            _ => None,
+        })
+        .flat_map(|timetable| &timetable.estimated_journey_version_frame)
+        .filter(|frame| frame.estimated_vehicle_journey.is_empty())
+        .count()
+}
+
 /// The journeys a document's estimated timetable carries, by their dated journey.
 fn journeys(siri: &Siri) -> Vec<&str> {
     let delivery = siri.payload.as_service_delivery().expect("a service delivery");
@@ -1014,6 +1031,11 @@ fn a_randomly_damaged_document_never_panics_and_never_loses_a_unit_quietly() {
                     reported += 1;
                 }
             }
+            assert_eq!(
+                frames_without_journeys(&siri),
+                findings.read_as_empty().count(),
+                "{label}: every frame read as holding no journey is reported, once"
+            );
             let written = siri_rs::to_string(&siri).expect("what was read writes");
             assert_eq!(
                 units_in(&damaged),
