@@ -46,8 +46,8 @@ is listed under *Changed*.
   `ConnectionLinksRequest`, with their deliveries. A document carrying one is
   refused as an unknown message.
 - An empty facility feature — `<Feature><AccessFacility/></Feature>`, which the
-  schema reads as `unknown` — is not read as its default, for any of the sixteen
-  feature families.
+  schema reads as `unknown` — is not read as its default, for any of the fifteen
+  feature families whose element declares one.
 
 ### Upgrading from 2.4
 
