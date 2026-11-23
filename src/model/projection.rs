@@ -4,36 +4,102 @@
 //! zone — either to features of the producer's geographic information system or to
 //! an explicit list of coordinates. Consumers that render maps use whichever form
 //! they can resolve.
+//!
+//! # Namespace
+//!
+//! The projection types are IFOPT's, and so is everything inside them: SIRI names
+//! the element that carries a link projection — `LinkProjectionToNextStopPoint`,
+//! `LinkProjection` in an affected section — in its own namespace, but `Features`,
+//! `Line`, `Boundary` and each `PointProjection` below it are `ifopt:` elements. A
+//! stop place component goes further and carries the IFOPT elements themselves
+//! (`ifopt:PointProjection`, `ifopt:LinkProjection`, `ifopt:ZoneProjection`).
+//!
+//! A [`LinkProjection`], [`ZoneProjection`] or [`PointProjection`] is therefore
+//! written with its content under the `ifopt` prefix, and binds that prefix on the
+//! element it is written as, so that it is right wherever it is carried. The
+//! points of a line or a boundary use the binding of the projection they belong to.
+//!
+//! Releases up to 2.4 wrote all of this in the SIRI namespace, which the schema
+//! rejects. A document written that way still reads: the reader goes by an
+//! element's local name, so it reads both forms alike.
 
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, Serializer};
+
+use crate::model::accessibility::IFOPT_NAMESPACE;
 
 /// A path between two points.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 pub struct LinkProjection {
     /// Features of the geographic information system the path runs along.
-    #[serde(rename = "Features", default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "Features", default)]
     pub features: Option<GisFeatures>,
     /// The path as an explicit sequence of points.
-    #[serde(rename = "Line", default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "Line", default)]
     pub line: Option<ProjectionLine>,
 }
 
+impl Serialize for LinkProjection {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        #[derive(Serialize)]
+        struct Written<'a> {
+            #[serde(rename = "@xmlns:ifopt")]
+            ifopt_namespace: &'static str,
+            #[serde(rename = "ifopt:Features", skip_serializing_if = "Option::is_none")]
+            features: Option<&'a GisFeatures>,
+            #[serde(rename = "ifopt:Line", skip_serializing_if = "Option::is_none")]
+            line: Option<&'a ProjectionLine>,
+        }
+
+        Written {
+            ifopt_namespace: IFOPT_NAMESPACE,
+            features: self.features.as_ref(),
+            line: self.line.as_ref(),
+        }
+        .serialize(serializer)
+    }
+}
+
 /// An area, given as a closed boundary.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 pub struct ZoneProjection {
     /// Features of the geographic information system the area covers.
-    #[serde(rename = "Features", default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "Features", default)]
     pub features: Option<GisFeatures>,
     /// The boundary; the schema requires at least three points per ring.
-    #[serde(rename = "Boundary", default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(rename = "Boundary", default)]
     pub boundary: Vec<ProjectionBoundary>,
+}
+
+impl Serialize for ZoneProjection {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        #[derive(Serialize)]
+        struct Written<'a> {
+            #[serde(rename = "@xmlns:ifopt")]
+            ifopt_namespace: &'static str,
+            #[serde(rename = "ifopt:Features", skip_serializing_if = "Option::is_none")]
+            features: Option<&'a GisFeatures>,
+            #[serde(rename = "ifopt:Boundary", skip_serializing_if = "<[_]>::is_empty")]
+            boundary: &'a [ProjectionBoundary],
+        }
+
+        Written {
+            ifopt_namespace: IFOPT_NAMESPACE,
+            features: self.features.as_ref(),
+            boundary: &self.boundary,
+        }
+        .serialize(serializer)
+    }
 }
 
 /// One closed ring of a [`ZoneProjection`].
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ProjectionBoundary {
     /// The points of the ring, in order.
-    #[serde(rename = "PointProjection")]
+    #[serde(
+        rename = "ifopt:PointProjection",
+        alias = "PointProjection",
+        serialize_with = "points_of_a_projection"
+    )]
     pub point_projection: Vec<PointProjection>,
 }
 
@@ -41,7 +107,7 @@ pub struct ProjectionBoundary {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GisFeatures {
     /// The features, at least one.
-    #[serde(rename = "GisFeatureRef")]
+    #[serde(rename = "ifopt:GisFeatureRef", alias = "GisFeatureRef")]
     pub gis_feature_ref: Vec<GisFeatureRef>,
 }
 
@@ -49,10 +115,15 @@ pub struct GisFeatures {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct GisFeatureRef {
     /// The system's own identifier for the feature.
-    #[serde(rename = "FeatureIdRef")]
+    #[serde(rename = "ifopt:FeatureIdRef", alias = "FeatureIdRef")]
     pub feature_id_ref: String,
     /// What kind of feature it is, in the system's own vocabulary.
-    #[serde(rename = "FeatureType", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ifopt:FeatureType",
+        alias = "FeatureType",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub feature_type: Option<String>,
 }
 
@@ -60,7 +131,11 @@ pub struct GisFeatureRef {
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct ProjectionLine {
     /// The points; the schema requires at least two, a start and an end.
-    #[serde(rename = "PointProjection")]
+    #[serde(
+        rename = "ifopt:PointProjection",
+        alias = "PointProjection",
+        serialize_with = "points_of_a_projection"
+    )]
     pub point_projection: Vec<PointProjection>,
 }
 
@@ -68,31 +143,31 @@ pub struct ProjectionLine {
 ///
 /// As with a [`Location`](crate::model::Location), the position is given either as
 /// WGS 84 degrees or as a coordinate list in the projection named by `srs_name`.
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Deserialize)]
 pub struct PointProjection {
     /// Identifier of this point within the document.
-    #[serde(rename = "@id", default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "@id", default)]
     pub id: Option<String>,
     /// Name of the spatial reference system `coordinates` is expressed in.
-    #[serde(rename = "@srsName", default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "@srsName", default)]
     pub srs_name: Option<String>,
     /// Features of the geographic information system this point projects onto.
-    #[serde(rename = "Features", default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "Features", default)]
     pub features: Option<GisFeatures>,
     /// Degrees east of the prime meridian.
-    #[serde(rename = "Longitude", default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "Longitude", default)]
     pub longitude: Option<f64>,
     /// Degrees north of the equator.
-    #[serde(rename = "Latitude", default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "Latitude", default)]
     pub latitude: Option<f64>,
     /// Metres above sea level.
-    #[serde(rename = "Altitude", default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "Altitude", default)]
     pub altitude: Option<f64>,
     /// The position in the projection named by `srs_name`, as a coordinate list.
-    #[serde(rename = "Coordinates", default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "Coordinates", default)]
     pub coordinates: Option<String>,
     /// Precision of the position in metres.
-    #[serde(rename = "Precision", default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "Precision", default)]
     pub precision: Option<u64>,
 }
 
@@ -105,6 +180,59 @@ impl PointProjection {
             ..Self::default()
         }
     }
+}
+
+impl Serialize for PointProjection {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        WrittenPoint::new(self, Some(IFOPT_NAMESPACE)).serialize(serializer)
+    }
+}
+
+/// A [`PointProjection`] as it is written: its content under the `ifopt` prefix,
+/// and the prefix bound on the point itself unless the projection it belongs to
+/// has bound it already.
+#[derive(Serialize)]
+struct WrittenPoint<'a> {
+    #[serde(rename = "@xmlns:ifopt", skip_serializing_if = "Option::is_none")]
+    ifopt_namespace: Option<&'static str>,
+    #[serde(rename = "@id", skip_serializing_if = "Option::is_none")]
+    id: Option<&'a str>,
+    #[serde(rename = "@srsName", skip_serializing_if = "Option::is_none")]
+    srs_name: Option<&'a str>,
+    #[serde(rename = "ifopt:Features", skip_serializing_if = "Option::is_none")]
+    features: Option<&'a GisFeatures>,
+    #[serde(rename = "ifopt:Longitude", skip_serializing_if = "Option::is_none")]
+    longitude: Option<f64>,
+    #[serde(rename = "ifopt:Latitude", skip_serializing_if = "Option::is_none")]
+    latitude: Option<f64>,
+    #[serde(rename = "ifopt:Altitude", skip_serializing_if = "Option::is_none")]
+    altitude: Option<f64>,
+    #[serde(rename = "ifopt:Coordinates", skip_serializing_if = "Option::is_none")]
+    coordinates: Option<&'a str>,
+    #[serde(rename = "ifopt:Precision", skip_serializing_if = "Option::is_none")]
+    precision: Option<u64>,
+}
+
+impl<'a> WrittenPoint<'a> {
+    fn new(point: &'a PointProjection, ifopt_namespace: Option<&'static str>) -> Self {
+        Self {
+            ifopt_namespace,
+            id: point.id.as_deref(),
+            srs_name: point.srs_name.as_deref(),
+            features: point.features.as_ref(),
+            longitude: point.longitude,
+            latitude: point.latitude,
+            altitude: point.altitude,
+            coordinates: point.coordinates.as_deref(),
+            precision: point.precision,
+        }
+    }
+}
+
+/// Writes the points of a line or a boundary, which the projection they belong to
+/// has already bound the `ifopt` prefix for.
+fn points_of_a_projection<S: Serializer>(points: &[PointProjection], serializer: S) -> Result<S::Ok, S::Error> {
+    serializer.collect_seq(points.iter().map(|point| WrittenPoint::new(point, None)))
 }
 
 #[cfg(test)]

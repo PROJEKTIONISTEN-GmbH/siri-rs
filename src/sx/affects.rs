@@ -2072,13 +2072,28 @@ pub struct AffectedStopPlaceComponent {
     #[serde(rename = "ComponentType", default, skip_serializing_if = "Option::is_none")]
     pub component_type: Option<StopPlaceComponentType>,
     /// The component's position, as a single point.
-    #[serde(rename = "PointProjection", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ifopt:PointProjection",
+        alias = "PointProjection",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub point_projection: Option<PointProjection>,
     /// The component's shape, as a line.
-    #[serde(rename = "LinkProjection", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ifopt:LinkProjection",
+        alias = "LinkProjection",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub link_projection: Option<LinkProjection>,
     /// The component's extent, as an area.
-    #[serde(rename = "ZoneProjection", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "ifopt:ZoneProjection",
+        alias = "ZoneProjection",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     pub zone_projection: Option<ZoneProjection>,
     /// Which part of the projected shape the situation applies to.
     #[serde(rename = "Offset", default, skip_serializing_if = "Option::is_none")]
