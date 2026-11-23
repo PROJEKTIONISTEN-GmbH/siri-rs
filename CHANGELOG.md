@@ -1,5 +1,60 @@
 # Changelog
 
+## 2.5.0 — 2026-11-23
+
+Facility discovery, and projections written in the namespace the schema puts
+them in. Everything here is additive in the API; one change of what is written
+is listed under *Changed*.
+
+### Added
+
+- **Facility discovery: `FacilityRequest` and `FacilityDelivery`.** A consumer
+  asks which facilities a producer serves — the lifts, ticket machines and
+  toilets it can then ask Facility Monitoring about — narrowed by a rectangle or
+  a topographic place (`FacilityRequest::scope`, `FacilityScope`), an operator
+  and a line, with preferred languages and a `FacilityDetailLevel`
+  (`enumerations::FacilityDetail`; an empty element reads as `normal`, the
+  schema's default). The producer answers with `AnnotatedFacility` entries, a
+  facility named by reference and, at more detail, described. Both are
+  `SiriPayload` variants (`as_facility_request`, `as_facility_delivery`); the
+  request's `Debug` output withholds its `AccountKey` like every other.
+  `AnnotatedFacility::new` names a facility by reference alone. The standard
+  publishes no example of this exchange; the tests read and write documents
+  derived from the stop points discovery and facility monitoring examples and
+  validate them against the schemas.
+
+### Changed
+
+- **Projections are written in the IFOPT namespace.** `LinkProjection`,
+  `PointProjection` and `ZoneProjection` are IFOPT types, and the schema puts
+  their content — `Features`, `Line`, `Boundary`, the points and their
+  coordinates — in the `ifopt` namespace even where a SIRI element carries them,
+  as `LinkProjectionToNextStopPoint` in a lines discovery or an affected route
+  does; a stop place component carries the IFOPT elements themselves. Earlier
+  releases wrote all of it in the SIRI namespace, and the schema rejected every
+  document carrying a projection. Each projection now binds the `ifopt` prefix
+  on the element it is written as and writes its content under it.
+
+  Documents written the earlier way still read, strictly and leniently: the
+  reader matches an element by its local name. A consumer that compared this
+  crate's output as text, rather than as XML, sees the prefix and the
+  declaration where there were none.
+
+### Known limitations
+
+- Two discovery services are not modelled yet: `InfoChannelRequest` and
+  `ConnectionLinksRequest`, with their deliveries. A document carrying one is
+  refused as an unknown message.
+- An empty facility feature — `<Feature><AccessFacility/></Feature>`, which the
+  schema reads as `unknown` — is not read as its default, for any of the sixteen
+  feature families.
+
+### Upgrading from 2.4
+
+- A `match` on `SiriPayload` needs a wildcard arm already, the enum being
+  non-exhaustive; one that routes the discovery messages should take
+  `SiriPayload::FacilityRequest` and `SiriPayload::FacilityDelivery`.
+
 ## 2.4.0 — 2026-11-22
 
 What this crate's own producer writes for an estimated timetable of no

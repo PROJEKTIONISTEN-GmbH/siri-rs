@@ -181,7 +181,7 @@ second reader, behind a feature:
 
 ```text
 [dependencies]
-siri-rs = { version = "2.4", features = ["lenient"] }
+siri-rs = { version = "2.5", features = ["lenient"] }
 ```
 
 ```rust
@@ -592,6 +592,10 @@ better read here than discovered:
   `TrainElement`, `Train` and `CompoundTrain` (schema 2.2) has no field, so it is
   dropped when read and not written back. The structs are exhaustive; the field
   comes with the next major release.
+- **Two discovery services are not modelled**: info channels and connection links
+  (`InfoChannelRequest`, `ConnectionLinksRequest`). A document carrying one is
+  refused as an unknown message; stop points, lines, facilities, service and
+  vehicle features and product categories are discovered.
 - **The schema has no form for a subscription request that mixes services**, though
   the reader accepts one; the producer answers it entry by entry.
 - **It takes a while to compile, and the library is large.** Building the library
