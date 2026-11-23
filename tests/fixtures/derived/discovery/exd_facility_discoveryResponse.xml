@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Derived from the official StopPoints Discovery response and the facility the
+	official Facility Monitoring response describes: the facilities a producer
+	serves, one described in full and one by reference alone. See ../README.md. -->
+<Siri xmlns="http://www.siri.org.uk/siri" xmlns:acsb="http://www.ifopt.org.uk/acsb" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.0" xsi:schemaLocation="http://www.siri.org.uk/siri ../../xsd/siri.xsd">
+	<FacilityDelivery version="2.0">
+		<ResponseTimestamp>2004-12-17T09:30:47-05:00</ResponseTimestamp>
+		<Status>true</Status>
+		<ValidUntil>2004-12-18T09:30:47-05:00</ValidUntil>
+		<AnnotatedFacility>
+			<FacilityRef>134567-L4</FacilityRef>
+			<Monitored>true</Monitored>
+			<Facility>
+				<FacilityCode>134567-L4</FacilityCode>
+				<Description xml:lang="FR">Les Halles station Lift 4</Description>
+				<FacilityClass>fixedEquipment</FacilityClass>
+				<Features>
+					<Feature>
+						<AccessFacility>lift</AccessFacility>
+					</Feature>
+				</Features>
+				<OwnerRef>RATP</OwnerRef>
+				<OwnerName xml:lang="EN">RATP</OwnerName>
+				<FacilityLocation>
+					<LineRef>LINE4</LineRef>
+					<StopPointRef>HGALLES</StopPointRef>
+					<StopPlaceRef>HGALLES</StopPlaceRef>
+					<StopPlaceComponentId>ORT123</StopPlaceComponentId>
+				</FacilityLocation>
+				<Limitations>
+					<acsb:WheelchairAccess>true</acsb:WheelchairAccess>
+					<acsb:StepFreeAccess>true</acsb:StepFreeAccess>
+				</Limitations>
+			</Facility>
+		</AnnotatedFacility>
+		<AnnotatedFacility>
+			<FacilityRef>134567-E2</FacilityRef>
+			<Monitored>false</Monitored>
+		</AnnotatedFacility>
+	</FacilityDelivery>
+</Siri>

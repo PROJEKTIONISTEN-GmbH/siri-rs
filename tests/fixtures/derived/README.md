@@ -54,6 +54,41 @@ and no official example carries one. The situation is invented for the occasion
 and carries only what the schema requires and a summary; the subscription and the
 producer are the example's.
 
+## `discovery/exd_facility_discoveryRequest.xml` and `discovery/exd_facility_discoveryResponse.xml`
+
+Facility discovery: a consumer asking which facilities a producer serves, and the
+answer. The request is modelled on the official
+`xml/discovery/exd_stopPoints_discoveryRequest.xml`, with that example's rectangle
+and requestor, and carries every further filter and policy element
+`FacilityRequestStructure` allows — an operator, a line, two languages and a
+`FacilityDetailLevel`. The response names two facilities: the lift the official
+`xml/fm/exf_facilityMonitoring_response.xml` describes, with its description,
+features, owner, location and limitations, and a second one by reference alone,
+not monitored.
+
+Why derived: the schema repository publishes no facility discovery example at all
+— `examples/siri_exu_discovery` covers stop points, lines, product categories,
+service features and vehicle features only.
+
+## `discovery/exd_lines_discoveryResponse_projection.xml` and `sx/exx_situationExchange_response_projection.xml`
+
+Projections: how a link, a point or a zone is drawn on a map. The first is the
+official `xml/discovery/exd_lines_discoveryResponse.xml` with a
+`LinkProjectionToNextStopPoint` on two stops of the outbound pattern — one onto
+features of a geographic information system, one as a line of three points
+(WGS 84 with and without altitude, and a projected coordinate list with its
+`srsName` and precision). The second is modelled on the official
+`xml/sx/exx_situationExchangeResponse.xml`, its situation trimmed to what the
+schema requires, and draws an affected route (`LinkProjectionToNextStopPoint`
+between two stop points), an affected section (`LinkProjection`) and an affected
+stop place component — whose point, link and zone projections are the IFOPT
+elements themselves. Identifiers and coordinates are invented for the occasion.
+
+Why derived: no published example carries a projection. Their content is in the
+IFOPT namespace even where a SIRI element carries it (`LinkProjectionStructure`
+and its siblings are IFOPT types), which is the point these documents hold the
+crate to.
+
 ## Elements the schema gives a default value
 
 XML Schema lets an element declaration carry a `default` or a `fixed` value; an

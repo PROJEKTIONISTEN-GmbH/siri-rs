@@ -63,6 +63,7 @@ fn transcribed() -> Vec<(&'static str, Vec<&'static str>)> {
         EquipmentStatus,
         EstimatedTimetableDetail,
         FacilityCategory,
+        FacilityDetail,
         FacilityStatus,
         FareClass,
         FareClassFacility,

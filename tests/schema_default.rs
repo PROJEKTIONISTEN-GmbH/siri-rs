@@ -769,7 +769,6 @@ fn the_declared_elements_no_field_reads_a_value_for_are_these() {
         "BookingStatusType",
         "ConnectionLinksDetailLevel",
         "EscalatorFreeAccess",
-        "FacilityDetailLevel",
         "FareClassFacility",
         "FunicularSubmode",
         "GuideDogAccess",

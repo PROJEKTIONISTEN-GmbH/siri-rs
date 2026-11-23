@@ -63,6 +63,7 @@ const KEYED: &[&str] = &[
     "CheckStatusRequest",
     "DataReadyNotification",
     "DataSupplyRequest",
+    "FacilityRequest",
     "HeartbeatNotification",
     "LinesRequest",
     "ProductCategoriesRequest",
@@ -103,9 +104,9 @@ fn the_messages_carrying_an_account_key_are_these() {
 fn an_account_key_is_not_shown_in_debug_output() {
     use chrono::DateTime;
     use siri_rs::framework::{
-        CapabilitiesRequest, CheckStatusRequest, DataReadyNotification, DataSupplyRequest, HeartbeatNotification,
-        LinesRequest, ProductCategoriesRequest, ServiceFeaturesRequest, ServiceRequest, StopPointsRequest,
-        SubscriptionRequest, TerminateSubscriptionRequest, VehicleFeaturesRequest,
+        CapabilitiesRequest, CheckStatusRequest, DataReadyNotification, DataSupplyRequest, FacilityRequest,
+        HeartbeatNotification, LinesRequest, ProductCategoriesRequest, ServiceFeaturesRequest, ServiceRequest,
+        StopPointsRequest, SubscriptionRequest, TerminateSubscriptionRequest, VehicleFeaturesRequest,
     };
     use siri_rs::Siri;
 
@@ -128,6 +129,7 @@ fn an_account_key_is_not_shown_in_debug_output() {
         keyed!(CheckStatusRequest::new(now, "EREWHON")),
         keyed!(DataReadyNotification::new(now, "KUBRICK")),
         keyed!(DataSupplyRequest::new(now, "EREWHON")),
+        keyed!(FacilityRequest::new(now, "EREWHON")),
         keyed!(HeartbeatNotification::healthy(now, "KUBRICK", now)),
         keyed!(LinesRequest::new(now, "EREWHON")),
         keyed!(ProductCategoriesRequest::new(now, "EREWHON")),

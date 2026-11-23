@@ -106,3 +106,114 @@ impl PointProjection {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const DECLARATION: &str = r#"xmlns:ifopt="http://www.ifopt.org.uk/ifopt""#;
+
+    fn two_point_link() -> LinkProjection {
+        LinkProjection {
+            features: None,
+            line: Some(ProjectionLine {
+                point_projection: vec![PointProjection::wgs84(9.7, 52.4), PointProjection::wgs84(9.8, 52.5)],
+            }),
+        }
+    }
+
+    #[test]
+    fn a_link_projection_binds_the_ifopt_prefix_once_for_everything_under_it() {
+        let xml = quick_xml::se::to_string_with_root("LinkProjectionToNextStopPoint", &two_point_link()).unwrap();
+
+        assert!(
+            xml.starts_with(&format!(
+                "<LinkProjectionToNextStopPoint {DECLARATION}><ifopt:Line><ifopt:PointProjection>\
+                 <ifopt:Longitude>9.7</ifopt:Longitude><ifopt:Latitude>52.4</ifopt:Latitude>"
+            )),
+            "{xml}"
+        );
+        assert_eq!(xml.matches("xmlns:ifopt").count(), 1, "{xml}");
+    }
+
+    #[test]
+    fn a_zone_projection_writes_its_features_and_rings_under_the_prefix() {
+        let zone = ZoneProjection {
+            features: Some(GisFeatures {
+                gis_feature_ref: vec![GisFeatureRef {
+                    feature_id_ref: "PLATFORM-3".to_owned(),
+                    feature_type: Some("area".to_owned()),
+                }],
+            }),
+            boundary: vec![ProjectionBoundary {
+                point_projection: vec![
+                    PointProjection::wgs84(9.70, 52.40),
+                    PointProjection::wgs84(9.71, 52.40),
+                    PointProjection::wgs84(9.71, 52.41),
+                ],
+            }],
+        };
+        let xml = quick_xml::se::to_string_with_root("ifopt:ZoneProjection", &zone).unwrap();
+
+        assert!(
+            xml.starts_with(&format!(
+                "<ifopt:ZoneProjection {DECLARATION}><ifopt:Features><ifopt:GisFeatureRef>\
+                 <ifopt:FeatureIdRef>PLATFORM-3</ifopt:FeatureIdRef><ifopt:FeatureType>area</ifopt:FeatureType>\
+                 </ifopt:GisFeatureRef></ifopt:Features><ifopt:Boundary><ifopt:PointProjection>"
+            )),
+            "{xml}"
+        );
+        assert_eq!(xml.matches("xmlns:ifopt").count(), 1, "{xml}");
+    }
+
+    #[test]
+    fn a_point_projection_of_its_own_binds_the_prefix_itself() {
+        let point = PointProjection {
+            id: Some("P1".to_owned()),
+            srs_name: Some("EPSG:25832".to_owned()),
+            coordinates: Some("550123.4 5874321.2".to_owned()),
+            precision: Some(2),
+            ..PointProjection::default()
+        };
+        let xml = quick_xml::se::to_string_with_root("ifopt:PointProjection", &point).unwrap();
+
+        assert_eq!(
+            xml,
+            format!(
+                "<ifopt:PointProjection {DECLARATION} id=\"P1\" srsName=\"EPSG:25832\">\
+                 <ifopt:Coordinates>550123.4 5874321.2</ifopt:Coordinates>\
+                 <ifopt:Precision>2</ifopt:Precision></ifopt:PointProjection>"
+            )
+        );
+    }
+
+    #[test]
+    fn a_projection_reads_alike_with_and_without_the_prefix() {
+        let prefixed = format!(
+            "<LinkProjection {DECLARATION}><ifopt:Features><ifopt:GisFeatureRef>\
+             <ifopt:FeatureIdRef>RL-1</ifopt:FeatureIdRef></ifopt:GisFeatureRef></ifopt:Features>\
+             <ifopt:Line><ifopt:PointProjection><ifopt:Longitude>9.7</ifopt:Longitude>\
+             <ifopt:Latitude>52.4</ifopt:Latitude></ifopt:PointProjection><ifopt:PointProjection>\
+             <ifopt:Longitude>9.8</ifopt:Longitude><ifopt:Latitude>52.5</ifopt:Latitude>\
+             </ifopt:PointProjection></ifopt:Line></LinkProjection>"
+        );
+        let unprefixed = prefixed
+            .replace(&format!(" {DECLARATION}"), "")
+            .replace("<ifopt:", "<")
+            .replace("</ifopt:", "</");
+
+        let from_prefixed: LinkProjection = quick_xml::de::from_str(&prefixed).unwrap();
+        let from_unprefixed: LinkProjection = quick_xml::de::from_str(&unprefixed).unwrap();
+        let expected = LinkProjection {
+            features: Some(GisFeatures {
+                gis_feature_ref: vec![GisFeatureRef {
+                    feature_id_ref: "RL-1".to_owned(),
+                    feature_type: None,
+                }],
+            }),
+            ..two_point_link()
+        };
+        assert_eq!(from_prefixed, expected);
+        assert_eq!(from_unprefixed, expected);
+    }
+}
