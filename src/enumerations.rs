@@ -92,6 +92,18 @@ siri_enum! {
 }
 
 siri_enum! {
+    /// Detail Levels for Facility Points Request. (since SIRI 2.0)
+    FacilityDetail as "FacilityDetailEnumeration" {
+        /// Return only the name and identifier of the Facility.
+        Minimum = "minimum",
+        /// Return name, identifier and coordinates of the Facility.
+        Normal = "normal",
+        /// Return all available data for each Facility.
+        Full = "full",
+    }
+}
+
+siri_enum! {
     /// Values for ModesOfTransport : TPEG Pti01 and Pts001 "ModeOfTransport".
     #[allow(non_camel_case_types)]
     VehicleModesOfTransport as "VehicleModesOfTransportEnumeration" {

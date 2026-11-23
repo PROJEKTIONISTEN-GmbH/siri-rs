@@ -14,11 +14,6 @@
 				<FacilityCode>134567-L4</FacilityCode>
 				<Description xml:lang="FR">Les Halles station Lift 4</Description>
 				<FacilityClass>fixedEquipment</FacilityClass>
-				<Features>
-					<Feature>
-						<AccessFacility>lift</AccessFacility>
-					</Feature>
-				</Features>
 				<OwnerRef>RATP</OwnerRef>
 				<OwnerName xml:lang="EN">RATP</OwnerName>
 				<FacilityLocation>

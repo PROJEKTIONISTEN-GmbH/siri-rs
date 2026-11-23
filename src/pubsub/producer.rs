@@ -730,6 +730,7 @@ fn payload_name(payload: &SiriPayload) -> &'static str {
         SiriPayload::ServiceFeaturesRequest(_) => "ServiceFeaturesRequest",
         SiriPayload::VehicleFeaturesRequest(_) => "VehicleFeaturesRequest",
         SiriPayload::ProductCategoriesRequest(_) => "ProductCategoriesRequest",
+        SiriPayload::FacilityRequest(_) => "FacilityRequest",
         SiriPayload::SubscriptionResponse(_) => "SubscriptionResponse",
         SiriPayload::TerminateSubscriptionResponse(_) => "TerminateSubscriptionResponse",
         SiriPayload::SubscriptionTerminatedNotification(_) => "SubscriptionTerminatedNotification",
@@ -743,6 +744,7 @@ fn payload_name(payload: &SiriPayload) -> &'static str {
         SiriPayload::ServiceFeaturesDelivery(_) => "ServiceFeaturesDelivery",
         SiriPayload::VehicleFeaturesDelivery(_) => "VehicleFeaturesDelivery",
         SiriPayload::ProductCategoriesDelivery(_) => "ProductCategoriesDelivery",
+        SiriPayload::FacilityDelivery(_) => "FacilityDelivery",
         SiriPayload::Extensions(_) => "Extensions",
     }
 }

@@ -80,7 +80,7 @@ fn a_facility_delivery_describes_a_facility_or_names_it_alone() {
     assert_eq!(described.facility_ref, FacilityRef::new("134567-L4"));
     assert_eq!(described.monitored, Some(true));
     let facility = described.facility.as_ref().expect("the first facility is described");
-    assert_eq!(facility.facility_class, Some(FacilityCategory::FixedEquipment));
+    assert_eq!(facility.facility_class, [FacilityCategory::FixedEquipment]);
     let location = facility.facility_location.as_ref().expect("the facility is located");
     assert_eq!(location.stop_point_ref, Some(StopPointRef::new("HGALLES")));
     let limitations = facility
@@ -118,7 +118,7 @@ fn a_facility_delivery_built_in_code_is_valid_and_reads_back() {
     lift.facility = Some(Facility {
         facility_code: Some("LIFT-KROEPCKE-2".to_owned()),
         description: vec![NaturalLanguageString::new("Aufzug Gleis 2")],
-        facility_class: Some(FacilityCategory::FixedEquipment),
+        facility_class: vec![FacilityCategory::FixedEquipment],
         features: Some(FacilityFeatures {
             feature: vec![FacilityFeature::new(FacilityFeatureKind::AccessFacility(
                 AccessFacility::Lift,

@@ -13,7 +13,8 @@
 //! * **Liveness** — [`CheckStatusRequest`]/[`CheckStatusResponse`] on demand,
 //!   [`HeartbeatNotification`] on a timer.
 //! * **Discovery** — what a producer can do ([`CapabilitiesRequest`]) and what it
-//!   knows about ([`StopPointsRequest`], [`LinesRequest`] and friends).
+//!   knows about ([`StopPointsRequest`], [`LinesRequest`], [`FacilityRequest`] and
+//!   friends).
 //!
 //! [`crate::pubsub`] turns these messages into the two state machines that drive
 //! an exchange.
@@ -40,11 +41,12 @@ pub use capabilities::{
 };
 pub use delivery::{DataReadyAcknowledgement, DataReadyNotification, DataReceivedAcknowledgement, DataSupplyRequest};
 pub use discovery::{
-    AnnotatedDestination, AnnotatedLineRef, AnnotatedStopPointRef, Destinations, Directions, JourneyPattern,
-    JourneyPatterns, LinesDelivery, LinesRequest, LinesScope, ProductCategoriesDelivery, ProductCategoriesRequest,
-    RouteDirection, ServiceFeaturesDelivery, ServiceFeaturesRequest, StopPointFeature, StopPointFeatures,
-    StopPointInPattern, StopPointLine, StopPointLines, StopPointsDelivery, StopPointsRequest, StopPointsScope,
-    StopsInPattern, VehicleFeaturesDelivery, VehicleFeaturesRequest,
+    AnnotatedDestination, AnnotatedLineRef, AnnotatedStopPointRef, Destinations, Directions, FacilityDelivery,
+    FacilityRequest, FacilityScope, JourneyPattern, JourneyPatterns, LinesDelivery, LinesRequest, LinesScope,
+    ProductCategoriesDelivery, ProductCategoriesRequest, RouteDirection, ServiceFeaturesDelivery,
+    ServiceFeaturesRequest, StopPointFeature, StopPointFeatures, StopPointInPattern, StopPointLine, StopPointLines,
+    StopPointsDelivery, StopPointsRequest, StopPointsScope, StopsInPattern, VehicleFeaturesDelivery,
+    VehicleFeaturesRequest,
 };
 pub use envelope::{
     DataNameSpaces, ServiceDelivery, ServiceDeliveryPayload, ServiceRequest, ServiceRequestContext,

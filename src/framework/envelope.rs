@@ -16,8 +16,9 @@ use crate::framework::delivery::{
     DataReadyAcknowledgement, DataReadyNotification, DataReceivedAcknowledgement, DataSupplyRequest,
 };
 use crate::framework::discovery::{
-    LinesDelivery, LinesRequest, ProductCategoriesDelivery, ProductCategoriesRequest, ServiceFeaturesDelivery,
-    ServiceFeaturesRequest, StopPointsDelivery, StopPointsRequest, VehicleFeaturesDelivery, VehicleFeaturesRequest,
+    FacilityDelivery, FacilityRequest, LinesDelivery, LinesRequest, ProductCategoriesDelivery,
+    ProductCategoriesRequest, ServiceFeaturesDelivery, ServiceFeaturesRequest, StopPointsDelivery, StopPointsRequest,
+    VehicleFeaturesDelivery, VehicleFeaturesRequest,
 };
 use crate::framework::error_condition::{DeliveryError, ErrorCondition};
 use crate::framework::status::{CheckStatusRequest, CheckStatusResponse, HeartbeatNotification};
@@ -126,6 +127,8 @@ siri_payload! {
     VehicleFeaturesRequest(VehicleFeaturesRequest) => as_vehicle_features_request,
     /// A request for the product categories a producer uses.
     ProductCategoriesRequest(ProductCategoriesRequest) => as_product_categories_request,
+    /// A request for the facilities a producer serves.
+    FacilityRequest(FacilityRequest) => as_facility_request,
     /// The outcome of a subscription request, one status per subscription.
     SubscriptionResponse(SubscriptionResponse) => as_subscription_response,
     /// The outcome of a termination request, one status per subscription.
@@ -152,6 +155,8 @@ siri_payload! {
     VehicleFeaturesDelivery(VehicleFeaturesDelivery) => as_vehicle_features_delivery,
     /// The product categories a producer uses.
     ProductCategoriesDelivery(ProductCategoriesDelivery) => as_product_categories_delivery,
+    /// The facilities a producer serves.
+    FacilityDelivery(FacilityDelivery) => as_facility_delivery,
     /// Implementation-defined content in place of a message, the schema's third
     /// alternative under `<Siri>`.
     Extensions(Extensions) => as_extensions,

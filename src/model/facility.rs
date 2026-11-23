@@ -587,6 +587,17 @@ pub struct AnnotatedFacility {
     pub facility: Option<Facility>,
 }
 
+impl AnnotatedFacility {
+    /// A facility named by reference alone, the `minimum` level of detail.
+    pub fn new(facility_ref: impl Into<FacilityRef>) -> Self {
+        Self {
+            facility_ref: facility_ref.into(),
+            monitored: None,
+            facility: None,
+        }
+    }
+}
+
 /// A change to a facility, in the SIRI 1.0 spelling the schema still allows.
 ///
 /// [`FacilityCondition`] says the same thing in more detail and is what a new

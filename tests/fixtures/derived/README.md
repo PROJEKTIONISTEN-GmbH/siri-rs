@@ -63,8 +63,13 @@ and requestor, and carries every further filter and policy element
 `FacilityRequestStructure` allows — an operator, a line, two languages and a
 `FacilityDetailLevel`. The response names two facilities: the lift the official
 `xml/fm/exf_facilityMonitoring_response.xml` describes, with its description,
-features, owner, location and limitations, and a second one by reference alone,
-not monitored.
+class, owner, location and limitations, and a second one by reference alone,
+not monitored. The lift's `Features` are left out: an empty feature element such
+as `<AccessFacility/>` is valid and means `unknown`, which the crate does not read
+for the sixteen feature families (`tests/schema_default.rs` lists them as not
+transcribed). The default-value check goes by element name, and would take a
+feature `AccessFacility` for the one in a mobility disruption, which the crate does
+read that way.
 
 Why derived: the schema repository publishes no facility discovery example at all
 — `examples/siri_exu_discovery` covers stop points, lines, product categories,

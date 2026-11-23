@@ -2,7 +2,7 @@
 //!
 //! Every SIRI functional service is driven by identifiers — a stop point, a line, a
 //! service feature — that the consumer has to know before it can ask a useful
-//! question. The discovery services publish those identifiers: five request/delivery
+//! question. The discovery services publish those identifiers: six request/delivery
 //! pairs, each answering "what values may I put in this field?".
 //!
 //! Discovery deliveries are stand-alone answers rather than payloads of a
@@ -11,12 +11,12 @@
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
-use crate::enumerations::{LinesDetail, StopPointsDetail};
+use crate::enumerations::{FacilityDetail, LinesDetail, StopPointsDetail};
 use crate::framework::error_condition::{ErrorCondition, ServiceRequestError};
 use crate::model::{
-    BoundingBox, DestinationRef, DirectionRef, JourneyPatternRef, LineDirection, LineRef, LineShape, LinkProjection,
-    Location, OperatorRef, PlaceRef, ProductCategory, ServiceFeature, ServiceFeatureRef, StopAreaRef, StopPointRef,
-    VehicleFeature,
+    AnnotatedFacility, BoundingBox, DestinationRef, DirectionRef, JourneyPatternRef, LineDirection, LineRef, LineShape,
+    LinkProjection, Location, OperatorRef, PlaceRef, ProductCategory, ServiceFeature, ServiceFeatureRef, StopAreaRef,
+    StopPointRef, VehicleFeature,
 };
 use crate::types::{Duration, EndpointAddress, Extensions, MessageQualifier, NaturalLanguageString, ParticipantRef};
 
@@ -703,6 +703,172 @@ impl ProductCategoriesDelivery {
             valid_until: None,
             shortest_possible_cycle: None,
             product_category,
+            extensions: None,
+        }
+    }
+}
+
+/// A request for the facilities a producer serves — lifts, ticket machines,
+/// toilets — so that a consumer knows which it can ask Facility Monitoring about.
+///
+/// Area and place are alternatives to each other — see [`FacilityRequest::scope`] —
+/// while operator and line further restrict whichever of them is used.
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
+pub struct FacilityRequest {
+    /// Version of SIRI the request conforms to.
+    #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    /// When the request was made.
+    #[serde(rename = "RequestTimestamp", deserialize_with = "crate::xml::date_time::required")]
+    pub request_timestamp: DateTime<FixedOffset>,
+    /// Account the requestor authenticates as.
+    #[serde(rename = "AccountId", default, skip_serializing_if = "Option::is_none")]
+    pub account_id: Option<String>,
+    /// Secret authenticating the account.
+    #[serde(rename = "AccountKey", default, skip_serializing_if = "Option::is_none")]
+    pub account_key: Option<String>,
+    /// Address to send the answer to.
+    #[serde(rename = "Address", default, skip_serializing_if = "Option::is_none")]
+    pub address: Option<EndpointAddress>,
+    /// Who is asking.
+    #[serde(rename = "RequestorRef")]
+    pub requestor_ref: ParticipantRef,
+    /// Identifier the requestor puts on this message.
+    #[serde(rename = "MessageIdentifier", default, skip_serializing_if = "Option::is_none")]
+    pub message_identifier: Option<MessageQualifier>,
+    /// Rectangle the facilities must lie in.
+    #[serde(rename = "BoundingBox", default, skip_serializing_if = "Option::is_none")]
+    pub bounding_box: Option<BoundingBox>,
+    /// Topographic place the facilities must belong to.
+    #[serde(rename = "PlaceRef", default, skip_serializing_if = "Option::is_none")]
+    pub place_ref: Option<PlaceRef>,
+    /// Operator whose facilities are wanted.
+    #[serde(rename = "OperatorRef", default, skip_serializing_if = "Option::is_none")]
+    pub operator_ref: Option<OperatorRef>,
+    /// Line whose facilities are wanted.
+    #[serde(rename = "LineRef", default, skip_serializing_if = "Option::is_none")]
+    pub line_ref: Option<LineRef>,
+    /// Languages the requestor would like text in, most preferred first.
+    #[serde(
+        rename = "Language",
+        default,
+        deserialize_with = "crate::xml::schema_default::string_en",
+        skip_serializing_if = "Vec::is_empty"
+    )]
+    pub language: Vec<String>,
+    /// How much detail each facility should be described with.
+    #[serde(
+        rename = "FacilityDetailLevel",
+        default,
+        deserialize_with = "crate::xml::schema_default::enumeration_normal",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub facility_detail_level: Option<FacilityDetail>,
+    /// Implementation-defined content.
+    #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<Extensions>,
+}
+
+debug_without_account_key!(FacilityRequest {
+    version, request_timestamp, account_id;
+    account_key;
+    address, requestor_ref, message_identifier, bounding_box, place_ref, operator_ref,
+    line_ref, language, facility_detail_level, extensions,
+});
+
+impl FacilityRequest {
+    /// An unfiltered request for every facility the producer serves.
+    pub fn new(request_timestamp: DateTime<FixedOffset>, requestor_ref: impl Into<ParticipantRef>) -> Self {
+        Self {
+            version: None,
+            request_timestamp,
+            account_id: None,
+            account_key: None,
+            address: None,
+            requestor_ref: requestor_ref.into(),
+            message_identifier: None,
+            bounding_box: None,
+            place_ref: None,
+            operator_ref: None,
+            line_ref: None,
+            language: Vec::new(),
+            facility_detail_level: None,
+            extensions: None,
+        }
+    }
+
+    /// Which alternative of the schema's area choice this request uses, or `None`
+    /// when it asks about every facility.
+    pub fn scope(&self) -> Option<FacilityScope<'_>> {
+        if let Some(bounding_box) = &self.bounding_box {
+            Some(FacilityScope::BoundingBox(bounding_box))
+        } else {
+            self.place_ref.as_ref().map(FacilityScope::Place)
+        }
+    }
+}
+
+/// Which way a [`FacilityRequest`] narrows the area it asks about.
+#[derive(Debug, Clone, Copy, PartialEq)]
+#[non_exhaustive]
+pub enum FacilityScope<'a> {
+    /// Facilities inside a rectangle.
+    BoundingBox(&'a BoundingBox),
+    /// Facilities belonging to a topographic place.
+    Place(&'a PlaceRef),
+}
+
+/// The facilities a producer serves.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct FacilityDelivery {
+    /// Version of SIRI the delivery conforms to.
+    #[serde(rename = "@version", default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    /// When the delivery was made.
+    #[serde(rename = "ResponseTimestamp", deserialize_with = "crate::xml::date_time::required")]
+    pub response_timestamp: DateTime<FixedOffset>,
+    /// Whether the request was processed successfully.
+    #[serde(
+        rename = "Status",
+        default,
+        deserialize_with = "crate::xml::schema_default::boolean_true",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub status: Option<bool>,
+    /// Why the request could not be processed.
+    #[serde(rename = "ErrorCondition", default, skip_serializing_if = "Option::is_none")]
+    pub error_condition: Option<ErrorCondition<ServiceRequestError>>,
+    /// End of the producer's data horizon.
+    #[serde(
+        rename = "ValidUntil",
+        default,
+        deserialize_with = "crate::xml::date_time::optional",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub valid_until: Option<DateTime<FixedOffset>>,
+    /// The shortest interval at which the producer will send updates.
+    #[serde(rename = "ShortestPossibleCycle", default, skip_serializing_if = "Option::is_none")]
+    pub shortest_possible_cycle: Option<Duration>,
+    /// The facilities, each described to the level of detail the request asked
+    /// for: by reference alone at the `minimum` level.
+    #[serde(rename = "AnnotatedFacility", default, skip_serializing_if = "Vec::is_empty")]
+    pub annotated_facility: Vec<AnnotatedFacility>,
+    /// Implementation-defined content.
+    #[serde(rename = "Extensions", default, skip_serializing_if = "Option::is_none")]
+    pub extensions: Option<Extensions>,
+}
+
+impl FacilityDelivery {
+    /// A successful delivery of the given facilities.
+    pub fn new(response_timestamp: DateTime<FixedOffset>, annotated_facility: Vec<AnnotatedFacility>) -> Self {
+        Self {
+            version: None,
+            response_timestamp,
+            status: Some(true),
+            error_condition: None,
+            valid_until: None,
+            shortest_possible_cycle: None,
+            annotated_facility,
             extensions: None,
         }
     }
